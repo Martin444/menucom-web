@@ -6,8 +6,8 @@ import 'package:get/get.dart';
 import 'package:http/retry.dart';
 import 'package:pickme_up_web/features/home/presentation/getx/menu_home_controller.dart';
 import 'package:pickme_up_web/features/home/presentation/widgets/menu_tile.dart';
-import 'package:pickme_up_web/utils/pu_colors.dart';
-import 'package:pickme_up_web/utils/style/pu_style_fonts.dart';
+import 'package:pu_material/utils/pu_colors.dart';
+import 'package:pu_material/utils/style/pu_style_fonts.dart';
 
 import '../../models/menu_model.dart';
 import '../widgets/head_home.dart';

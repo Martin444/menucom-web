@@ -11,7 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
 
-  puMaterial:
+  pu_material:
     path: pu_material
 
   cupertino_icons: ^1.0.6
@@ -21,8 +21,7 @@ dependencies:
   flutter_svg: ^2.0.10+1
   flutter_localizations:
     sdk: flutter
-  intl: ^0.18.1
-  google_fonts: ^6.2.1
+
 
 dev_dependencies:
   flutter_test:

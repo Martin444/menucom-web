@@ -5,10 +5,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:pickme_up_web/features/home/presentation/getx/menu_home_controller.dart';
 import 'package:pickme_up_web/routes/routes.dart';
-import 'package:pickme_up_web/utils/style/pu_style_fonts.dart';
-
-import '../../../../utils/pu_assets.dart';
-import '../../../../utils/pu_colors.dart';
+import 'package:pu_material/utils/pu_assets.dart';
+import 'package:pu_material/utils/pu_colors.dart';
+import 'package:pu_material/utils/style/pu_style_fonts.dart';
 
 class HeadHome extends StatelessWidget {
   final bool? withBack;

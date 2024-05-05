@@ -1,14 +1,11 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:pickme_up_web/features/home/models/menu_item_model.dart';
-import 'package:pickme_up_web/utils/formaters/currency_converter.dart';
-import 'package:pickme_up_web/utils/overflow_text.dart';
-import 'package:pickme_up_web/utils/style/pu_style_fonts.dart';
-
-import '../../../../utils/pu_assets.dart';
-import '../../../../utils/pu_colors.dart';
+import 'package:pu_material/utils/formaters/currency_converter.dart';
+import 'package:pu_material/utils/overflow_text.dart';
+import 'package:pu_material/utils/pu_assets.dart';
+import 'package:pu_material/utils/pu_colors.dart';
+import 'package:pu_material/utils/style/pu_style_fonts.dart';
 
 class MenuTile extends StatelessWidget {
   final MenuItemModel item;

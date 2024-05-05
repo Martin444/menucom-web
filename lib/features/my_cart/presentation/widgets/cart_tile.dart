@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:pickme_up_web/features/my_cart/model/cart_item_model.dart';
-import 'package:pickme_up_web/utils/formaters/currency_converter.dart';
-import 'package:pickme_up_web/utils/overflow_text.dart';
-import 'package:pickme_up_web/utils/style/pu_style_fonts.dart';
-
-import '../../../../utils/pu_colors.dart';
+import 'package:pu_material/utils/formaters/currency_converter.dart';
+import 'package:pu_material/utils/overflow_text.dart';
+import 'package:pu_material/utils/pu_colors.dart';
+import 'package:pu_material/utils/style/pu_style_fonts.dart';
 
 class CartTile extends StatelessWidget {
   final CartItemModel item;
