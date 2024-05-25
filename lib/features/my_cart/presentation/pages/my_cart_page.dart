@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pickme_up_web/features/home/presentation/widgets/head_home.dart';
-import 'package:pickme_up_web/features/my_cart/presentation/widgets/cart_tile.dart';
 import 'package:pickme_up_web/routes/routes.dart';
+import 'package:pu_material/pu_material.dart';
 import 'package:pu_material/utils/formaters/currency_converter.dart';
 import 'package:pu_material/utils/pu_colors.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
-import 'package:pu_material/widgets/button_primary.dart';
+import 'package:pu_material/widgets/cards/cart/cart_tile.dart';
 
 import '../../../home/presentation/getx/menu_home_controller.dart';
 

@@ -1,22 +1,30 @@
 import 'package:get/get.dart';
-import 'package:get/get_rx/get_rx.dart';
+import 'package:pickme_up_web/core/exeptions/api_exception.dart';
 import 'package:pickme_up_web/features/home/data/usecases/get_menu_usecases.dart';
+import 'package:pu_material/widgets/cards/cart/model/cart_item_model.dart';
 
-import '../../../my_cart/model/cart_item_model.dart';
 import '../../models/menu_item_model.dart';
 import '../../models/menu_model.dart';
 
 class MenuHomeCartController extends GetxController {
   RxList<MenuModel> listMenu = <MenuModel>[].obs;
   RxList<MenuItemModel> listMenuItems = <MenuItemModel>[].obs;
+  RxString errorText = ''.obs;
 
   void getItemsMenu({String? idMenu}) async {
-    var response = await GetMenuUseCase().execute(idMenu!);
-    listMenu.assignAll(response);
-    for (var element in listMenu) {
-      listMenuItems.assignAll(element.items!);
+    try {
+      var response = await GetMenuUseCase().execute(idMenu!);
+      listMenu.assignAll(response);
+      for (var element in listMenu) {
+        listMenuItems.assignAll(element.items!);
+      }
+      update();
+    } catch (e) {
+      errorText.value = (e as ApiException).message.toString();
+      errorText.refresh();
+      update();
+      // rethrow;
     }
-    update();
   }
 
   RxList<CartItemModel?> listMenuSelected = <CartItemModel?>[].obs;

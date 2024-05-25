@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    cartcon.getItemsMenu(idMenu: 'b8b80560-0060-46d7-b171-edd273cb4caf');
+    cartcon.getItemsMenu(idMenu: 'c0da802a-e33c-498b-9917-30d8aed0b68a');
     super.initState();
   }
 
@@ -109,7 +109,18 @@ class _HomePageState extends State<HomePage> {
             GetBuilder<MenuHomeCartController>(
               builder: (_) {
                 if (_.listMenu.isEmpty) {
-                  return const Center(child: CircularProgressIndicator());
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Center(
+                      child: _.errorText.value.isEmpty
+                          ? const CircularProgressIndicator()
+                          : Text(
+                              _.errorText.value,
+                              style: PuTextStyle.title5,
+                              textAlign: TextAlign.center,
+                            ),
+                    ),
+                  );
                 } else {
                   if (_.listMenu.length == 1) {
                     return Column(
@@ -129,38 +140,40 @@ class _HomePageState extends State<HomePage> {
                         const SizedBox(
                           height: 20,
                         ),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            return Container(
-                              height: 233,
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              child: GridView.builder(
-                                scrollDirection: Axis.vertical,
-                                itemCount: _.listMenu[0].items!.length,
-                                gridDelegate:
-                                    SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount:
-                                      constraints.maxWidth >= 700 ? 6 : 2,
-                                  mainAxisExtent: 200,
-                                  childAspectRatio: 0.2,
-                                  crossAxisSpacing: 19,
-                                  mainAxisSpacing: 10,
+                        Flexible(
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              return Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 20),
+                                child: GridView.builder(
+                                  scrollDirection: Axis.vertical,
+                                  itemCount: _.listMenu[0].items!.length,
+                                  shrinkWrap: true,
+                                  gridDelegate:
+                                      SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount:
+                                        constraints.maxWidth >= 700 ? 6 : 2,
+                                    mainAxisExtent: 200,
+                                    childAspectRatio: 0.2,
+                                    crossAxisSpacing: 19,
+                                    mainAxisSpacing: 10,
+                                  ),
+                                  itemBuilder: (context, index) {
+                                    return MenuTile(
+                                      item: _.listMenu[0].items![index],
+                                      selected: cartcon.detectItemInList(
+                                          _.listMenu[0].items![index]),
+                                      onAddCart: (v) {
+                                        cartcon.selectItemMenu(
+                                            _.listMenu[0].items![index]);
+                                      },
+                                    );
+                                  },
                                 ),
-                                itemBuilder: (context, index) {
-                                  return MenuTile(
-                                    item: _.listMenu[0].items![index],
-                                    selected: cartcon.detectItemInList(
-                                        _.listMenu[0].items![index]),
-                                    onAddCart: (v) {
-                                      cartcon.selectItemMenu(
-                                          _.listMenu[0].items![index]);
-                                    },
-                                  );
-                                },
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
                         ),
                       ],
                     );
@@ -212,10 +225,12 @@ class _HomePageState extends State<HomePage> {
                                   child: MenuTile(
                                     item: menuEntry.items![index],
                                     selected: cartcon.detectItemInList(
-                                        menuEntry.items![index]),
+                                      menuEntry.items![index],
+                                    ),
                                     onAddCart: (v) {
                                       cartcon.selectItemMenu(
-                                          menuEntry.items![index]);
+                                        menuEntry.items![index],
+                                      );
                                     },
                                   ),
                                 );
