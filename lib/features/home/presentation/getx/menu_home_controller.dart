@@ -66,7 +66,7 @@ class MenuHomeCartController extends GetxController {
       calculateTotal();
       update();
     } catch (e) {
-      print(e);
+      rethrow;
     }
   }
 

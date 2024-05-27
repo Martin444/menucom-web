@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pickme_up_web/core/injection_bindings.dart';
-import 'package:pickme_up_web/features/home/presentation/page/home_page.dart';
 import 'package:pickme_up_web/routes/pages.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 

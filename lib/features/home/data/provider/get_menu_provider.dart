@@ -18,12 +18,12 @@ class GetMenuProvider extends GetMenuRespository {
       );
       var respJson = jsonDecode(response.body);
 
-      if (respJson['statusCode'] != null) {
-        throw ApiException(
-          respJson['statusCode'],
-          respJson['message'],
-        );
-      }
+      // if (respJson['statusCode'] != null) {
+      //   throw ApiException(
+      //     respJson['statusCode'],
+      //     respJson['message'],
+      //   );
+      // }
 
       respJson.forEach((e) {
         listItemsMenu.add(MenuModel.fromJson(e));
