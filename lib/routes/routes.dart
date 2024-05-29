@@ -2,6 +2,6 @@
 
 class PURoutes {
   static String HOME = '/';
-  static String REGISTER_USER = '/mi-nombre';
-  static String MYCART = '/my-cart';
+  static String REGISTER_USER = '/ingersa-legajo';
+  static String MYCART = '/mi-carrito';
 }

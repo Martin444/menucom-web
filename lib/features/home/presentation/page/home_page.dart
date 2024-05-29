@@ -20,7 +20,12 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    cartcon.getItemsMenu(idMenu: 'f91b5985-017e-4a97-8a79-ab237ad8384c');
+    var currentRouteID = Uri.base;
+    var iDdinning = currentRouteID.toString().split('/').last;
+
+    cartcon.getItemsMenu(
+      idMenu: iDdinning,
+    );
     super.initState();
   }
 

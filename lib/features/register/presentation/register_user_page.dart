@@ -15,6 +15,7 @@ class RegisterUser extends StatefulWidget {
 class _RegisterUserState extends State<RegisterUser> {
   TextEditingController nameControl = TextEditingController();
   var keyName = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
