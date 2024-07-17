@@ -1,7 +1,6 @@
 import 'dart:convert';
 
 import 'package:pickme_up_web/core/config.dart';
-import 'package:pickme_up_web/core/exeptions/api_exception.dart';
 import 'package:pickme_up_web/features/home/data/repository/get_menu_repository.dart';
 import 'package:http/http.dart' as http;
 
@@ -17,13 +16,6 @@ class GetMenuProvider extends GetMenuRespository {
         userURl,
       );
       var respJson = jsonDecode(response.body);
-
-      // if (respJson['statusCode'] != null) {
-      //   throw ApiException(
-      //     respJson['statusCode'],
-      //     respJson['message'],
-      //   );
-      // }
 
       respJson.forEach((e) {
         listItemsMenu.add(MenuModel.fromJson(e));

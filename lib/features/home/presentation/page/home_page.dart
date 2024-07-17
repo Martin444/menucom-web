@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:pickme_up_web/features/home/presentation/getx/menu_home_controller.dart';
 import 'package:pickme_up_web/features/home/presentation/widgets/menu_tile.dart';
+import 'package:pu_material/pu_material.dart';
 import 'package:pu_material/utils/pu_colors.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
 
@@ -98,155 +99,162 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: PUColors.primaryBackground,
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const HeadHome(),
-            const SizedBox(
-              height: 20,
-            ),
-            GetBuilder<MenuHomeCartController>(
-              builder: (_) {
-                if (_.listMenu.isEmpty) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Center(
-                      child: _.errorText.value.isEmpty
-                          ? const CircularProgressIndicator()
-                          : Text(
-                              _.errorText.value,
-                              style: PuTextStyle.title5,
-                              textAlign: TextAlign.center,
+      body: Stack(
+        children: [
+          const BackgroundCircles(
+            withBlur: true,
+          ),
+          SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const HeadHome(),
+                const SizedBox(
+                  height: 20,
+                ),
+                GetBuilder<MenuHomeCartController>(
+                  builder: (_) {
+                    if (_.listMenu.isEmpty) {
+                      return Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
+                        child: Center(
+                          child: _.errorText.value.isEmpty
+                              ? const CircularProgressIndicator()
+                              : Text(
+                                  _.errorText.value,
+                                  style: PuTextStyle.title5,
+                                  textAlign: TextAlign.center,
+                                ),
+                        ),
+                      );
+                    } else {
+                      if (_.listMenu.length == 1) {
+                        return Column(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20.0,
+                              ),
+                              child: Text(
+                                _.listMenu[0].description!,
+                                style: PuTextStyle.title5,
+                              ),
                             ),
-                    ),
-                  );
-                } else {
-                  if (_.listMenu.length == 1) {
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20.0,
-                          ),
-                          child: Text(
-                            _.listMenu[0].description!,
-                            style: PuTextStyle.title5,
-                          ),
-                        ),
-                        const SizedBox(
-                          height: 20,
-                        ),
-                        Flexible(
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              return Container(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 20),
+                            const SizedBox(
+                              height: 20,
+                            ),
+                            Flexible(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  return Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    child: GridView.builder(
+                                      scrollDirection: Axis.vertical,
+                                      itemCount: _.listMenu[0].items!.length,
+                                      shrinkWrap: true,
+                                      gridDelegate:
+                                          SliverGridDelegateWithFixedCrossAxisCount(
+                                        crossAxisCount:
+                                            constraints.maxWidth >= 700 ? 6 : 2,
+                                        mainAxisExtent: 200,
+                                        childAspectRatio: 0.2,
+                                        crossAxisSpacing: 19,
+                                        mainAxisSpacing: 10,
+                                      ),
+                                      itemBuilder: (context, index) {
+                                        return MenuTile(
+                                          item: _.listMenu[0].items![index],
+                                          selected: cartcon.detectItemInList(
+                                              _.listMenu[0].items![index]),
+                                          onAddCart: (v) {
+                                            cartcon.selectItemMenu(
+                                                _.listMenu[0].items![index]);
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
+                        );
+                      }
+                      return ListView.builder(
+                        itemCount: _.listMenu.length,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemBuilder: (contx, index) {
+                          final menuEntry = _.listMenu[index];
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20.0,
+                                ),
+                                child: Text(
+                                  menuEntry.description!,
+                                  style: PuTextStyle.title5,
+                                ),
+                              ),
+                              const SizedBox(
+                                height: 20,
+                              ),
+                              SizedBox(
+                                height: 240,
                                 child: GridView.builder(
-                                  scrollDirection: Axis.vertical,
-                                  itemCount: _.listMenu[0].items!.length,
+                                  scrollDirection: Axis.horizontal,
+                                  itemCount: menuEntry.items!.length,
                                   shrinkWrap: true,
                                   gridDelegate:
-                                      SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount:
-                                        constraints.maxWidth >= 700 ? 6 : 2,
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 1,
                                     mainAxisExtent: 200,
                                     childAspectRatio: 0.2,
-                                    crossAxisSpacing: 19,
-                                    mainAxisSpacing: 10,
+                                    crossAxisSpacing: 9,
+                                    mainAxisSpacing: 0,
                                   ),
                                   itemBuilder: (context, index) {
-                                    return MenuTile(
-                                      item: _.listMenu[0].items![index],
-                                      selected: cartcon.detectItemInList(
-                                          _.listMenu[0].items![index]),
-                                      onAddCart: (v) {
-                                        cartcon.selectItemMenu(
-                                            _.listMenu[0].items![index]);
-                                      },
+                                    return Container(
+                                      margin: const EdgeInsets.only(
+                                        bottom: 10,
+                                        left: 20,
+                                      ),
+                                      child: MenuTile(
+                                        item: menuEntry.items![index],
+                                        selected: cartcon.detectItemInList(
+                                          menuEntry.items![index],
+                                        ),
+                                        onAddCart: (v) {
+                                          cartcon.selectItemMenu(
+                                            menuEntry.items![index],
+                                          );
+                                        },
+                                      ),
                                     );
                                   },
                                 ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  }
-                  return ListView.builder(
-                    itemCount: _.listMenu.length,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemBuilder: (contx, index) {
-                      final menuEntry = _.listMenu[index];
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const SizedBox(
-                            height: 20,
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 20.0,
-                            ),
-                            child: Text(
-                              menuEntry.description!,
-                              style: PuTextStyle.title5,
-                            ),
-                          ),
-                          const SizedBox(
-                            height: 20,
-                          ),
-                          SizedBox(
-                            height: 240,
-                            child: GridView.builder(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: menuEntry.items!.length,
-                              shrinkWrap: true,
-                              gridDelegate:
-                                  const SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: 1,
-                                mainAxisExtent: 200,
-                                childAspectRatio: 0.2,
-                                crossAxisSpacing: 9,
-                                mainAxisSpacing: 0,
                               ),
-                              itemBuilder: (context, index) {
-                                return Container(
-                                  margin: const EdgeInsets.only(
-                                    bottom: 10,
-                                    left: 20,
-                                  ),
-                                  child: MenuTile(
-                                    item: menuEntry.items![index],
-                                    selected: cartcon.detectItemInList(
-                                      menuEntry.items![index],
-                                    ),
-                                    onAddCart: (v) {
-                                      cartcon.selectItemMenu(
-                                        menuEntry.items![index],
-                                      );
-                                    },
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
+                            ],
+                          );
+                        },
                       );
-                    },
-                  );
-                }
-              },
+                    }
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

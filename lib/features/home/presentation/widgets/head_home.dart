@@ -27,7 +27,6 @@ class HeadHome extends StatelessWidget {
           vertical: 10,
           horizontal: 20,
         ),
-        decoration: BoxDecoration(color: PUColors.primaryColor),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -58,9 +57,9 @@ class HeadHome extends StatelessWidget {
                   ),
             Flexible(
               flex: 3,
-              child: Image.asset(
-                PUImages.isoLogo,
-                height: 60,
+              child: Text(
+                'menu',
+                style: PuTextStyle.title1,
               ),
             ),
             withBack ?? false
@@ -71,28 +70,33 @@ class HeadHome extends StatelessWidget {
                     ),
                   )
                 : Flexible(
-                    child: Stack(
-                      alignment: const Alignment(0, -0.8),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        Text(
-                          _.listMenuSelected.length.toString(),
-                          style: PuTextStyle.title3disable,
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                            Get.toNamed(PURoutes.MYCART);
-                          },
-                          child: Center(
-                            child: SvgPicture.asset(
-                              PUIcons.iconCart,
-                              height: 50,
-                              colorFilter: ColorFilter.mode(
-                                PUColors.primaryBackground,
-                                BlendMode.srcIn,
-                              ),
-                              fit: BoxFit.fitHeight,
+                        Stack(
+                          alignment: const Alignment(0, -0.8),
+                          children: [
+                            Text(
+                              _.listMenuSelected.length.toString(),
+                              style: PuTextStyle.description1,
                             ),
-                          ),
+                            GestureDetector(
+                              onTap: () {
+                                Get.toNamed(PURoutes.MYCART);
+                              },
+                              child: Center(
+                                child: SvgPicture.asset(
+                                  PUIcons.iconCart,
+                                  height: 50,
+                                  colorFilter: ColorFilter.mode(
+                                    PUColors.bgButton,
+                                    BlendMode.srcIn,
+                                  ),
+                                  fit: BoxFit.fitHeight,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),

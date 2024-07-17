@@ -26,15 +26,10 @@ class MenuTile extends StatelessWidget {
         horizontal: 10,
       ),
       decoration: BoxDecoration(
-        color: PUColors.primaryBackground,
+        color: selected
+            ? PUColors.selectedItem.withOpacity(0.5)
+            : PUColors.bgItem.withOpacity(0.3),
         borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            offset: const Offset(0, 4),
-            color: Colors.black.withOpacity(0.4),
-            blurRadius: 4,
-          ),
-        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
