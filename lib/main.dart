@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      title: 'Pickme Up',
+      title: 'Menu com',
       theme: ThemeData(
         useMaterial3: false,
       ),
