@@ -58,7 +58,7 @@ class HeadHome extends StatelessWidget {
             Flexible(
               flex: 3,
               child: Text(
-                'menu',
+                '${_.nameComerce}',
                 style: PuTextStyle.title1,
               ),
             ),

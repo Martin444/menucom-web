@@ -10,12 +10,14 @@ class MenuHomeCartController extends GetxController {
   RxList<MenuModel> listMenu = <MenuModel>[].obs;
   RxList<MenuItemModel> listMenuItems = <MenuItemModel>[].obs;
   RxString errorText = ''.obs;
+  RxString nameComerce = ''.obs;
 
   void getItemsMenu({String? idMenu}) async {
     try {
       var response = await GetMenuUseCase().execute(idMenu!);
       listMenu.assignAll(response);
       for (var element in listMenu) {
+        nameComerce.value = element.idOwner ?? '';
         listMenuItems.assignAll(element.items!);
       }
       update();
