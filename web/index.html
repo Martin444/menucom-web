@@ -39,24 +39,83 @@
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
+  <style>
+    #loader {
+      position: fixed;
+      z-index: 9999;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;  
+      font-size: 14px;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    #loader.hidden {
+      display: none;
+    }
+    
+    #loader > div {
+      width: 30px;
+      height: 30px;
+      position: relative;
+      border: 3px solid op_secundary_color;
+      border-top-color: op_primary_color; 
+      border-radius: 50%;
+      animation: spin 2s linear infinite;
+      margin-bottom: 20px;
+    }    
+
+    #loader > span {
+      color: black;
+      
+    }
+      
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
 </head>
 
 <body>
-  <script>
-    window.addEventListener('load', function (ev) {
-      // Download main.dart.js
-      _flutter.loader.loadEntrypoint({
-        serviceWorker: {
-          serviceWorkerVersion: serviceWorkerVersion,
-        },
-        onEntrypointLoaded: function (engineInitializer) {
-          engineInitializer.initializeEngine().then(function (appRunner) {
-            appRunner.runApp();
+    <!-- Agregar contenedor para el loader -->
+    <div id="loader">
+      <div></div>
+      <span>Estamos preparando todo para ti, por favor espera un momento... </span>
+    </div>
+    <script>
+      window.addEventListener('load', function(ev) {
+        {{flutter_js}}
+        {{flutter_build_config}}
+        // Download main.dart.js
+        var serviceWorkerVersion = '{{flutter_service_worker_version}}'.replace('"','');
+        _flutter.loader.load({
+          serviceWorker: {
+            serviceWorkerVersion: "",
+            serviceWorkerUrl: "/"+serviceWorkerVersion+".js?v=",
+          },
+          entrypointUrl: '/main.dart.js?v=' + serviceWorkerVersion,
+          onEntrypointLoaded: function(engineInitializer) {
+            engineInitializer.initializeEngine({renderer: "html"}).then(function(appRunner) {
+              var text = document.querySelector("#loader > span");
+            text.innerHTML = "¡A punto de terminar! Un momento por favor.";
+              appRunner.runApp();
+            }).then(function() {
+            // Agrega un temporizador para eliminar el contenedor del loader después de 2 segundos y actualizar el texto
+            setTimeout(function() {
+            var container = document.getElementById("loader");
+             container.classList.add("hidden");
+            }, 2000); 
           });
-        }
+          }
+        });
       });
-    });
-  </script>
+    </script>
 </body>
 
 </html>

@@ -101,9 +101,7 @@ class _HomePageState extends State<HomePage> {
       backgroundColor: PUColors.primaryBackground,
       body: Stack(
         children: [
-          const BackgroundCircles(
-            withBlur: true,
-          ),
+   
           SingleChildScrollView(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.start,

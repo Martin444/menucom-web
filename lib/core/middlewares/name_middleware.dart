@@ -9,7 +9,7 @@ class NameMiddleware extends GetMiddleware {
   @override
   RouteSettings? redirect(String? route) {
     if (NAME_USER.isEmpty) {
-      return RouteSettings(name: PURoutes.REGISTER_USER);
+      return RouteSettings(name: PURoutes.HOME);
     }
     return null;
   }
