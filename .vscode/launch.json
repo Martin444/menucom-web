@@ -1,0 +1,34 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "menucom_dev",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--web-renderer",
+                "html",
+                //"--web-port=52245",
+                //"--no-sound-null-safety",
+                "--dart-define=API_URL=http://localhost:3001",
+            ]
+        },
+        {
+            "name": "menucom_beta",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--web-renderer",
+                "html",
+                //"--web-port=52245",
+                //"--no-sound-null-safety",
+                "--dart-define=API_URL=https://hammerhead-app-pouq5.ondigitalocean.app",
+            ]
+        },
+    ]
+}

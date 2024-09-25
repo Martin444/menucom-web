@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Catalogo para clientes CSM">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="menucom_catalog">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <title>Menu com</title>
+  <link rel="manifest" href="manifest.json">
+  <style>
+    #loader {
+      position: fixed;
+      z-index: 9999;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #fff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;  
+      font-size: 14px;
+      font-family: 'Poppins', sans-serif;
+    }
+    
+    #loader.hidden {
+      display: none;
+    }
+    
+    #loader > div {
+      width: 30px;
+      height: 30px;
+      position: relative;
+      border: 3px solid #1336e5;
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 2s linear infinite;
+      margin-bottom: 20px;
+    }    
+
+    #loader > span {
+      color: black;
+      
+    }
+      
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loader">
+    <div></div>
+    <span>Estamos preparando todo para ti, por favor espera un momento... </span>
+  </div>
+  <!-- <script src="flutter_bootstrap.js" async></script> -->
+  <script>
+    window.addEventListener('load', function() {
+      {{flutter_js}}
+      {{flutter_build_config}}
+      
+      const serviceWorkerVersion = '{{flutter_service_worker_version}}';
+      const loader = document.getElementById("loader");
+  
+      _flutter.loader.load({
+        serviceWorker: {
+          serviceWorkerVersion: serviceWorkerVersion,
+          serviceWorkerUrl: `/${serviceWorkerVersion}.js?v=`,
+        },
+        entrypointUrl: `/main.dart.js?v=${serviceWorkerVersion}`,
+        onEntrypointLoaded: function(engineInitializer) {
+          engineInitializer.initializeEngine({renderer: "html"})
+            .then(appRunner => {
+              var text = document.querySelector("#loader > span");
+              text.innerHTML = "¡A punto de terminar! Un momento por favor.";
+              return appRunner.runApp();
+            })
+            .then(() => {
+              setTimeout(() => {
+                loader.classList.add("hidden");
+              }, 2000);
+            })
+            .catch(error => {
+              console.error("Error al ejecutar la aplicación:", error);
+              var text = document.querySelector("#loader > span");
+              text.innerHTML = "Ocurrió un error. Por favor, recarga la página.";
+            });
+        }
+      }).catch(error => {
+        console.error("Error al cargar el servicio:", error);
+        var text = document.querySelector("#loader > span");
+        text.innerHTML = "Ocurrió un error al cargar el servicio. Por favor, recarga la página.";
+      });
+    });
+  </script>
+</body>
+</html>
