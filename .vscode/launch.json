@@ -18,6 +18,19 @@
             ]
         },
         {
+            "name": "qa_menucom",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--web-renderer",
+                "html",
+                //"--web-port=52245",
+                //"--no-sound-null-safety",
+                "--dart-define=API_URL=https://menucom-api-88f8abeaad4f.herokuapp.com",
+            ]
+        },
+        {
             "name": "menucom_beta",
             "request": "launch",
             "type": "dart",
