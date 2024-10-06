@@ -50,6 +50,7 @@ class MenuHomeCartController extends GetxController {
     try {
       wardList = [];
       final responseWar = await GetClothingUserUsescase().execute(idMenu!);
+      nameComerce.value = responseWar.owner!;
       for (var e in responseWar.listClothing!) {
         wardList.add(e);
       }
@@ -197,6 +198,20 @@ class MenuHomeCartController extends GetxController {
   }
 
   bool detectItemInList(MenuItemModel item) {
+    try {
+      var itemFound = listMenuSelected.firstWhere(
+        (e) {
+          return e?.id == item.id;
+        },
+        orElse: () => null,
+      );
+      return itemFound != null;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  bool detectItemInWardrobe(ClothingItemModel item) {
     try {
       var itemFound = listMenuSelected.firstWhere(
         (e) {

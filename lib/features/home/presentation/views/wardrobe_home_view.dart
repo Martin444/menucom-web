@@ -108,7 +108,7 @@ class _WardrobeHomeViewState extends State<WardrobeHomeView> {
                     itemBuilder: (context, index) {
                       return ClothingTile(
                         item: menuEntry.items![index],
-                        selected: false,
+                        selected: cartcon.detectItemInWardrobe(menuEntry.items![index]),
                         onAddCart: (v) {
                           cartcon.selectItemWard(
                             menuEntry.items![index],

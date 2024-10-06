@@ -74,11 +74,11 @@ class HeadHome extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Stack(
-                          alignment: const Alignment(0, -0.8),
+                          alignment: const Alignment(0, -0.6),
                           children: [
                             Text(
                               _.listMenuSelected.length.toString(),
-                              style: PuTextStyle.description1,
+                              style: PuTextStyle.cartQuantityTextStyle,
                             ),
                             GestureDetector(
                               onTap: () {
@@ -89,7 +89,7 @@ class HeadHome extends StatelessWidget {
                                   PUIcons.iconCart,
                                   height: 50,
                                   colorFilter: ColorFilter.mode(
-                                    PUColors.bgButton,
+                                    PUColors.iconColorBlack,
                                     BlendMode.srcIn,
                                   ),
                                   fit: BoxFit.fitHeight,
