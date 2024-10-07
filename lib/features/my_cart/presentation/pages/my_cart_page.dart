@@ -27,19 +27,13 @@ class _MyCartPageState extends State<MyCartPage> {
         children: [
           HeadHome(
             withBack: true,
+            titleHead: 'Mi carrito',
             onBack: () {
               Get.toNamed(PURoutes.HOME);
             },
           ),
           const SizedBox(
             height: 10,
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0),
-            child: Text(
-              'Tu carrito',
-              style: PuTextStyle.title5,
-            ),
           ),
           GetBuilder<MenuHomeCartController>(builder: (_) {
             return Expanded(
@@ -96,13 +90,16 @@ class _MyCartPageState extends State<MyCartPage> {
                     children: [
                       Text(
                         'Total:',
-                        style: PuTextStyle.title2,
+                        style: PuTextStyle.priceCartTOtal,
                       ),
                       Text(
                         _.totalOrder.toString().convertToCorrency(),
-                        style: PuTextStyle.title2,
+                        style: PuTextStyle.priceCartTOtal,
                       ),
                     ],
+                  ),
+                  const SizedBox(
+                    height: 10,
                   ),
                   ButtonPrimary(
                     title: 'Continuar',
