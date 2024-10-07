@@ -8,7 +8,7 @@ import 'package:pu_material/widgets/buttons/button_primary.dart';
 import 'package:pu_material/widgets/cards/cart/cart_tile.dart';
 
 import '../../../../routes/routes.dart';
-import '../../../home/presentation/getx/menu_home_controller.dart';
+import '../../../home/getx/menu_home_controller.dart';
 
 class MyCartPage extends StatefulWidget {
   const MyCartPage({super.key});

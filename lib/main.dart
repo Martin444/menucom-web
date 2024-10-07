@@ -1,11 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:menu_dart_api/core/api.dart';
+import 'package:menucom_catalog/core/config.dart';
 import 'package:menucom_catalog/routes/pages.dart';
 import 'package:menucom_catalog/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 void main() {
+  inicialiceServiceMenucomAPi();
   runApp(const MyApp());
+}
+
+void inicialiceServiceMenucomAPi() {
+  try {
+    API.getInstance(URL_PICKME_API);
+  } catch (e) {
+    rethrow;
+  }
 }
 
 class MyApp extends StatelessWidget {

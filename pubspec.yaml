@@ -13,6 +13,9 @@ dependencies:
   pu_material:
     path: pu_material
 
+  menu_dart_api:
+    path: menu_dart_api
+
   cupertino_icons: ^1.0.6
   get: 4.6.6
   http: ^1.2.1

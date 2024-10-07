@@ -1,3 +1,6 @@
 [submodule "pu_material"]
 	path = pu_material
 	url = https://github.com/Martin444/pu_material.git
+[submodule "menu_dart_api"]
+	path = menu_dart_api
+	url = https://github.com/Martin444/menu_dart_api.git

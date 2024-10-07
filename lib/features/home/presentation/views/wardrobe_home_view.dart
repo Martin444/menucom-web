@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/presentation/getx/menu_home_controller.dart';
+import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/clothing_tile.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
 

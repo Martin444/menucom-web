@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/presentation/getx/menu_home_controller.dart';
+import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
 import 'package:menucom_catalog/routes/routes.dart';
 import 'package:pu_material/utils/pu_assets.dart';
 import 'package:pu_material/utils/pu_colors.dart';

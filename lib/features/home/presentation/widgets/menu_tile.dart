@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:menucom_catalog/features/home/models/menu_item_model.dart';
+import 'package:menu_dart_api/by_feature/menu/get_menu_bydinning/model/menu_item_model.dart';
 import 'package:pu_material/utils/formaters/currency_converter.dart';
 import 'package:pu_material/utils/overflow_text.dart';
 import 'package:pu_material/utils/pu_assets.dart';

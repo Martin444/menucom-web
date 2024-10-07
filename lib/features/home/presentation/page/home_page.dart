@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/presentation/getx/menu_home_controller.dart';
+import 'package:menu_dart_api/by_feature/menu/get_menu_bydinning/model/menu_model.dart';
+import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
 import 'package:menucom_catalog/features/home/presentation/views/menu_home_view.dart';
 import 'package:menucom_catalog/features/home/presentation/views/wardrobe_home_view.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/menu_tile.dart';
@@ -8,7 +9,6 @@ import 'package:pu_material/pu_material.dart';
 import 'package:pu_material/utils/pu_colors.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
 
-import '../../models/menu_model.dart';
 import '../widgets/head_home.dart';
 
 class HomePage extends StatefulWidget {
