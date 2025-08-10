@@ -1,6 +1,8 @@
 import 'package:get/get.dart';
 import 'package:menucom_catalog/features/home/getx/menu_binding.dart';
 import 'package:menucom_catalog/features/home/presentation/page/home_page.dart';
+import 'package:menucom_catalog/features/my_cart/getx/order_binding.dart';
+import 'package:menucom_catalog/features/my_cart/presentation/pages/confirm_order_page.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/pages/my_cart_page.dart';
 import 'package:menucom_catalog/routes/routes.dart';
 
@@ -19,6 +21,16 @@ class PUPages {
       page: () => const MyCartPage(),
       bindings: [
         MenuHomeBinding(),
+        OrderBinding(),
+      ],
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: PURoutes.CONFIRMORDER,
+      page: () => const ConfirmOrderPage(),
+      bindings: [
+        MenuHomeBinding(),
+        OrderBinding(),
       ],
       transition: Transition.fadeIn,
     ),

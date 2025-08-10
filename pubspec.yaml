@@ -24,6 +24,8 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   shared_preferences: ^2.2.3
+  url_launcher: ^6.3.2
+  socket_io_client: ^2.0.3
 
 dev_dependencies:
   flutter_test:

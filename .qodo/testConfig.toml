@@ -1,0 +1,3 @@
+[dart]
+testingFramework = "test"
+mockingFramework = "Mockito"
