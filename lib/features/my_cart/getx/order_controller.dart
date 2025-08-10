@@ -65,7 +65,7 @@ class OrderController extends GetxController {
     var orderCreated = await CreateOrderUseCase().call(orders.value);
     if (orderCreated.id != null) {
       // Conectar al WebSocket y suscribirse a la room de la orden
-      _connectAndSubscribeToOrder(orderCreated.id!);
+      _connectAndSubscribeToOrder(orderCreated.operationID!);
       // orderStatus.value = OrderStatus.confirmed;
       // orderStatus.refresh();
       await redirectToMercadoPagoCheckout(orderCreated.paymentUrl!);
@@ -85,55 +85,52 @@ class OrderController extends GetxController {
       print('Error cerrando socket previo: $e');
     }
 
-    print('[SOCKET] Intentando conectar a ws://$URL_PICKME_API para orderId: $orderId');
+    // Usar solo la URL base para WebSocket (sin /payments/webhooks)
+    String wsUrl = URL_PICKME_API;
+    // Dejar la URL como https:// para que se conecte como antes
+
+    // Si falla, probar con /socket.io
     _socket = IO.io(
-      URL_PICKME_API,
-      IO.OptionBuilder()
-          .setTransports(['websocket'])
-          .disableAutoConnect()
-          .enableReconnection()
-          .setReconnectionAttempts(5)
-          .setReconnectionDelay(2000)
-          .build(),
+      wsUrl,
+      <String, dynamic>{
+        'transports': ['websocket'],
+        'autoConnect': false,
+      },
     );
 
-    _socket!.on('connect', (_) {
-      print('[SOCKET] Conectado al WebSocket');
+    _socket!.onConnect((_) {
+      print('Conectado al gateway de pagos');
       print('[SOCKET] Emitiendo subscribeToOrder con orderId: $orderId');
-      _socket!.emit('subscribeToOrder', {'orderId': orderId});
-    });
-
-    _socket!.on('connect_error', (err) {
-      print('[SOCKET] Error de conexión: $err');
-    });
-
-    _socket!.on('error', (err) {
-      print('[SOCKET] Error general: $err');
-    });
-
-    _socket!.on('reconnect_attempt', (attempt) {
-      print('[SOCKET] Intento de reconexión #$attempt');
-    });
-
-    _socket!.on('reconnect', (_) {
-      print('[SOCKET] Reconectado');
-    });
-
-    _socket!.on('disconnect', (reason) {
-      print('[SOCKET] Desconectado del WebSocket. Razón: $reason');
+      _socket!.emit('subscribeToOrder', orderId);
     });
 
     _socket!.on('paymentSuccess', (data) {
-      print('[SOCKET] Evento paymentSuccess recibido: $data');
-      orderStatus.value = OrderStatus.delivered;
+      print('Pago exitoso para la orden: ${data['orderId']}');
+      orderStatus.value = OrderStatus.confirmed;
       orderStatus.refresh();
-      // Opcional: cerrar el socket después de recibir el pago
+      isOrderLoading.value = false;
+      isOrderLoading.refresh();
       try {
         _socket?.disconnect();
         _socket?.destroy();
       } catch (e) {
         print('[SOCKET] Error cerrando socket tras paymentSuccess: $e');
       }
+    });
+
+    _socket!.onDisconnect((_) => print('Desconectado del gateway de pagos'));
+
+    _socket!.on('connect_error', (err) {
+      print('[SOCKET] Error de conexión: $err');
+    });
+    _socket!.on('error', (err) {
+      print('[SOCKET] Error general: $err');
+    });
+    _socket!.on('reconnect_attempt', (attempt) {
+      print('[SOCKET] Intento de reconexión #$attempt');
+    });
+    _socket!.on('reconnect', (_) {
+      print('[SOCKET] Reconectado');
     });
 
     _socket!.onAny((event, data) {

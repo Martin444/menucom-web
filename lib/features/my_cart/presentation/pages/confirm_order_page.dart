@@ -5,7 +5,9 @@ import 'package:menucom_catalog/features/my_cart/presentation/widgets/confirm_or
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/products_section.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/totals_section.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/contact_form_section.dart';
+
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/confirm_order_actions.dart';
+import 'package:menucom_catalog/features/my_cart/presentation/widgets/order_status_config.dart';
 
 /// Confirm Order Page - Main page for order confirmation
 class ConfirmOrderPage extends StatefulWidget {
@@ -163,11 +165,12 @@ class ConfirmOrderContent extends StatelessWidget {
           const SizedBox(height: 32),
           TotalsSection(orderController: orderController),
           const SizedBox(height: 24),
-          ContactFormSection(
-            formKey: formKey,
-            contactController: contactController,
-            orderController: orderController,
-          ),
+          if (orderController.orderStatus.value != OrderStatus.confirmed)
+            ContactFormSection(
+              formKey: formKey,
+              contactController: contactController,
+              orderController: orderController,
+            ),
         ],
       ),
     );
