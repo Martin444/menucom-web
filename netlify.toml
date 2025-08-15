@@ -1,3 +1,3 @@
 [build]
-    command = "flutter build web --release --dart-define=API_URL=https://menucom-api-60e608ae2f99.herokuapp.com"
+    command = "flutter build web --release --dart-define=API_URL=https://menucom-api-60e608ae2f99.herokuapp.com --dart-define=MP_PUBLIC_KEY=APP_USR-7787d0fd-e71d-4bae-ab11-82ca733e729a"
     publish = "build/web"
