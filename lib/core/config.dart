@@ -2,5 +2,10 @@
 
 const String URL_PICKME_API = String.fromEnvironment('API_URL', defaultValue: "");
 
+// MercadoPago Public Key (solo frontend). Configurable por --dart-define=MP_PUBLIC_KEY=...
+const String MP_PUBLIC_KEY = String.fromEnvironment('MP_PUBLIC_KEY', defaultValue: "");
+// Locale opcional para MercadoPago (ej: es-AR, es-MX, pt-BR)
+const String MP_LOCALE = String.fromEnvironment('MP_LOCALE', defaultValue: "es-AR");
+
 String ACCESS_TOKEN = '';
 String NAME_USER = '';

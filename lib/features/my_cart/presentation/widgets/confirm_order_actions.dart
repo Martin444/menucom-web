@@ -30,37 +30,19 @@ class ConfirmOrderActions extends StatelessWidget {
         ),
         child: SizedBox(
           width: double.infinity,
-          height: 52,
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF1976d2), Color(0xFF1565c0)],
-              ),
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF1976d2).withOpacity(0.3),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: ButtonPrimary(
-              onPressed: () {
-                if (isConfirmed) {
-                  // Acción para seguir comprando, por ejemplo, navegar a la tienda principal
-                  Get.back();
-                } else {
-                  if (formKey.currentState?.validate() ?? false) {
-                    orderController.saveContactToLastOrder(contactController.text);
-                  }
+          child: ButtonPrimary(
+            onPressed: () {
+              if (isConfirmed) {
+                // Acción para seguir comprando, por ejemplo, navegar a la tienda principal
+                Get.back();
+              } else {
+                if (formKey.currentState?.validate() ?? false) {
+                  orderController.saveContactToLastOrder(contactController.text);
                 }
-              },
-              load: orderController.isOrderLoading.value,
-              title: isConfirmed ? 'Seguir comprando' : 'Confirmar',
-            ),
+              }
+            },
+            load: orderController.isOrderLoading.value,
+            title: isConfirmed ? 'Seguir comprando' : 'Confirmar',
           ),
         ),
       );

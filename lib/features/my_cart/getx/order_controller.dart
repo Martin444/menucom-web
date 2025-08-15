@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
 import 'package:menucom_catalog/core/config.dart';
 import 'package:menucom_catalog/routes/routes.dart';
+import 'package:menucom_catalog/core/payments/mercadopago_wallet.dart';
 
 import 'package:pu_material/widgets/cards/cart/model/cart_item_model.dart';
 // ignore: avoid_web_libraries_in_flutter
@@ -68,11 +70,79 @@ class OrderController extends GetxController {
       _connectAndSubscribeToOrder(orderCreated.operationID!);
       // orderStatus.value = OrderStatus.confirmed;
       // orderStatus.refresh();
-      await redirectToMercadoPagoCheckout(orderCreated.paymentUrl!);
+      await _openMercadoPagoCheckout(preferenceId: orderCreated.paymentUrl!);
     } else {
       errorText.value = 'Error al crear la orden';
       errorText.refresh();
     }
+  }
+
+  Future<void> _openMercadoPagoCheckout({required String preferenceId}) async {
+    // En web: renderizar Wallet Brick en un modal; en no-web: fallback a abrir URL
+    if (Get.context == null) {
+      await redirectToMercadoPagoCheckout(preferenceId);
+      return;
+    }
+
+    showDialog(
+      context: Get.context!,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Pagar con Mercado Pago',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      ),
+                      IconButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        icon: const Icon(Icons.close),
+                      )
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  // Contenedor del Wallet Brick (solo se renderiza en web)
+                  SizedBox(
+                    width: double.infinity,
+                    child: MercadoPagoWalletBrick(
+                      publicKey: MP_PUBLIC_KEY,
+                      preferenceId: preferenceId,
+                      locale: MP_LOCALE,
+                      height: 520,
+                      options: const {
+                        'theme': {
+                          'elementsColor': '#1336e5',
+                          'headerColor': '#1336e5',
+                        },
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Serás redirigido si es necesario para completar el pago.',
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void _connectAndSubscribeToOrder(String orderId) {
