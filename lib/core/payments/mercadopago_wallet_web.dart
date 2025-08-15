@@ -49,10 +49,12 @@ class _MercadoPagoWalletBrickState extends State<MercadoPagoWalletBrick> {
   void _registerViewFactory() {
     // ignore: undefined_prefixed_name
     ui.platformViewRegistry.registerViewFactory(_viewType, (int viewId) {
+      debugPrint('[MP_WIDGET] Register view factory for $_viewType with container: $_containerId');
       final div = html.DivElement()
         ..id = _containerId
         ..style.width = '100%'
         ..style.height = '${widget.height}px';
+      debugPrint('[MP_WIDGET] Created div with id=$_containerId');
       return div;
     });
   }
@@ -69,14 +71,16 @@ class _MercadoPagoWalletBrickState extends State<MercadoPagoWalletBrick> {
         debugPrint('MercadoPago container not found: $_containerId');
         return;
       }
+      debugPrint('[MP_WIDGET] Container $_containerId found. Calling checkout...');
       await MercadoPagoWeb.checkout(
         preferenceId: widget.preferenceId,
         container: _containerId,
         options: {
-          'container': _containerId,
+          'container': _containerId, // Keep for compatibility when using mpCheckout (not used in mpCheckout2)
           if (widget.options != null) ...widget.options!,
         },
       );
+      debugPrint('[MP_WIDGET] Checkout invoked');
     } catch (e) {
       debugPrint('MercadoPago init/build error: $e');
     }
@@ -86,10 +90,12 @@ class _MercadoPagoWalletBrickState extends State<MercadoPagoWalletBrick> {
     for (int i = 0; i < attempts; i++) {
       final el = html.document.getElementById(_containerId);
       if (el != null) {
+        debugPrint('[MP_WIDGET] _waitForContainer success at attempt $i');
         return true;
       }
       await Future.delayed(delay);
     }
+    debugPrint('[MP_WIDGET] _waitForContainer timeout for $_containerId');
     return false;
   }
 

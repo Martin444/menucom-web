@@ -4,6 +4,7 @@ import 'package:menucom_catalog/features/home/presentation/page/home_page.dart';
 import 'package:menucom_catalog/features/my_cart/getx/order_binding.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/pages/confirm_order_page.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/pages/my_cart_page.dart';
+import 'package:menucom_catalog/features/my_cart/presentation/pages/checkout_status_page.dart';
 import 'package:menucom_catalog/routes/routes.dart';
 
 class PUPages {
@@ -30,6 +31,14 @@ class PUPages {
       page: () => const ConfirmOrderPage(),
       bindings: [
         MenuHomeBinding(),
+        OrderBinding(),
+      ],
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: PURoutes.CHECKOUT_STATUS,
+      page: () => const CheckoutStatusPage(),
+      bindings: [
         OrderBinding(),
       ],
       transition: Transition.fadeIn,

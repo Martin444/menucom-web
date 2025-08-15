@@ -17,11 +17,11 @@ class MercadoPagoWeb {
     String container = 'mp-checkout-container',
     Map<String, dynamic>? options,
   }) async {
-    final cfg = {
-      'container': container,
+    final cfg = <String, dynamic>{
       if (options != null) ...options,
     };
-    final result = await js.context.callMethod('mpCheckout', [preferenceId, cfg]);
+    // Prefer explicit 3-arg function to avoid any surprises with container merging
+    final result = await js.context.callMethod('mpCheckout2', [preferenceId, container, cfg]);
     return result == true;
   }
 
