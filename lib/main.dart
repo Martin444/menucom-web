@@ -6,14 +6,22 @@ import 'package:menucom_catalog/routes/pages.dart';
 import 'package:menucom_catalog/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
-void main() {
-  inicialiceServiceMenucomAPi();
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await inicialiceServiceMenucomAPi();
   runApp(const MyApp());
 }
 
-void inicialiceServiceMenucomAPi() {
+Future<void> inicialiceServiceMenucomAPi() async {
   try {
     API.getInstance(URL_PICKME_API);
+
+    // Inicializar Anonymous ID de forma opcional (no bloqueante)
+    // Esto asegura que el ID esté listo antes de la primera request
+    API.getCurrentAnonymousId().catchError((e) {
+      // No hacer nada si falla, se generará automáticamente en la primera request
+      return '';
+    });
   } catch (e) {
     rethrow;
   }
