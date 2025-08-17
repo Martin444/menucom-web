@@ -9,13 +9,25 @@ class MenuHomeCartController extends GetxController {
   RxString errorText = ''.obs;
   RxString nameComerce = ''.obs;
 
+  // Nueva información del owner
+  Rx<OwnerModel?> ownerInfo = Rx<OwnerModel?>(null);
+
   void getItemsMenu({String? idMenu}) async {
     try {
       var response = await GetMenuUseCase().execute(idMenu!);
-      nameComerce.value = response.owner!;
-      listMenu.assignAll(response.listmenus!);
-      for (var element in listMenu) {
-        listMenuItems.assignAll(element.items!);
+
+      // Actualizar información del owner
+      ownerInfo.value = response.owner;
+      nameComerce.value = response.owner?.name ?? '';
+
+      // Actualizar menús
+      if (response.listmenus != null) {
+        listMenu.assignAll(response.listmenus!);
+        for (var element in listMenu) {
+          if (element.items != null) {
+            listMenuItems.addAll(element.items!);
+          }
+        }
       }
       isLoadHomeItems.value = false;
       update();

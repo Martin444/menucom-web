@@ -5,6 +5,7 @@ import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
 import 'package:menucom_catalog/features/home/presentation/views/menu_home_view.dart';
 import 'package:menucom_catalog/features/home/presentation/views/wardrobe_home_view.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/menu_tile.dart';
+import 'package:menucom_catalog/features/home/presentation/widgets/owner_info_widget.dart';
 import 'package:pu_material/pu_material.dart';
 import 'package:pu_material/utils/pu_colors.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
@@ -109,6 +110,7 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const HeadHome(),
+                const OwnerInfoWidget(),
                 const SizedBox(
                   height: 20,
                 ),
