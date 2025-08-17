@@ -12,9 +12,29 @@ class MenuHomeCartController extends GetxController {
   // Nueva información del owner
   Rx<OwnerModel?> ownerInfo = Rx<OwnerModel?>(null);
 
+  // Persistir el ID del menú/owner para usarlo en las órdenes
+  RxString persistedOwnerId = ''.obs;
+
+  // Método para obtener el ownerId persistido
+  String get currentOwnerId => persistedOwnerId.value;
+
+  // Método para limpiar el ownerId persistido
+  void clearPersistedOwnerId() {
+    persistedOwnerId.value = '';
+  }
+
+  // NOTA: Para usar el ownerId en OrderController, desde la UI se debe hacer:
+  // 1. Obtener el MenuHomeController: final menuController = Get.find<MenuHomeCartController>();
+  // 2. Obtener el OrderController: final orderController = Get.find<OrderController>();
+  // 3. Establecer el ownerId: orderController.setOwnerId(menuController.currentOwnerId);
+  // 4. Luego crear la orden: orderController.createOrder(listItems);
+
   void getItemsMenu({String? idMenu}) async {
     try {
       var response = await GetMenuUseCase().execute(idMenu!);
+
+      // Persistir el ownerId si la respuesta es exitosa
+      persistedOwnerId.value = idMenu;
 
       // Actualizar información del owner
       ownerInfo.value = response.owner;
@@ -55,6 +75,10 @@ class MenuHomeCartController extends GetxController {
     try {
       wardList = [];
       final responseWar = await GetClothingUserUsescase().execute(idMenu!);
+
+      // Persistir el ownerId si la respuesta es exitosa
+      persistedOwnerId.value = idMenu;
+
       nameComerce.value = responseWar.owner!;
       for (var e in responseWar.listClothing!) {
         wardList.add(e);

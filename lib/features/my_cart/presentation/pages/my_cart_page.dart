@@ -118,6 +118,7 @@ class _MyCartPageState extends State<MyCartPage> {
                       ButtonPrimary(
                         title: 'Continuar',
                         onPressed: () {
+                          orderController.setOwnerId(_.persistedOwnerId.value);
                           orderController.createOrder(_.listMenuSelected.whereType<CartItemModel>().toList());
                         },
                         load: false,
