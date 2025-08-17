@@ -5,6 +5,7 @@ import 'package:menucom_catalog/features/my_cart/getx/order_binding.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/pages/confirm_order_page.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/pages/my_cart_page.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/pages/checkout_status_page.dart';
+import 'package:menucom_catalog/features/route_test/route_test_page.dart';
 import 'package:menucom_catalog/routes/routes.dart';
 
 class PUPages {
@@ -41,6 +42,11 @@ class PUPages {
       bindings: [
         OrderBinding(),
       ],
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: PURoutes.ROUTE_TEST,
+      page: () => const RouteTestPage(),
       transition: Transition.fadeIn,
     ),
   ];
