@@ -7,33 +7,45 @@ import 'order_status_config.dart';
 
 class ConfirmOrderHeader extends StatelessWidget {
   final bool isMobile;
-  final OrderController orderController;
+  final OrderController? orderController;
   final OrderStatus status;
   final bool showStatusAnimation;
+  final String? customOrderId;
+  final String? customClientId;
+  final DateTime? customDate;
+  final List<InfoItem>? customInfoItems;
 
   const ConfirmOrderHeader({
     Key? key,
     required this.isMobile,
-    required this.orderController,
+    this.orderController,
     this.status = OrderStatus.confirmed,
     this.showStatusAnimation = false,
+    this.customOrderId,
+    this.customClientId,
+    this.customDate,
+    this.customInfoItems,
   }) : super(key: key);
 
   String _generateOrderId() {
+    if (customOrderId != null) return customOrderId!;
     return 'ORD-2024-${(100000 + (DateTime.now().millisecondsSinceEpoch % 900000))}';
   }
 
   String _generateClientId() {
+    if (customClientId != null) return customClientId!;
     return (1000000000 + (DateTime.now().millisecondsSinceEpoch % 9000000000)).toString();
   }
 
   String _formatDate() {
-    final now = DateTime.now();
+    final dateToFormat = customDate ?? DateTime.now();
     final formatter = DateFormat('d MMM yyyy, HH:mm', 'es_ES');
-    return formatter.format(now);
+    return formatter.format(dateToFormat);
   }
 
   List<InfoItem> _buildInfoItems() {
+    if (customInfoItems != null) return customInfoItems!;
+
     return [
       InfoItem(label: 'ID:', value: _generateOrderId()),
       InfoItem(label: 'Cliente:', value: _generateClientId()),

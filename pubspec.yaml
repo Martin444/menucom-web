@@ -27,6 +27,7 @@ dependencies:
   url_launcher: ^6.3.2
   socket_io_client: ^2.0.3
   uuid: ^4.5.1
+  intl: ^0.20.2
 
 dependency_overrides:
   intl: ^0.20.2

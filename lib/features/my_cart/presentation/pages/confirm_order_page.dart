@@ -86,7 +86,7 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> with TickerProvider
                           isMobile: isMobile,
                           orderController: orderController,
                           status: orderController.orderStatus.value,
-                          showStatusAnimation: false,
+                          showStatusAnimation: true,
                         ),
                         Expanded(
                           child: Container(

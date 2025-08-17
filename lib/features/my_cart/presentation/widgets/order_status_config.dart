@@ -69,4 +69,22 @@ class OrderStatusConfig {
   static StatusHeaderConfig getConfig(OrderStatus status) {
     return configs[status]!;
   }
+
+  /// Maps MercadoPago payment status to OrderStatus
+  static OrderStatus mapPaymentStatusToOrderStatus(String paymentStatus) {
+    switch (paymentStatus.toLowerCase()) {
+      case 'approved':
+      case 'success':
+        return OrderStatus.confirmed;
+      case 'pending':
+      case 'in_process':
+        return OrderStatus.processing;
+      case 'rejected':
+      case 'failure':
+      case 'cancelled':
+        return OrderStatus.failed;
+      default:
+        return OrderStatus.pending;
+    }
+  }
 }
