@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:menucom_catalog/core/widgets/robust_network_image.dart';
 import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
 import 'package:pu_material/utils/pu_colors.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
@@ -40,20 +41,21 @@ class OwnerInfoWidget extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: PUColors.primaryBackground,
-                  image: owner.photoURL != null && owner.photoURL!.isNotEmpty
-                      ? DecorationImage(
-                          image: NetworkImage(owner.photoURL!),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
                 ),
-                child: owner.photoURL == null || owner.photoURL!.isEmpty
-                    ? Icon(
+                child: owner.photoURL != null && owner.photoURL!.isNotEmpty
+                    ? ClipOval(
+                        child: RobustNetworkImage(
+                          imageUrl: owner.photoURL!,
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
+                        ),
+                      )
+                    : Icon(
                         Icons.store,
                         color: PUColors.primaryColor,
                         size: 30,
-                      )
-                    : null,
+                      ),
               ),
               const SizedBox(width: 16),
               // Información del owner

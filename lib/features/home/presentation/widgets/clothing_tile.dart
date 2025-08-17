@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
+import 'package:menucom_catalog/core/widgets/robust_network_image.dart';
 import 'package:pu_material/utils/formaters/currency_converter.dart';
 import 'package:pu_material/utils/overflow_text.dart';
 import 'package:pu_material/utils/pu_assets.dart';
@@ -54,8 +55,8 @@ class _ClothingTileState extends State<ClothingTile> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         mainAxisSize: MainAxisSize.max,
         children: [
-          Image.network(
-            widget.item.photoURL!,
+          RobustNetworkImage(
+            imageUrl: widget.item.photoURL ?? '',
             height: 140,
             width: double.infinity,
             fit: BoxFit.fitHeight,

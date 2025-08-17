@@ -127,5 +127,57 @@ void main() {
       expect(menuResponse.owner!.name, equals("Test Owner"));
       expect(menuResponse.listmenus, isNull);
     });
+
+    test('debe manejar createAt y updateAt como objetos JSON', () {
+      // Arrange - caso donde createAt y updateAt vienen como objetos JSON
+      final jsonResponse = {
+        "owner": {
+          "id": "12dd8541-48f3-4639-be7e-5029bd338f88",
+          "name": "Test Owner",
+          "email": "test@test.com",
+          "phone": "123456789",
+          "role": "dinning",
+          "createAt": {"date": "2025-07-19T14:31:59.272Z"}, // Como objeto con propiedad 'date'
+          "updateAt": {"value": "2025-07-19T14:31:59.272Z"} // Como objeto con propiedad 'value'
+        },
+        "listmenu": []
+      };
+
+      // Act
+      final menuResponse = MenuResponse.fromJson(jsonResponse);
+
+      // Assert
+      expect(menuResponse.owner, isNotNull);
+      expect(menuResponse.owner!.name, equals("Test Owner"));
+      expect(menuResponse.owner!.createAt, isNotNull); // Ahora debe parsearse correctamente
+      expect(menuResponse.owner!.updateAt, isNotNull); // Ahora debe parsearse correctamente
+      expect(menuResponse.listmenus, isNotNull);
+    });
+
+    test('debe manejar createAt y updateAt mal formados', () {
+      // Arrange - caso donde createAt y updateAt vienen con formato incorrecto
+      final jsonResponse = {
+        "owner": {
+          "id": "12dd8541-48f3-4639-be7e-5029bd338f88",
+          "name": "Test Owner",
+          "email": "test@test.com",
+          "phone": "123456789",
+          "role": "dinning",
+          "createAt": {"invalid": "formato"}, // Objeto sin fecha válida
+          "updateAt": 12345 // Número en lugar de string u objeto
+        },
+        "listmenu": []
+      };
+
+      // Act
+      final menuResponse = MenuResponse.fromJson(jsonResponse);
+
+      // Assert
+      expect(menuResponse.owner, isNotNull);
+      expect(menuResponse.owner!.name, equals("Test Owner"));
+      expect(menuResponse.owner!.createAt, isNull); // Debe ser null porque no tiene formato válido
+      expect(menuResponse.owner!.updateAt, isNull); // Debe ser null porque no es string ni objeto válido
+      expect(menuResponse.listmenus, isNotNull);
+    });
   });
 }
