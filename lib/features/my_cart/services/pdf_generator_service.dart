@@ -1,6 +1,8 @@
 import 'dart:typed_data';
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
 
 /// PDF Generator Service - Handles PDF generation for order receipts
 class PdfGeneratorService {
@@ -12,192 +14,259 @@ class PdfGeneratorService {
     required String date,
   }) async {
     try {
-      // For now, we'll generate a simple HTML-based PDF
-      // In a real implementation, you might use packages like pdf or printing
-      final htmlContent = _generateHtmlContent(
-        orderId: orderId,
-        status: status,
-        paymentData: paymentData,
-        date: date,
+      // Create PDF document
+      final pdf = pw.Document();
+
+      // Get status configuration
+      final statusText = _getStatusText(status);
+      final statusColor = _getStatusColorPdf(status);
+
+      // Add page to PDF
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(32),
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                // Header
+                _buildPdfHeader(statusText, statusColor),
+                pw.SizedBox(height: 30),
+
+                // Order Information Section
+                _buildPdfSection(
+                  title: 'Información de la Orden',
+                  items: [
+                    _buildPdfDetailRow('ID de Orden:', orderId),
+                    _buildPdfDetailRow('Fecha:', date),
+                    _buildPdfDetailRow('Estado:', statusText),
+                  ],
+                ),
+                pw.SizedBox(height: 20),
+
+                // Payment Details Section
+                _buildPdfSection(
+                  title: 'Detalles del Pago',
+                  items: _buildPaymentDetailRows(paymentData),
+                ),
+
+                pw.Spacer(),
+
+                // Footer
+                _buildPdfFooter(),
+              ],
+            );
+          },
+        ),
       );
 
-      // Create a blob and download it
-      final bytes = Uint8List.fromList(htmlContent.codeUnits);
-      final blob = html.Blob([bytes], 'text/html');
-      final url = html.Url.createObjectUrlFromBlob(blob);
+      // Generate PDF bytes
+      final Uint8List pdfBytes = await pdf.save();
 
-      // Create download link
-      final anchor = html.AnchorElement(href: url)
-        ..setAttribute('download', 'comprobante_$orderId.html');
-      
-      // Add to document and trigger download
-      html.document.body?.append(anchor);
-      anchor.click();
-      anchor.remove();
-
-      // Clean up
-      html.Url.revokeObjectUrl(url);
+      // Download PDF
+      _downloadPdf(pdfBytes, 'comprobante_$orderId.pdf');
     } catch (e) {
       throw Exception('Error al generar PDF: $e');
     }
   }
 
-  /// Generates HTML content for the receipt
-  static String _generateHtmlContent({
-    required String orderId,
-    required String status,
-    required Map<String, String> paymentData,
-    required String date,
-  }) {
-    final statusText = _getStatusText(status);
-    final statusColor = _getStatusColor(status);
+  /// Downloads the PDF file using web browser
+  static void _downloadPdf(Uint8List pdfBytes, String filename) {
+    final blob = html.Blob([pdfBytes], 'application/pdf');
+    final url = html.Url.createObjectUrlFromBlob(blob);
 
-    return '''
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Comprobante de Pago - $orderId</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
-            color: #333;
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            border-radius: 12px;
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 28px;
-            font-weight: bold;
-        }
-        .header p {
-            margin: 5px 0 0 0;
-            opacity: 0.9;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 8px 16px;
-            background-color: $statusColor;
-            color: white;
-            border-radius: 20px;
-            font-weight: bold;
-            margin: 15px 0;
-        }
-        .details-section {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border-left: 4px solid #667eea;
-        }
-        .details-section h2 {
-            margin-top: 0;
-            color: #2c3e50;
-            font-size: 20px;
-        }
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-        .detail-row:last-child {
-            border-bottom: none;
-        }
-        .detail-label {
-            font-weight: 600;
-            color: #495057;
-            flex: 1;
-        }
-        .detail-value {
-            flex: 2;
-            text-align: right;
-            color: #6c757d;
-        }
-        .footer {
-            text-align: center;
-            margin-top: 40px;
-            padding: 20px;
-            border-top: 1px solid #e9ecef;
-            color: #6c757d;
-            font-size: 14px;
-        }
-        @media print {
-            body {
-                margin: 0;
-                padding: 15px;
-            }
-            .header {
-                background: #667eea !important;
-                -webkit-print-color-adjust: exact;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h1>Comprobante de Pago</h1>
-        <p>Menucom - Sistema de Pedidos</p>
-        <div class="status-badge">$statusText</div>
-    </div>
+    final anchor = html.AnchorElement(href: url)..setAttribute('download', filename);
 
-    <div class="details-section">
-        <h2>Información de la Orden</h2>
-        <div class="detail-row">
-            <span class="detail-label">ID de Orden:</span>
-            <span class="detail-value">$orderId</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">Fecha:</span>
-            <span class="detail-value">$date</span>
-        </div>
-        <div class="detail-row">
-            <span class="detail-label">Estado:</span>
-            <span class="detail-value">$statusText</span>
-        </div>
-    </div>
+    html.document.body?.append(anchor);
+    anchor.click();
+    anchor.remove();
 
-    <div class="details-section">
-        <h2>Detalles del Pago</h2>
-        ${_generatePaymentDetailsHtml(paymentData)}
-    </div>
-
-    <div class="footer">
-        <p>Este es un comprobante generado automáticamente por Menucom.</p>
-        <p>Generado el ${DateTime.now().toString().split('.')[0]}</p>
-    </div>
-</body>
-</html>
-    ''';
+    html.Url.revokeObjectUrl(url);
   }
 
-  static String _generatePaymentDetailsHtml(Map<String, String> paymentData) {
-    final buffer = StringBuffer();
-    
+  /// Builds PDF header with title and status
+  static pw.Widget _buildPdfHeader(String statusText, PdfColor statusColor) {
+    return pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.all(20),
+      decoration: pw.BoxDecoration(
+        gradient: const pw.LinearGradient(
+          colors: [
+            PdfColor.fromInt(0xFF667eea),
+            PdfColor.fromInt(0xFF764ba2),
+          ],
+        ),
+        borderRadius: pw.BorderRadius.circular(12),
+      ),
+      child: pw.Column(
+        children: [
+          pw.Text(
+            'Comprobante de Pago',
+            style: pw.TextStyle(
+              fontSize: 24,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.white,
+            ),
+          ),
+          pw.SizedBox(height: 8),
+          pw.Text(
+            'Menucom - Sistema de Pedidos',
+            style: const pw.TextStyle(
+              fontSize: 14,
+              color: PdfColors.white,
+            ),
+          ),
+          pw.SizedBox(height: 12),
+          pw.Container(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: pw.BoxDecoration(
+              color: statusColor,
+              borderRadius: pw.BorderRadius.circular(20),
+            ),
+            child: pw.Text(
+              statusText,
+              style: pw.TextStyle(
+                fontSize: 12,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds a section with title and content
+  static pw.Widget _buildPdfSection({
+    required String title,
+    required List<pw.Widget> items,
+  }) {
+    return pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.all(20),
+      decoration: pw.BoxDecoration(
+        color: const PdfColor.fromInt(0xFFF8F9FA),
+        borderRadius: pw.BorderRadius.circular(12),
+      ),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          // Left border indicator
+          pw.Container(
+            width: 4,
+            height: 60,
+            decoration: pw.BoxDecoration(
+              color: const PdfColor.fromInt(0xFF667eea),
+              borderRadius: pw.BorderRadius.circular(2),
+            ),
+          ),
+          pw.SizedBox(width: 16),
+          // Content
+          pw.Expanded(
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  title,
+                  style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
+                    color: const PdfColor.fromInt(0xFF2c3e50),
+                  ),
+                ),
+                pw.SizedBox(height: 16),
+                ...items,
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds a detail row for PDF
+  static pw.Widget _buildPdfDetailRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 6),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            width: 140,
+            child: pw.Text(
+              '$label:',
+              style: pw.TextStyle(
+                fontWeight: pw.FontWeight.bold,
+                color: const PdfColor.fromInt(0xFF495057),
+              ),
+            ),
+          ),
+          pw.Expanded(
+            child: pw.Text(
+              value,
+              style: const pw.TextStyle(
+                color: PdfColor.fromInt(0xFF6c757d),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds payment detail rows
+  static List<pw.Widget> _buildPaymentDetailRows(Map<String, String> paymentData) {
+    final List<pw.Widget> rows = [];
+
     paymentData.forEach((key, value) {
       if (value.isNotEmpty) {
-        buffer.write('''
-        <div class="detail-row">
-            <span class="detail-label">$key:</span>
-            <span class="detail-value">$value</span>
-        </div>
-        ''');
+        rows.add(_buildPdfDetailRow(key, value));
       }
     });
 
-    return buffer.toString();
+    return rows;
   }
 
+  /// Builds PDF footer
+  static pw.Widget _buildPdfFooter() {
+    return pw.Container(
+      width: double.infinity,
+      padding: const pw.EdgeInsets.all(20),
+      decoration: const pw.BoxDecoration(
+        border: pw.Border(
+          top: pw.BorderSide(
+            color: PdfColor.fromInt(0xFFe9ecef),
+            width: 1,
+          ),
+        ),
+      ),
+      child: pw.Column(
+        children: [
+          pw.Text(
+            'Este es un comprobante generado automáticamente por Menucom.',
+            style: const pw.TextStyle(
+              fontSize: 12,
+              color: PdfColor.fromInt(0xFF6c757d),
+            ),
+            textAlign: pw.TextAlign.center,
+          ),
+          pw.SizedBox(height: 5),
+          pw.Text(
+            'Generado el ${DateTime.now().toString().split('.')[0]}',
+            style: const pw.TextStyle(
+              fontSize: 10,
+              color: PdfColor.fromInt(0xFF6c757d),
+            ),
+            textAlign: pw.TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Gets status text for display
   static String _getStatusText(String status) {
     switch (status.toLowerCase()) {
       case 'approved':
@@ -214,19 +283,20 @@ class PdfGeneratorService {
     }
   }
 
-  static String _getStatusColor(String status) {
+  /// Gets status color for PDF
+  static PdfColor _getStatusColorPdf(String status) {
     switch (status.toLowerCase()) {
       case 'approved':
       case 'success':
-        return '#4CAF50';
+        return const PdfColor.fromInt(0xFF4CAF50);
       case 'pending':
       case 'in_process':
-        return '#FF9800';
+        return const PdfColor.fromInt(0xFFFF9800);
       case 'rejected':
       case 'failure':
-        return '#F44336';
+        return const PdfColor.fromInt(0xFFF44336);
       default:
-        return '#757575';
+        return const PdfColor.fromInt(0xFF757575);
     }
   }
 }

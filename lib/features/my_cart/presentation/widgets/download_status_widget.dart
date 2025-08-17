@@ -17,8 +17,7 @@ class DownloadStatusWidget extends StatefulWidget {
   State<DownloadStatusWidget> createState() => _DownloadStatusWidgetState();
 }
 
-class _DownloadStatusWidgetState extends State<DownloadStatusWidget>
-    with SingleTickerProviderStateMixin {
+class _DownloadStatusWidgetState extends State<DownloadStatusWidget> with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
 

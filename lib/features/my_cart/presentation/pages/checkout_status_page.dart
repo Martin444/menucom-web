@@ -168,7 +168,7 @@ class CheckoutStatusPage extends StatelessWidget {
           isMobile: isMobile,
         ),
         const SizedBox(height: 16),
-        
+
         // Navigation Buttons
         Row(
           children: [

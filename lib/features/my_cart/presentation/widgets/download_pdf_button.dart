@@ -27,7 +27,7 @@ class DownloadPdfButton extends StatelessWidget {
       width: double.infinity,
       child: ElevatedButton.icon(
         onPressed: isLoading ? null : _handleDownload,
-        icon: isLoading 
+        icon: isLoading
             ? const SizedBox(
                 width: 16,
                 height: 16,
