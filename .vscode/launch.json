@@ -15,7 +15,7 @@
                 //"--web-port=52245",
                 //"--no-sound-null-safety",
                 "--dart-define=API_URL=http://localhost:3001",
-                "--dart-define=MP_PUBLIC_KEY=APP_USR-7787d0fd-e71d-4bae-ab11-82ca733e729a",
+                "--dart-define=MP_PUBLIC_KEY=APP_USR-3ee7f54a-686a-49b4-8592-40610ab7d742",
             ]
         },
         {
@@ -29,7 +29,7 @@
                 //"--web-port=52245",
                 //"--no-sound-null-safety",
                 "--dart-define=API_URL=https://menucom-api-60e608ae2f99.herokuapp.com",
-                "--dart-define=MP_PUBLIC_KEY=APP_USR-7787d0fd-e71d-4bae-ab11-82ca733e729a",
+                "--dart-define=MP_PUBLIC_KEY=APP_USR-3ee7f54a-686a-49b4-8592-40610ab7d742",
             ],
         },
         {
