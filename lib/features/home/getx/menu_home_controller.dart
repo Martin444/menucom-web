@@ -15,12 +15,169 @@ class MenuHomeCartController extends GetxController {
   // Persistir el ID del menú/owner para usarlo en las órdenes
   RxString persistedOwnerId = ''.obs;
 
+  // Filtrado y búsqueda
+  RxString searchQuery = ''.obs;
+  RxString selectedCategory = ''.obs;
+  RxList<String> availableCategories = <String>[].obs;
+  RxBool isGridView = true.obs;
+  RxString sortBy = 'none'.obs; // 'none', 'name', 'price_low', 'price_high'
+
+  // Datos filtrados
+  RxList<MenuModel> filteredMenu = <MenuModel>[].obs;
+  RxList<MenuItemModel> filteredMenuItems = <MenuItemModel>[].obs;
+  List<WardrobeModel> filteredWardList = <WardrobeModel>[];
+
   // Método para obtener el ownerId persistido
   String get currentOwnerId => persistedOwnerId.value;
 
   // Método para limpiar el ownerId persistido
   void clearPersistedOwnerId() {
     persistedOwnerId.value = '';
+  }
+
+  // Métodos de filtrado y búsqueda
+  void updateSearchQuery(String query) {
+    searchQuery.value = query;
+    _applyFilters();
+  }
+
+  void selectCategory(String category) {
+    selectedCategory.value = category;
+    _applyFilters();
+  }
+
+  void clearFilters() {
+    searchQuery.value = '';
+    selectedCategory.value = '';
+    sortBy.value = 'none';
+    _applyFilters();
+  }
+
+  void setSortBy(String sortOption) {
+    sortBy.value = sortOption;
+    _applyFilters();
+  }
+
+  void toggleViewMode() {
+    isGridView.value = !isGridView.value;
+    update();
+  }
+
+  void _updateCategories() {
+    Set<String> categories = {'Todos'};
+
+    // Agregar categorías de menús
+    for (var menu in listMenu) {
+      if (menu.description != null && menu.description!.isNotEmpty) {
+        categories.add(menu.description!);
+      }
+    }
+
+    // Agregar categorías de wardrobes
+    for (var wardrobe in wardList) {
+      if (wardrobe.description != null && wardrobe.description!.isNotEmpty) {
+        categories.add(wardrobe.description!);
+      }
+    }
+
+    availableCategories.value = categories.toList();
+  }
+
+  void _applyFilters() {
+    // Filtrar menús
+    filteredMenu.value = listMenu.where((menu) {
+      bool matchesCategory = selectedCategory.value.isEmpty ||
+          selectedCategory.value == 'Todos' ||
+          menu.description == selectedCategory.value;
+
+      bool matchesSearch =
+          searchQuery.value.isEmpty || menu.description!.toLowerCase().contains(searchQuery.value.toLowerCase());
+
+      return matchesCategory && matchesSearch;
+    }).toList();
+
+    // Filtrar items de menú
+    List<MenuItemModel> allFilteredItems = [];
+    for (var menu in filteredMenu) {
+      if (menu.items != null) {
+        var filteredItems = menu.items!.where((item) {
+          return searchQuery.value.isEmpty ||
+              item.name!.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
+              (item.ingredients != null &&
+                  item.ingredients!
+                      .any((ingredient) => ingredient.toLowerCase().contains(searchQuery.value.toLowerCase())));
+        }).toList();
+
+        // Aplicar ordenamiento a los items
+        _sortItems(filteredItems);
+        allFilteredItems.addAll(filteredItems);
+      }
+    }
+    filteredMenuItems.value = allFilteredItems;
+
+    // Filtrar wardrobes
+    filteredWardList = wardList.where((wardrobe) {
+      bool matchesCategory = selectedCategory.value.isEmpty ||
+          selectedCategory.value == 'Todos' ||
+          wardrobe.description == selectedCategory.value;
+
+      bool matchesSearch =
+          searchQuery.value.isEmpty || wardrobe.description!.toLowerCase().contains(searchQuery.value.toLowerCase());
+
+      return matchesCategory && matchesSearch;
+    }).toList();
+
+    // Aplicar ordenamiento a cada menú filtrado
+    for (var menu in filteredMenu) {
+      if (menu.items != null) {
+        _sortItems(menu.items!);
+      }
+    }
+
+    // Aplicar ordenamiento a wardrobes
+    for (var wardrobe in filteredWardList) {
+      if (wardrobe.items != null) {
+        _sortClothingItems(wardrobe.items!);
+      }
+    }
+
+    update();
+  }
+
+  void _sortItems(List<MenuItemModel> items) {
+    switch (sortBy.value) {
+      case 'name':
+        items.sort((a, b) => a.name!.compareTo(b.name!));
+        break;
+      case 'price_low':
+        items.sort((a, b) => (a.price ?? 0).compareTo(b.price ?? 0));
+        break;
+      case 'price_high':
+        items.sort((a, b) => (b.price ?? 0).compareTo(a.price ?? 0));
+        break;
+      case 'none':
+      default:
+        // No ordenar
+        break;
+    }
+  }
+
+  void _sortClothingItems(List<ClothingItemModel> items) {
+    switch (sortBy.value) {
+      case 'name':
+        items.sort((a, b) => a.name!.compareTo(b.name!));
+        break;
+      case 'price_low':
+        items.sort((a, b) => (a.price ?? 0).compareTo(b.price ?? 0));
+        break;
+      case 'price_high':
+        items.sort((a, b) => (b.price ?? 0).compareTo(a.price ?? 0));
+        break;
+      case 'none':
+      default:
+        // No ordenar
+        break;
+    }
   }
 
   // NOTA: Para usar el ownerId en OrderController, desde la UI se debe hacer:
@@ -49,6 +206,11 @@ class MenuHomeCartController extends GetxController {
           }
         }
       }
+
+      // Actualizar categorías y aplicar filtros iniciales
+      _updateCategories();
+      _applyFilters();
+
       isLoadHomeItems.value = false;
       update();
     } catch (e) {
@@ -83,6 +245,11 @@ class MenuHomeCartController extends GetxController {
       for (var e in responseWar.listClothing!) {
         wardList.add(e);
       }
+
+      // Actualizar categorías y aplicar filtros iniciales
+      _updateCategories();
+      _applyFilters();
+
       isLoadHomeItems.value = false;
       update();
       return wardList;
@@ -180,6 +347,26 @@ class MenuHomeCartController extends GetxController {
       rethrow;
     }
   }
+
+  // Método para obtener todos los items filtrados (menús y wardrobes combinados)
+  List<dynamic> getFilteredItems() {
+    List<dynamic> allItems = [];
+
+    // Agregar items de menú filtrados
+    allItems.addAll(filteredMenuItems);
+
+    // Agregar items de wardrobe filtrados
+    for (var wardrobe in filteredWardList) {
+      if (wardrobe.items != null) {
+        allItems.addAll(wardrobe.items!);
+      }
+    }
+
+    return allItems;
+  }
+
+  // Método para determinar si estamos en modo menú o wardrobe
+  bool get isMenuMode => wardList.isEmpty;
 
   void addquantityItem(CartItemModel item) {
     // crea una funcion que detecte el item, si está agrega un quantity, sino remueve uno.

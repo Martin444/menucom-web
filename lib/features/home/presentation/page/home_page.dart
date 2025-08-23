@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:menu_dart_api/by_feature/menu/get_menu_bydinning/model/menu_model.dart';
 import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
-import 'package:menucom_catalog/features/home/presentation/views/menu_home_view.dart';
-import 'package:menucom_catalog/features/home/presentation/views/wardrobe_home_view.dart';
-import 'package:menucom_catalog/features/home/presentation/widgets/menu_tile.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/owner_info_widget.dart';
+import 'package:menucom_catalog/features/home/presentation/widgets/search_filter_bar.dart';
+import 'package:menucom_catalog/features/home/presentation/widgets/filter_summary_widget.dart';
+import 'package:menucom_catalog/features/home/presentation/widgets/responsive_items_grid.dart';
 import 'package:pu_material/pu_material.dart';
 import 'package:pu_material/utils/pu_colors.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
@@ -33,71 +32,6 @@ class _HomePageState extends State<HomePage> {
     super.initState();
   }
 
-  List<Widget> getMyMenus(List<MenuModel> menu) {
-    List<Widget> myWidget = [const Column()];
-
-    for (var e in menu) {
-      myWidget.add(
-        Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20.0,
-                ),
-                child: Text(
-                  e.description!,
-                  style: PuTextStyle.title5,
-                ),
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  return Container(
-                    height: 233,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: GridView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: e.items!.length,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: constraints.maxWidth >= 700 ? 6 : 1,
-                        mainAxisExtent: 200,
-                        childAspectRatio: 0.3,
-                        crossAxisSpacing: 19,
-                        mainAxisSpacing: 10,
-                      ),
-                      itemBuilder: (context, index) {
-                        return Container(
-                          margin: const EdgeInsets.only(
-                            bottom: 10,
-                            left: 10,
-                          ),
-                          child: MenuTile(
-                            item: e.items![index],
-                            selected: cartcon.detectItemInList(e.items![index]),
-                            onAddCart: (v) {
-                              cartcon.selectItemMenu(e.items![index]);
-                            },
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-    return myWidget;
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -111,9 +45,8 @@ class _HomePageState extends State<HomePage> {
               children: [
                 const HeadHome(),
                 const OwnerInfoWidget(),
-                const SizedBox(
-                  height: 20,
-                ),
+                const SearchFilterBar(),
+                const FilterSummaryWidget(),
                 GetBuilder<MenuHomeCartController>(
                   builder: (_) {
                     if (_.isLoadHomeItems.value) {
@@ -130,18 +63,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       );
                     } else {
-                      return Column(
-                        children: [
-                          Visibility(
-                            visible: _.listMenu.isNotEmpty,
-                            child: const MenuHomeView(),
-                          ),
-                          Visibility(
-                            visible: _.wardList.isNotEmpty,
-                            child: const WardrobeHomeView(),
-                          )
-                        ],
-                      );
+                      return const ResponsiveItemsGrid();
                     }
                   },
                 ),

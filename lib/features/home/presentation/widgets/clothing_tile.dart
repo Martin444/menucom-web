@@ -59,7 +59,7 @@ class _ClothingTileState extends State<ClothingTile> {
             imageUrl: widget.item.photoURL ?? '',
             height: 140,
             width: double.infinity,
-            fit: BoxFit.fitHeight,
+            fit: BoxFit.cover,
             clearCacheOnError: true,
           ),
           const SizedBox(
