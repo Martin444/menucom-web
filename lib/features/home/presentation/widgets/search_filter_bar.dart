@@ -76,40 +76,42 @@ class SearchFilterBar extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: Obx(() => DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: controller.sortBy.value,
-                            borderRadius: BorderRadius.circular(24),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            icon: Icon(
-                              Icons.sort,
-                              color: PUColors.iconColorBlack,
-                            ),
-                            items: const [
-                              DropdownMenuItem(
-                                value: 'none',
-                                child: Text('Ordenar por'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'name',
-                                child: Text('Nombre A-Z'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'price_low',
-                                child: Text('Precio: menor a mayor'),
-                              ),
-                              DropdownMenuItem(
-                                value: 'price_high',
-                                child: Text('Precio: mayor a menor'),
-                              ),
-                            ],
-                            onChanged: (String? value) {
-                              if (value != null) {
-                                controller.setSortBy(value);
-                              }
-                            },
+                    child: Obx(
+                      () => DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: controller.sortBy.value,
+                          borderRadius: BorderRadius.circular(24),
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          icon: Icon(
+                            Icons.sort,
+                            color: PUColors.iconColorBlack,
                           ),
-                        )),
+                          items: const [
+                            DropdownMenuItem(
+                              value: 'none',
+                              child: Text('Ordenar por'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'name',
+                              child: Text('Nombre A-Z'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'price_low',
+                              child: Text('Precio: menor a mayor'),
+                            ),
+                            DropdownMenuItem(
+                              value: 'price_high',
+                              child: Text('Precio: mayor a menor'),
+                            ),
+                          ],
+                          onChanged: (String? value) {
+                            if (value != null) {
+                              controller.setSortBy(value);
+                            }
+                          },
+                        ),
+                      ),
+                    ),
                   ),
 
                   const SizedBox(width: 12),
@@ -131,10 +133,12 @@ class SearchFilterBar extends StatelessWidget {
                     ),
                     child: IconButton(
                       onPressed: controller.toggleViewMode,
-                      icon: Obx(() => Icon(
-                            controller.isGridView.value ? Icons.list : Icons.grid_view,
-                            color: PUColors.iconColorBlack,
-                          )),
+                      icon: Obx(
+                        () => Icon(
+                          controller.isGridView.value ? Icons.list : Icons.grid_view,
+                          color: PUColors.iconColorBlack,
+                        ),
+                      ),
                     ),
                   ),
                 ],

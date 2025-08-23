@@ -36,39 +36,43 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: PUColors.primaryBackground,
-      body: Stack(
-        children: [
-          SingleChildScrollView(
+      body: CustomScrollView(
+        slivers: [
+          // Header widgets como slivers
+          SliverToBoxAdapter(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const HeadHome(),
-                const OwnerInfoWidget(),
-                const SearchFilterBar(),
-                const FilterSummaryWidget(),
-                GetBuilder<MenuHomeCartController>(
-                  builder: (_) {
-                    if (_.isLoadHomeItems.value) {
-                      return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Center(
-                          child: _.errorText.value.isEmpty
-                              ? const CircularProgressIndicator()
-                              : Text(
-                                  _.errorText.value,
-                                  style: PuTextStyle.title5,
-                                  textAlign: TextAlign.center,
-                                ),
-                        ),
-                      );
-                    } else {
-                      return const ResponsiveItemsGrid();
-                    }
-                  },
-                ),
+              children: const [
+                HeadHome(),
+                OwnerInfoWidget(),
+                SearchFilterBar(),
+                FilterSummaryWidget(),
               ],
             ),
+          ),
+
+          // Contenido grid/list
+          GetBuilder<MenuHomeCartController>(
+            builder: (_) {
+              if (_.isLoadHomeItems.value) {
+                return SliverToBoxAdapter(
+                  child: Container(
+                    height: 400,
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Center(
+                      child: _.errorText.value.isEmpty
+                          ? const CircularProgressIndicator()
+                          : Text(
+                              _.errorText.value,
+                              style: PuTextStyle.title5,
+                              textAlign: TextAlign.center,
+                            ),
+                    ),
+                  ),
+                );
+              } else {
+                return const ResponsiveItemsSliver();
+              }
+            },
           ),
         ],
       ),
