@@ -203,7 +203,7 @@ class ResponsiveItemsSliver extends StatelessWidget {
           } else if (screenWidth > 600) {
             maxCrossAxisExtent = 250; // Tamaño para tablet
           } else {
-            maxCrossAxisExtent = 180; // Tamaño para móvil
+            maxCrossAxisExtent = 290; // Tamaño para móvil
           }
         }
 

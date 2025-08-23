@@ -50,6 +50,9 @@ class _ClothingTileState extends State<ClothingTile> {
         vertical: 15,
         horizontal: 10,
       ),
+      constraints: const BoxConstraints(
+        minHeight: 170,
+      ),
       decoration: PuStyleContainers.borderAllContainer,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,14 +76,9 @@ class _ClothingTileState extends State<ClothingTile> {
               mainAxisSize: MainAxisSize.max,
               children: [
                 Flexible(
-                  child: PUOverflowTextDetector(
-                    message: widget.item.name!,
-                    children: [
-                      Text(
-                        widget.item.brand!,
-                        style: PuTextStyle.brandHeadStyle,
-                      ),
-                    ],
+                  child: Text(
+                    widget.item.brand?.capitalizeFirst ?? '-',
+                    style: PuTextStyle.brandHeadStyle,
                   ),
                 ),
                 const SizedBox(
@@ -88,6 +86,7 @@ class _ClothingTileState extends State<ClothingTile> {
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Flexible(
                       child: Text(
@@ -102,7 +101,7 @@ class _ClothingTileState extends State<ClothingTile> {
                           Text(
                             widget.item.price!.toString().convertToCorrency(),
                             textAlign: TextAlign.end,
-                            style: PuTextStyle.nameProductStyle,
+                            style: PuTextStyle.namePriceCardStyle,
                           ),
                         ],
                       ),
