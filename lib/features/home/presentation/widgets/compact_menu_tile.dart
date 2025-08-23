@@ -48,9 +48,9 @@ class CompactMenuTile extends StatelessWidget {
         final spacing = isDesktop ? 16.0 : (isTablet ? 14.0 : 12.0);
         final iconSize = isDesktop ? 24.0 : (isTablet ? 22.0 : 20.0);
         final buttonPadding = isDesktop ? 10.0 : (isTablet ? 9.0 : 8.0);
-        
+
         // Dimensiones mínimas para evitar deformación
-        final minHeight = isDesktop ? 120.0 : (isTablet ? 110.0 : 100.0);
+        final minHeight = isDesktop ? 220.0 : (isTablet ? 210.0 : 200.0);
         final minWidth = isDesktop ? 320.0 : (isTablet ? 300.0 : 280.0);
 
         // Responsive text scaling

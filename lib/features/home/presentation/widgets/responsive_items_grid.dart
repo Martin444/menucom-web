@@ -197,13 +197,13 @@ class ResponsiveItemsSliver extends StatelessWidget {
         } else {
           // Modo grid: ancho fijo para mantener consistencia
           if (screenWidth > 1200) {
-            maxCrossAxisExtent = 200; // Items más pequeños en pantallas grandes
+            maxCrossAxisExtent = 230; // Items más pequeños en pantallas grandes
           } else if (screenWidth > 900) {
             maxCrossAxisExtent = 220; // Tamaño medio
           } else if (screenWidth > 600) {
             maxCrossAxisExtent = 250; // Tamaño para tablet
           } else {
-            maxCrossAxisExtent = 160; // Tamaño para móvil
+            maxCrossAxisExtent = 180; // Tamaño para móvil
           }
         }
 

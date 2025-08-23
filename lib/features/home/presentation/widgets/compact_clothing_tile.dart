@@ -34,7 +34,7 @@ class CompactClothingTile extends StatelessWidget {
         final spacing = isDesktop ? 16.0 : (isTablet ? 14.0 : 12.0);
         final iconSize = isDesktop ? 24.0 : (isTablet ? 22.0 : 20.0);
         final buttonPadding = isDesktop ? 10.0 : (isTablet ? 9.0 : 8.0);
-        
+
         // Dimensiones mínimas para evitar deformación
         final minHeight = isDesktop ? 130.0 : (isTablet ? 120.0 : 110.0);
         final minWidth = isDesktop ? 340.0 : (isTablet ? 320.0 : 300.0);

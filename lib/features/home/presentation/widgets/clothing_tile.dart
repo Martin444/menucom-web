@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
 import 'package:pu_material/widgets/pu_robust_network_image.dart';
 import 'package:pu_material/utils/formaters/currency_converter.dart';
@@ -89,14 +90,9 @@ class _ClothingTileState extends State<ClothingTile> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Flexible(
-                      child: PUOverflowTextDetector(
-                        message: widget.item.name!,
-                        children: [
-                          Text(
-                            widget.item.name!,
-                            style: PuTextStyle.nameProductStyle,
-                          ),
-                        ],
+                      child: Text(
+                        widget.item.name!.capitalizeFirst!,
+                        style: PuTextStyle.nameProductStyle,
                       ),
                     ),
                     Flexible(
