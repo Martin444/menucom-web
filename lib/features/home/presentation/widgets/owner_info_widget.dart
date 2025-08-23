@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/core/widgets/robust_network_image.dart';
+import 'package:pu_material/widgets/pu_robust_network_image.dart';
 import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
 import 'package:pu_material/utils/pu_colors.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
@@ -44,11 +44,12 @@ class OwnerInfoWidget extends StatelessWidget {
                 ),
                 child: owner.photoURL != null && owner.photoURL!.isNotEmpty
                     ? ClipOval(
-                        child: RobustNetworkImage(
+                        child: PuRobustNetworkImage(
                           imageUrl: owner.photoURL!,
                           width: 60,
                           height: 60,
                           fit: BoxFit.cover,
+                          clearCacheOnError: true,
                         ),
                       )
                     : Icon(
