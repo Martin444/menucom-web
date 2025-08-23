@@ -14,9 +14,25 @@
   // Initialize MercadoPago instance
   window.mpInit = function (publicKey, locale) {
     ensureMP();
-    mpInstance = new window.MercadoPago(publicKey, { locale: locale || 'es-AR' });
-  try { console.log('[MP_BRIDGE] mpInit ok', { locale, hasInstance: !!mpInstance }); } catch (_) {}
-    return true;
+    try {
+      mpInstance = new window.MercadoPago(publicKey, { locale: locale || 'es-AR' });
+      
+      // Verify the instance was created successfully
+      if (!mpInstance) {
+        throw new Error('Failed to create MercadoPago instance');
+      }
+      
+      // Check if the public key is valid (basic validation)
+      if (!publicKey || publicKey.trim() === '' || publicKey === 'undefined') {
+        throw new Error('Invalid or missing MercadoPago public key');
+      }
+      
+      try { console.log('[MP_BRIDGE] mpInit ok', { locale, publicKey: publicKey.substring(0, 8) + '...', hasInstance: !!mpInstance }); } catch (_) {}
+      return true;
+    } catch (error) {
+      try { console.error('[MP_BRIDGE] Error in mpInit:', error.message, error); } catch (_) {}
+      throw error;
+    }
   };
 
   // Create checkout brick (preferred approach)
@@ -64,36 +80,65 @@
 
   // Alternative with explicit containerId to avoid issues passing objects from Dart
   window.mpCheckout2 = async function (preferenceId, containerId, settings) {
-    ensureMP();
-    if (!mpInstance) throw new Error('Call mpInit(publicKey) before mpCheckout2');
+    try {
+      ensureMP();
+      if (!mpInstance) throw new Error('Call mpInit(publicKey) before mpCheckout2');
 
-    const cfgSettings = Object.assign({}, settings || {});
-    cfgSettings.initialization = Object.assign({}, cfgSettings.initialization || {}, {
-      preferenceId: preferenceId,
-    });
+      // Validate preferenceId
+      if (!preferenceId || preferenceId.trim() === '') {
+        throw new Error('PreferenceId is required and cannot be empty');
+      }
 
-    const bricksBuilder = mpInstance.bricks();
-    if (!bricksBuilder) throw new Error('Bricks builder not available');
+      const cfgSettings = Object.assign({}, settings || {});
+      cfgSettings.initialization = Object.assign({}, cfgSettings.initialization || {}, {
+        preferenceId: preferenceId,
+      });
 
-    try { console.log('[MP_BRIDGE] mpCheckout2 called', { containerId, cfgSettings }); } catch (_) {}
+      const bricksBuilder = mpInstance.bricks();
+      if (!bricksBuilder) throw new Error('Bricks builder not available');
 
-    const ensureContainer = () => !!document.getElementById(containerId);
-    if (!ensureContainer()) {
-      try { console.warn('[MP_BRIDGE] (2) Container not found initially', containerId); } catch (_) {}
-      await new Promise((resolve) => setTimeout(resolve, 50));
+      try { console.log('[MP_BRIDGE] mpCheckout2 called', { preferenceId, containerId, cfgSettings }); } catch (_) {}
+
+      const ensureContainer = () => !!document.getElementById(containerId);
+      if (!ensureContainer()) {
+        try { console.warn('[MP_BRIDGE] (2) Container not found initially', containerId); } catch (_) {}
+        await new Promise((resolve) => setTimeout(resolve, 50));
+      }
+      if (!ensureContainer()) {
+        try { console.warn('[MP_BRIDGE] (2) Container still missing', containerId); } catch (_) {}
+        await new Promise((resolve) => requestAnimationFrame(resolve));
+      }
+      if (!ensureContainer()) {
+        try { console.error('[MP_BRIDGE] (2) Container not found, aborting', containerId); } catch (_) {}
+        throw new Error(`[Checkout Bricks error] Could not find the Brick container ID '${containerId}'.`);
+      }
+
+      // Add error handling for brick creation
+      const result = await bricksBuilder.create('wallet', containerId, cfgSettings);
+      try { console.log('[MP_BRIDGE] (2) bricks.create result', result); } catch (_) {}
+      
+      if (!result) {
+        throw new Error('Failed to create MercadoPago wallet brick');
+      }
+      
+      return !!result;
+    } catch (error) {
+      try { 
+        console.error('[MP_BRIDGE] Error in mpCheckout2:', error.message, error); 
+        // Show error to user
+        const container = document.getElementById(containerId);
+        if (container) {
+          container.innerHTML = `
+            <div style="padding: 20px; text-align: center; color: #d32f2f; border: 1px solid #d32f2f; border-radius: 8px; margin: 10px;">
+              <h3>Error en el procesamiento del pago</h3>
+              <p>Error: ${error.message}</p>
+              <p>Por favor, intenta nuevamente o contacta con soporte.</p>
+            </div>
+          `;
+        }
+      } catch (_) {}
+      throw error;
     }
-    if (!ensureContainer()) {
-      try { console.warn('[MP_BRIDGE] (2) Container still missing', containerId); } catch (_) {}
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-    }
-    if (!ensureContainer()) {
-      try { console.error('[MP_BRIDGE] (2) Container not found, aborting', containerId); } catch (_) {}
-      throw new Error(`[Checkout Bricks error] Could not find the Brick container ID '${containerId}'.`);
-    }
-
-    const result = await bricksBuilder.create('wallet', containerId, cfgSettings);
-    try { console.log('[MP_BRIDGE] (2) bricks.create result', !!result); } catch (_) {}
-    return !!result;
   };
 
   // Expose card form creation for advanced flows

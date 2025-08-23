@@ -61,6 +61,18 @@ class _MercadoPagoWalletBrickState extends State<MercadoPagoWalletBrick> {
 
   Future<void> _initAndBuild() async {
     try {
+      // Validar configuración antes de inicializar
+      if (widget.publicKey.isEmpty || widget.publicKey == 'undefined') {
+        throw Exception('MercadoPago public key is not configured');
+      }
+
+      if (widget.preferenceId.isEmpty || widget.preferenceId == 'undefined') {
+        throw Exception('MercadoPago preference ID is empty or invalid');
+      }
+
+      debugPrint(
+          '[MP_WIDGET] Validaciones pasadas - publicKey: ${widget.publicKey.substring(0, 8)}..., preferenceId: ${widget.preferenceId}');
+
       if (!_initialized) {
         MercadoPagoWeb.init(publicKey: widget.publicKey, locale: widget.locale);
         _initialized = true;
@@ -72,7 +84,9 @@ class _MercadoPagoWalletBrickState extends State<MercadoPagoWalletBrick> {
         return;
       }
       debugPrint('[MP_WIDGET] Container $_containerId found. Calling checkout...');
-      await MercadoPagoWeb.checkout(
+      debugPrint('[MP_WIDGET] PreferenceId: ${widget.preferenceId}');
+
+      final result = await MercadoPagoWeb.checkout(
         preferenceId: widget.preferenceId,
         container: _containerId,
         options: {
@@ -80,10 +94,22 @@ class _MercadoPagoWalletBrickState extends State<MercadoPagoWalletBrick> {
           if (widget.options != null) ...widget.options!,
         },
       );
-      debugPrint('[MP_WIDGET] Checkout invoked');
+
+      if (result) {
+        debugPrint('[MP_WIDGET] Checkout invoked successfully');
+      } else {
+        debugPrint('[MP_WIDGET] Checkout failed');
+      }
     } catch (e) {
       debugPrint('MercadoPago init/build error: $e');
+      // Show error in container
+      _showErrorInContainer(e.toString());
     }
+  }
+
+  void _showErrorInContainer(String error) {
+    // This would need to be implemented with a proper error widget
+    debugPrint('[MP_WIDGET] Error to show: $error');
   }
 
   Future<bool> _waitForContainer({int attempts = 20, Duration delay = const Duration(milliseconds: 50)}) async {
