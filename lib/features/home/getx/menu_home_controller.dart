@@ -84,14 +84,26 @@ class MenuHomeCartController extends GetxController {
   }
 
   void _applyFilters() {
+    String normalize(String s) {
+      return s
+          .toLowerCase()
+          .replaceAll(RegExp(r'[áàäâ]'), 'a')
+          .replaceAll(RegExp(r'[éèëê]'), 'e')
+          .replaceAll(RegExp(r'[íìïî]'), 'i')
+          .replaceAll(RegExp(r'[óòöô]'), 'o')
+          .replaceAll(RegExp(r'[úùüû]'), 'u');
+    }
+
+    String q = normalize(searchQuery.value.trim());
+    bool isNumericQuery = int.tryParse(q) != null;
+
     // Filtrar menús
     filteredMenu.value = listMenu.where((menu) {
       bool matchesCategory = selectedCategory.value.isEmpty ||
           selectedCategory.value == 'Todos' ||
-          menu.description == selectedCategory.value;
+          (menu.description != null && normalize(menu.description!).contains(normalize(selectedCategory.value)));
 
-      bool matchesSearch =
-          searchQuery.value.isEmpty || menu.description!.toLowerCase().contains(searchQuery.value.toLowerCase());
+      bool matchesSearch = q.isEmpty || (menu.description != null && normalize(menu.description!).contains(q));
 
       return matchesCategory && matchesSearch;
     }).toList();
@@ -101,14 +113,22 @@ class MenuHomeCartController extends GetxController {
     for (var menu in filteredMenu) {
       if (menu.items != null) {
         var filteredItems = menu.items!.where((item) {
-          return searchQuery.value.isEmpty ||
-              item.name!.toLowerCase().contains(searchQuery.value.toLowerCase()) ||
-              (item.ingredients != null &&
-                  item.ingredients!
-                      .any((ingredient) => ingredient.toLowerCase().contains(searchQuery.value.toLowerCase())));
-        }).toList();
+          final name = item.name != null ? normalize(item.name!) : '';
+          final ingredients = item.ingredients?.map(normalize).join(' ') ?? '';
+          final price = item.price?.toString() ?? '';
+          // Puedes agregar más campos si los hay (ej: tags)
 
-        // Aplicar ordenamiento a los items
+          bool match = q.isEmpty ||
+              name.contains(q) ||
+              ingredients.contains(q) ||
+              (menu.description != null && normalize(menu.description!).contains(q));
+
+          // Si la query es numérica, buscar por precio exacto
+          if (isNumericQuery && item.price != null) {
+            match = match || item.price.toString() == q;
+          }
+          return match;
+        }).toList();
         _sortItems(filteredItems);
         allFilteredItems.addAll(filteredItems);
       }
@@ -119,13 +139,39 @@ class MenuHomeCartController extends GetxController {
     filteredWardList = wardList.where((wardrobe) {
       bool matchesCategory = selectedCategory.value.isEmpty ||
           selectedCategory.value == 'Todos' ||
-          wardrobe.description == selectedCategory.value;
+          (wardrobe.description != null &&
+              normalize(wardrobe.description!).contains(normalize(selectedCategory.value)));
 
-      bool matchesSearch =
-          searchQuery.value.isEmpty || wardrobe.description!.toLowerCase().contains(searchQuery.value.toLowerCase());
+      bool matchesSearch = q.isEmpty || (wardrobe.description != null && normalize(wardrobe.description!).contains(q));
 
       return matchesCategory && matchesSearch;
     }).toList();
+
+    // Filtrar items de wardrobe (sin modificar la lista original)
+    for (var wardrobe in filteredWardList) {
+      if (wardrobe.items != null) {
+        final filteredItems = wardrobe.items!.where((item) {
+          final name = item.name != null ? normalize(item.name!) : '';
+          final brand = item.brand != null ? normalize(item.brand!) : '';
+          final color = item.color != null ? normalize(item.color!) : '';
+          // Puedes agregar más campos si los hay
+
+          bool match = q.isEmpty ||
+              name.contains(q) ||
+              brand.contains(q) ||
+              color.contains(q) ||
+              (wardrobe.description != null && normalize(wardrobe.description!).contains(q));
+
+          if (isNumericQuery && item.price != null) {
+            match = match || item.price.toString() == q;
+          }
+          return match;
+        }).toList();
+        _sortClothingItems(filteredItems);
+        // Si necesitas mostrar los items filtrados, puedes crear un nuevo objeto WardrobeModel temporal con estos items
+        // o manejarlo en la UI usando filteredItems en vez de wardrobe.items
+      }
+    }
 
     // Aplicar ordenamiento a cada menú filtrado
     for (var menu in filteredMenu) {
@@ -355,10 +401,37 @@ class MenuHomeCartController extends GetxController {
     // Agregar items de menú filtrados
     allItems.addAll(filteredMenuItems);
 
-    // Agregar items de wardrobe filtrados
+    // Agregar items de wardrobe filtrados (usando el mismo filtro flexible)
+    String normalize(String s) {
+      return s
+          .toLowerCase()
+          .replaceAll(RegExp(r'[áàäâ]'), 'a')
+          .replaceAll(RegExp(r'[éèëê]'), 'e')
+          .replaceAll(RegExp(r'[íìïî]'), 'i')
+          .replaceAll(RegExp(r'[óòöô]'), 'o')
+          .replaceAll(RegExp(r'[úùüû]'), 'u');
+    }
+
+    String q = normalize(searchQuery.value.trim());
+    bool isNumericQuery = int.tryParse(q) != null;
+
     for (var wardrobe in filteredWardList) {
       if (wardrobe.items != null) {
-        allItems.addAll(wardrobe.items!);
+        final filteredItems = wardrobe.items!.where((item) {
+          final name = item.name != null ? normalize(item.name!) : '';
+          final brand = item.brand != null ? normalize(item.brand!) : '';
+          final color = item.color != null ? normalize(item.color!) : '';
+          bool match = q.isEmpty ||
+              name.contains(q) ||
+              brand.contains(q) ||
+              color.contains(q) ||
+              (wardrobe.description != null && normalize(wardrobe.description!).contains(q));
+          if (isNumericQuery && item.price != null) {
+            match = match || item.price.toString() == q;
+          }
+          return match;
+        }).toList();
+        allItems.addAll(filteredItems);
       }
     }
 

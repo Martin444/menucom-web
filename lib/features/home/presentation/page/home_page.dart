@@ -36,46 +36,83 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: PUColors.primaryBackground,
-      body: CustomScrollView(
-        slivers: [
-          // Header widgets como slivers
-          SliverToBoxAdapter(
-            child: Column(
-              children: const [
-                HeadHome(),
-                OwnerInfoWidget(),
-                SearchFilterBar(),
-                FilterSummaryWidget(),
-              ],
+      body: NestedScrollView(
+        headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
+          return [
+            // Header estático que se oculta al hacer scroll
+            SliverAppBar(
+              expandedHeight: 0,
+              floating: false,
+              pinned: false,
+              automaticallyImplyLeading: false,
+              backgroundColor: PUColors.primaryBackground,
+              elevation: 0,
+              flexibleSpace: const Column(
+                children: [
+                  HeadHome(),
+                  OwnerInfoWidget(),
+                ],
+              ),
             ),
-          ),
-
-          // Contenido grid/list
-          GetBuilder<MenuHomeCartController>(
-            builder: (_) {
-              if (_.isLoadHomeItems.value) {
-                return SliverToBoxAdapter(
-                  child: Container(
-                    height: 400,
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Center(
-                      child: _.errorText.value.isEmpty
-                          ? const CircularProgressIndicator()
-                          : Text(
-                              _.errorText.value,
-                              style: PuTextStyle.title5,
-                              textAlign: TextAlign.center,
-                            ),
-                    ),
-                  ),
-                );
-              } else {
-                return const ResponsiveItemsSliver();
-              }
-            },
-          ),
-        ],
+            // SearchFilterBar como SliverPersistentHeader para que sea sticky
+            SliverPersistentHeader(
+              pinned: true,
+              delegate: _SearchFilterBarDelegate(),
+            ),
+          ];
+        },
+        body: GetBuilder<MenuHomeCartController>(
+          builder: (_) {
+            if (_.isLoadHomeItems.value) {
+              return Container(
+                height: 400,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Center(
+                  child: _.errorText.value.isEmpty
+                      ? const CircularProgressIndicator()
+                      : Text(
+                          _.errorText.value,
+                          style: PuTextStyle.title5,
+                          textAlign: TextAlign.center,
+                        ),
+                ),
+              );
+            } else {
+              return const SingleChildScrollView(
+                physics: ClampingScrollPhysics(),
+                child: Column(
+                  children: [
+                    FilterSummaryWidget(),
+                    ResponsiveItemsGrid(),
+                  ],
+                ),
+              );
+            }
+          },
+        ),
       ),
     );
+  }
+}
+
+// Delegate personalizado para el SearchFilterBar
+class _SearchFilterBarDelegate extends SliverPersistentHeaderDelegate {
+  @override
+  double get minExtent => 140; // Altura mínima: 48 (búsqueda) + 40 (chips) + 16*2 (padding) + 16 (spacing)
+
+  @override
+  double get maxExtent => 140; // Altura máxima igual a la mínima
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      color: PUColors.primaryBackground,
+      child: const SearchFilterBar(),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return false;
   }
 }

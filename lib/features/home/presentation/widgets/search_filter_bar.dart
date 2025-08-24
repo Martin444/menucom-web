@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:get/get.dart';
 import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
 import 'package:pu_material/utils/pu_colors.dart';
@@ -15,7 +16,7 @@ class SearchFilterBar extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           child: Column(
             children: [
-              // Barra de búsqueda y toggle de vista
+              // Barra de búsqueda y dropdown de ordenamiento
               Row(
                 children: [
                   // Campo de búsqueda
@@ -61,7 +62,6 @@ class SearchFilterBar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 12),
-
                   // Dropdown de ordenamiento
                   Container(
                     height: 48,
@@ -113,75 +113,65 @@ class SearchFilterBar extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                  const SizedBox(width: 12),
-
-                  // Toggle vista grid/lista
-                  Container(
-                    height: 48,
-                    width: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: IconButton(
-                      onPressed: controller.toggleViewMode,
-                      icon: Obx(
-                        () => Icon(
-                          controller.isGridView.value ? Icons.list : Icons.grid_view,
-                          color: PUColors.iconColorBlack,
-                        ),
-                      ),
-                    ),
-                  ),
                 ],
               ),
 
               const SizedBox(height: 16),
 
-              // Chips de categorías
+              // Chips de categorías con mejor manejo de scroll
               Obx(() => controller.availableCategories.isNotEmpty
                   ? SizedBox(
                       height: 40,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: controller.availableCategories.length,
-                        itemBuilder: (context, index) {
-                          final category = controller.availableCategories[index];
-                          final isSelected = controller.selectedCategory.value == category ||
-                              (controller.selectedCategory.value.isEmpty && category == 'Todos');
-
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 8),
-                            child: FilterChip(
-                              label: Text(
-                                category,
-                                style: PuTextStyle.ingredientsListStyle.copyWith(
-                                  color: isSelected ? Colors.white : PUColors.iconColorBlack,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                ),
-                              ),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                controller.selectCategory(selected ? category : '');
-                              },
-                              backgroundColor: Colors.white,
-                              selectedColor: PUColors.primaryColor,
-                              checkmarkColor: Colors.white,
-                              side: BorderSide(
-                                color:
-                                    isSelected ? PUColors.primaryColor : PUColors.iconColorBlack.withValues(alpha: 0.3),
-                              ),
-                            ),
-                          );
+                      child: NotificationListener<ScrollNotification>(
+                        onNotification: (ScrollNotification notification) {
+                          // Evitar que el scroll horizontal interfiera con el scroll vertical
+                          return true;
                         },
+                        child: ScrollConfiguration(
+                          behavior: ScrollConfiguration.of(context).copyWith(
+                            // Habilitar scroll en todas las plataformas
+                            dragDevices: {
+                              PointerDeviceKind.touch,
+                              PointerDeviceKind.mouse,
+                              PointerDeviceKind.trackpad,
+                            },
+                          ),
+                          child: ListView.builder(
+                            physics: const ClampingScrollPhysics(),
+                            scrollDirection: Axis.horizontal,
+                            itemCount: controller.availableCategories.length,
+                            itemBuilder: (context, index) {
+                              final category = controller.availableCategories[index];
+                              final isSelected = controller.selectedCategory.value == category ||
+                                  (controller.selectedCategory.value.isEmpty && category == 'Todos');
+
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8),
+                                child: FilterChip(
+                                  label: Text(
+                                    category,
+                                    style: PuTextStyle.ingredientsListStyle.copyWith(
+                                      color: isSelected ? Colors.white : PUColors.iconColorBlack,
+                                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    ),
+                                  ),
+                                  selected: isSelected,
+                                  onSelected: (selected) {
+                                    controller.selectCategory(selected ? category : '');
+                                  },
+                                  backgroundColor: Colors.white,
+                                  selectedColor: PUColors.primaryColor,
+                                  checkmarkColor: Colors.white,
+                                  side: BorderSide(
+                                    color: isSelected
+                                        ? PUColors.primaryColor
+                                        : PUColors.iconColorBlack.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                       ),
                     )
                   : const SizedBox()),
