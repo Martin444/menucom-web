@@ -4,7 +4,10 @@ import 'package:menu_dart_api/menu_com_api.dart';
 import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/clothing_tile.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/menu_tile.dart';
+import 'package:pu_material/pu_material.dart';
 
+/// Grid responsivo para mostrar items del menú o ropa
+/// Refactorizado para usar atomic design con componentes de pu_material
 class ResponsiveItemsGrid extends StatelessWidget {
   const ResponsiveItemsGrid({super.key});
 
@@ -12,87 +15,84 @@ class ResponsiveItemsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<MenuHomeCartController>(
       builder: (controller) {
-        final isMenuMode = controller.isMenuMode;
         final filteredData = controller.getFilteredItems();
 
-        // Si no hay elementos filtrados
+        // Estado vacío usando EmptyStateAtom
         if (filteredData.isEmpty) {
-          return const SizedBox(
-            height: 400,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.search_off,
-                    size: 64,
-                    color: Colors.grey,
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    'No se encontraron elementos que coincidan con los filtros',
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Colors.grey,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            ),
-          );
+          return _buildEmptyState();
         }
 
-        return LayoutBuilder(
-          builder: (context, constraints) {
-            // Responsive: 2 mobile, 3 tablet, hasta 5 desktop
-            double maxWidth = constraints.maxWidth;
-            int columns = 2;
-            if (maxWidth >= 1200) {
-              columns = 5;
-            } else if (maxWidth >= 900) {
-              columns = 4;
-            } else if (maxWidth >= 600) {
-              columns = 3;
-            }
-            double spacing = 20;
-            // double totalSpacing = spacing * (columns - 1); // No se usa
-            // double itemWidth = (maxWidth - totalSpacing) / columns; // No se usa
-            double aspectRatio = 0.8;
+        return _buildResponsiveGrid(controller, filteredData);
+      },
+    );
+  }
 
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: columns,
-                crossAxisSpacing: spacing,
-                mainAxisSpacing: spacing,
-                childAspectRatio: aspectRatio,
-              ),
-              itemCount: filteredData.length,
-              itemBuilder: (context, index) {
-                final item = filteredData[index];
-                if (isMenuMode) {
-                  final menuItem = item as MenuItemModel;
-                  return MenuTile(
-                    item: menuItem,
-                    selected: controller.detectItemInList(menuItem),
-                    onAddCart: controller.selectItemMenu,
-                  );
-                } else {
-                  final clothingItem = item as ClothingItemModel;
-                  return ClothingTile(
-                    item: clothingItem,
-                    selected: controller.detectItemInWardrobe(clothingItem),
-                    onAddCart: controller.selectItemWard,
-                  );
-                }
-              },
-            );
-          },
+  /// Construye el estado vacío usando EmptyStateAtom de pu_material
+  Widget _buildEmptyState() {
+    return const ContainerAtom(
+      height: 400,
+      child: EmptyStateAtom(
+        title: 'No se encontraron elementos que coincidan con los filtros',
+        titleStyle: TextStyle(
+          fontSize: 16,
+          color: Colors.grey,
+        ),
+      ),
+    );
+  }
+
+  /// Construye el grid responsivo usando GridLayoutAtom
+  Widget _buildResponsiveGrid(MenuHomeCartController controller, List<dynamic> filteredData) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return ContainerAtom(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+          child: GridLayoutAtom(
+            constraints: constraints,
+            mainAxisExtent: _calculateItemHeight(constraints),
+            mainAxisSpacing: 20,
+            crossAxisSpacing: 20,
+            children: _buildGridItems(controller, filteredData),
+          ),
         );
       },
     );
+  }
+
+  /// Calcula la altura de los items basada en las dimensiones de la pantalla
+  double _calculateItemHeight(BoxConstraints constraints) {
+    double maxWidth = constraints.maxWidth;
+    int columns = _getColumnCount(maxWidth);
+    double itemWidth = maxWidth / columns;
+    return itemWidth * 1.25; // Aspect ratio de 0.8 inverso
+  }
+
+  /// Obtiene el número de columnas basado en el ancho disponible
+  int _getColumnCount(double maxWidth) {
+    if (maxWidth >= 1200) return 5;
+    if (maxWidth >= 900) return 4;
+    if (maxWidth >= 600) return 3;
+    return 2;
+  }
+
+  /// Construye los items del grid según el tipo (menú o ropa)
+  List<Widget> _buildGridItems(MenuHomeCartController controller, List<dynamic> filteredData) {
+    return filteredData.map((item) {
+      if (item is MenuItemModel) {
+        return MenuTile(
+          item: item,
+          selected: controller.detectItemInList(item),
+          onAddCart: controller.selectItemMenu,
+        );
+      } else if (item is ClothingItemModel) {
+        return ClothingTile(
+          item: item,
+          selected: controller.detectItemInWardrobe(item),
+          onAddCart: controller.selectItemWard,
+        );
+      } else {
+        return const SizedBox.shrink(); // fallback para tipos desconocidos
+      }
+    }).toList();
   }
 }

@@ -1,4 +1,8 @@
 // ignore_for_file: non_constant_identifier_names, constant_identifier_names
+const String ACCESS_TOKEN_SECRET_KEY = String.fromEnvironment(
+  'ACCESS_TOKEN_SECRET_KEY',
+  defaultValue: "",
+);
 
 const String URL_PICKME_API = String.fromEnvironment('API_URL', defaultValue: "");
 

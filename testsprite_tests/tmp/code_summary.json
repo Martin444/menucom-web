@@ -1,0 +1,315 @@
+{
+  "tech_stack": [
+    {
+      "language": "Dart",
+      "version": ">=3.4.1 <4.0.0",
+      "description": "Primary programming language for Flutter development"
+    },
+    {
+      "framework": "Flutter",
+      "description": "Cross-platform UI toolkit for mobile, web, and desktop applications"
+    },
+    {
+      "state_management": "GetX",
+      "version": "4.6.6",
+      "description": "Reactive state management, dependency injection, and route management for Flutter"
+    },
+    {
+      "architecture": "Clean Architecture",
+      "description": "Implemented with proper separation of concerns using specialized controllers"
+    },
+    {
+      "custom_packages": [
+        {
+          "name": "pu_material",
+          "type": "local_package",
+          "description": "Custom UI components and styling system for the application",
+          "location": "pu_material/"
+        },
+        {
+          "name": "menu_dart_api",
+          "type": "local_package", 
+          "description": "Data and domain layer API for menu management with use cases, models, and repositories",
+          "location": "menu_dart_api/"
+        }
+      ]
+    },
+    {
+      "dependencies": [
+        "http: ^1.2.1",
+        "flutter_svg: ^2.0.10+1",
+        "shared_preferences: ^2.2.3",
+        "url_launcher: ^6.3.2",
+        "socket_io_client: ^2.0.3",
+        "uuid: ^4.5.1",
+        "intl: ^0.20.2",
+        "pdf: ^3.11.1",
+        "cached_network_image: ^3.4.1",
+        "flutter_localization: ^0.2.0"
+      ]
+    }
+  ],
+  "features": [
+    {
+      "name": "Home Feature",
+      "description": "Main feature for menu browsing, filtering, and cart management with Clean Architecture implementation",
+      "path": "lib/features/home/",
+      "architecture": "Clean Architecture with specialized controllers",
+      "components": [
+        {
+          "type": "presentation_layer",
+          "path": "lib/features/home/presentation/",
+          "description": "UI layer with pages, views, and widgets",
+          "files": [
+            "pages/home_page.dart - Main landing page with nested scroll view and sticky search bar",
+            "views/menu_home_view.dart - Menu items display with responsive grid",
+            "views/wardrobe_home_view.dart - Clothing items display",
+            "widgets/head_home.dart - Header component with cart icon and navigation",
+            "widgets/search_filter_bar.dart - Search and filtering interface with debounced input",
+            "widgets/filter_summary_widget.dart - Active filters display",
+            "widgets/responsive_items_grid.dart - Responsive grid for menu/clothing items",
+            "widgets/owner_info_widget.dart - Owner/business information display",
+            "widgets/menu_tile.dart - Individual menu item card using pu_material ProductCard"
+          ]
+        },
+        {
+          "type": "controllers_layer",
+          "path": "lib/features/home/controllers/",
+          "description": "Specialized controllers implementing Clean Architecture principles",
+          "files": [
+            "menu_controller.dart - Menu data management using menu_dart_api GetMenuUseCase",
+            "filter_controller.dart - Search, filtering, and categorization with debouncing",
+            "cart_controller.dart - Shopping cart management with reactive calculations",
+            "home_controller.dart - Coordinator controller integrating all specialized controllers"
+          ],
+          "patterns": [
+            "Single Responsibility Principle - each controller has one specific purpose",
+            "Reactive Programming - using GetX observables for state management",
+            "Dependency Injection - controllers injected via GetX bindings",
+            "Clean Architecture - separation of concerns with proper layering"
+          ]
+        },
+        {
+          "type": "legacy_layer",
+          "path": "lib/features/home/getx/",
+          "description": "Legacy monolithic controller maintained for compatibility during migration",
+          "files": [
+            "menu_home_controller.dart - Original 517-line controller being gradually replaced",
+            "menu_binding.dart - Dependency injection setup for both old and new controllers"
+          ],
+          "migration_strategy": "Gradual replacement with coexistence pattern"
+        }
+      ],
+      "refactoring_details": {
+        "original_controller": "MenuHomeCartController (517 lines)",
+        "refactored_into": [
+          "MenuController - Menu data management (107 lines)",
+          "FilterController - Search and filtering (167 lines)", 
+          "CartController - Cart management (225 lines)",
+          "HomeController - Coordination layer (224 lines)"
+        ],
+        "total_lines_before": 517,
+        "total_lines_after": 723,
+        "benefits": [
+          "Single Responsibility Principle",
+          "Better testability",
+          "Improved maintainability",
+          "Clear separation of concerns",
+          "Easier debugging and development"
+        ]
+      }
+    },
+    {
+      "name": "My Cart Feature",
+      "description": "Shopping cart management and checkout functionality",
+      "path": "lib/features/my_cart/",
+      "components": [
+        {
+          "type": "presentation",
+          "files": [
+            "pages/my_cart_page.dart - Cart items display and checkout interface",
+            "widgets/download_status_widget.dart - Animated status indicator for downloads/orders"
+          ]
+        },
+        {
+          "type": "controller",
+          "files": [
+            "getx/order_controller.dart - Order management and processing"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Shared Utilities",
+      "description": "Common utilities and helpers used across the application",
+      "path": "lib/shared/",
+      "components": [
+        {
+          "type": "utilities",
+          "path": "lib/shared/utils/",
+          "files": [
+            "debouncer.dart - Debouncing utility for search inputs to optimize API calls",
+            "text_normalizer.dart - Text normalization for improved search functionality with accent removal"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Core Architecture",
+      "description": "Application core with routing, configuration, and cross-cutting concerns",
+      "path": "lib/core/",
+      "components": [
+        {
+          "type": "configuration",
+          "description": "App-wide configuration and setup"
+        }
+      ]
+    },
+    {
+      "name": "Routing System",
+      "description": "Application navigation and route management",
+      "path": "lib/routes/",
+      "components": [
+        {
+          "type": "routing",
+          "description": "GetX-based routing system with page definitions and route constants"
+        }
+      ]
+    }
+  ],
+  "architecture_patterns": [
+    {
+      "pattern": "Clean Architecture",
+      "implementation": "Separated presentation, business logic, and data layers",
+      "benefits": [
+        "Clear separation of concerns",
+        "High testability",
+        "Framework independence",
+        "Maintainable codebase"
+      ]
+    },
+    {
+      "pattern": "Repository Pattern",
+      "implementation": "menu_dart_api package provides repository pattern for data access",
+      "location": "menu_dart_api/"
+    },
+    {
+      "pattern": "Use Case Pattern", 
+      "implementation": "Business logic encapsulated in use cases (GetMenuUseCase)",
+      "location": "menu_dart_api/"
+    },
+    {
+      "pattern": "Reactive Programming",
+      "implementation": "GetX observables for reactive state management",
+      "benefits": [
+        "Automatic UI updates",
+        "Simplified state management",
+        "Better performance"
+      ]
+    },
+    {
+      "pattern": "Dependency Injection",
+      "implementation": "GetX dependency injection with bindings",
+      "location": "lib/features/home/getx/menu_binding.dart"
+    },
+    {
+      "pattern": "Atomic Design",
+      "implementation": "UI components structured as atoms, molecules, and organisms",
+      "location": "pu_material/ package"
+    }
+  ],
+  "testing_strategy": [
+    {
+      "type": "Unit Tests",
+      "location": "test/",
+      "description": "Unit tests for business logic and utilities"
+    },
+    {
+      "type": "Widget Tests", 
+      "location": "test/widget_test.dart",
+      "description": "Widget testing for UI components"
+    },
+    {
+      "type": "Integration Tests",
+      "description": "Testsprite integration for comprehensive testing"
+    }
+  ],
+  "migration_strategy": {
+    "approach": "Gradual Migration with Coexistence",
+    "description": "Old and new controllers coexist during transition period",
+    "phases": [
+      {
+        "phase": "1 - Refactoring Complete",
+        "status": "✅ COMPLETED",
+        "description": "Created specialized controllers with proper Clean Architecture separation"
+      },
+      {
+        "phase": "2 - UI Integration",
+        "status": "🔄 IN PROGRESS", 
+        "description": "Gradually migrating UI components to use new controllers"
+      },
+      {
+        "phase": "3 - Legacy Removal",
+        "status": "⏳ PENDING",
+        "description": "Remove old monolithic controller once migration is complete"
+      }
+    ],
+    "coexistence_pattern": "Both old and new controllers available via dependency injection with different tags"
+  },
+  "performance_optimizations": [
+    {
+      "feature": "Debounced Search",
+      "implementation": "300ms delay on search input to reduce API calls",
+      "location": "lib/shared/utils/debouncer.dart"
+    },
+    {
+      "feature": "Text Normalization",
+      "implementation": "Efficient text normalization for better search results",
+      "location": "lib/shared/utils/text_normalizer.dart"
+    },
+    {
+      "feature": "Reactive State Management",
+      "implementation": "GetX observables for efficient UI updates",
+      "impact": "Automatic UI updates only when state changes"
+    },
+    {
+      "feature": "Image Caching",
+      "implementation": "cached_network_image for optimized image loading",
+      "impact": "Reduced network usage and faster image display"
+    }
+  ],
+  "ui_components": [
+    {
+      "package": "pu_material",
+      "description": "Custom Material Design components with atomic design principles",
+      "components": [
+        "ProductCard - Reusable card component for menu items",
+        "PuRobustNetworkImage - Robust image loading with fallbacks",
+        "Buttons - Primary and secondary button components",
+        "Colors - Centralized color palette",
+        "Typography - Consistent text styles",
+        "Containers - Styled container components"
+      ]
+    }
+  ],
+  "data_flow": {
+    "description": "Clean Architecture data flow with proper layer separation",
+    "flow": [
+      "UI Layer (Widgets) -> Controllers -> Use Cases (menu_dart_api) -> Repositories -> Data Sources",
+      "Reactive updates flow back through GetX observables to automatically update UI"
+    ],
+    "benefits": [
+      "Unidirectional data flow",
+      "Clear data transformation layers",
+      "Easy to test and mock",
+      "Framework-independent business logic"
+    ]
+  },
+  "code_quality": {
+    "linting": "flutter_lints: ^3.0.0",
+    "architecture_compliance": "Clean Architecture principles enforced",
+    "naming_conventions": "Dart conventions with descriptive names",
+    "documentation": "Comprehensive inline documentation for all public APIs",
+    "type_safety": "Strong typing with null safety enabled"
+  }
+}

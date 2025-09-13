@@ -33,8 +33,8 @@ class OrderStatusConfig {
       gradientColors: [Color(0xFF2196F3), Color(0xFF1976D2)],
       iconBackgroundColor: Color(0xFF2196F3),
       icon: Icons.sync,
-      title: '¡Procesando Orden!',
-      subtitle: 'Preparando tu pedido',
+      title: '¡Todo listo para procesar tu orden!',
+      subtitle: 'Si querés, podés completar el pago ahora con MercadoPago. , y nos encargamos del resto 😉',
     ),
     OrderStatus.shipped: StatusHeaderConfig(
       gradientColors: [Color(0xFF9C27B0), Color(0xFF7B1FA2)],

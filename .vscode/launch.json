@@ -15,6 +15,7 @@
                 //"--web-port=52245",
                 //"--no-sound-null-safety",
                 "--dart-define=API_URL=http://localhost:3001",
+                "--dart-define=ACCESS_TOKEN_SECRET_KEY=p7Xv9QmL2eR8sTzY4bN1aCwV6jKdFgHu",
                 "--dart-define=MP_PUBLIC_KEY=APP_USR-3ee7f54a-686a-49b4-8592-40610ab7d742",
             ]
         },
@@ -29,6 +30,7 @@
                 //"--web-port=52245",
                 //"--no-sound-null-safety",
                 "--dart-define=API_URL=https://menucom-api-60e608ae2f99.herokuapp.com",
+                "--dart-define=ACCESS_TOKEN_SECRET_KEY=p7Xv9QmL2eR8sTzY4bN1aCwV6jKdFgHu",
                 "--dart-define=MP_PUBLIC_KEY=APP_USR-3ee7f54a-686a-49b4-8592-40610ab7d742",
             ],
         },
@@ -42,6 +44,7 @@
                 "html",
                 //"--web-port=52245",
                 //"--no-sound-null-safety",
+                "--dart-define=ACCESS_TOKEN_SECRET_KEY=p7Xv9QmL2eR8sTzY4bN1aCwV6jKdFgHu",
                 "--dart-define=API_URL=https://hammerhead-app-pouq5.ondigitalocean.app",
             ]
         },

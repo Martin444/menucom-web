@@ -115,7 +115,7 @@ class MenuHomeCartController extends GetxController {
         var filteredItems = menu.items!.where((item) {
           final name = item.name != null ? normalize(item.name!) : '';
           final ingredients = item.ingredients?.map(normalize).join(' ') ?? '';
-          final price = item.price?.toString() ?? '';
+          // final price = item.price?.toString() ?? '';
           // Puedes agregar más campos si los hay (ej: tags)
 
           bool match = q.isEmpty ||
@@ -193,7 +193,7 @@ class MenuHomeCartController extends GetxController {
   void _sortItems(List<MenuItemModel> items) {
     switch (sortBy.value) {
       case 'name':
-        items.sort((a, b) => a.name!.compareTo(b.name!));
+        items.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
         break;
       case 'price_low':
         items.sort((a, b) => (a.price ?? 0).compareTo(b.price ?? 0));
@@ -211,7 +211,7 @@ class MenuHomeCartController extends GetxController {
   void _sortClothingItems(List<ClothingItemModel> items) {
     switch (sortBy.value) {
       case 'name':
-        items.sort((a, b) => a.name!.compareTo(b.name!));
+        items.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
         break;
       case 'price_low':
         items.sort((a, b) => (a.price ?? 0).compareTo(b.price ?? 0));

@@ -1,8 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:menu_dart_api/menu_com_api.dart';
-import 'package:pu_material/pu_material.dart';
+// ========================================
+// ARCHIVO NO UTILIZADO - CANDIDATO PARA ELIMINACIÓN
+// ========================================
+// Este archivo contiene una versión compacta de ClothingTile que nunca se implementó.
+// No hay referencias a CompactClothingTile en ningún archivo del proyecto.
+// La funcionalidad está cubierta por clothing_tile.dart que es el que se usa actualmente.
+//
+// RECOMENDACIÓN: Eliminar este archivo
+// ========================================
 
-class CompactClothingTile extends StatelessWidget {
+/*
   final ClothingItemModel item;
   final bool selected;
   final Function(ClothingItemModel) onAddCart;
@@ -30,3 +36,4 @@ class CompactClothingTile extends StatelessWidget {
     );
   }
 }
+*/
