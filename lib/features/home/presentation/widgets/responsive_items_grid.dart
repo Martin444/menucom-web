@@ -79,16 +79,56 @@ class ResponsiveItemsGrid extends StatelessWidget {
   List<Widget> _buildGridItems(MenuHomeCartController controller, List<dynamic> filteredData) {
     return filteredData.map((item) {
       if (item is MenuItemModel) {
-        return MenuTile(
-          item: item,
-          selected: controller.detectItemInList(item),
-          onAddCart: controller.selectItemMenu,
+        final isAdded = controller.detectItemInList(item);
+        return GestureDetector(
+          onTap: () {
+            Get.toNamed(
+              '/product-detail',
+              arguments: {
+                'name': item.name ?? '',
+                'brand': item.deliveryTime != null ? 'Entrega: ${item.deliveryTime}' : '',
+                'description': item.ingredients?.join(', ') ?? '',
+                'photoUrl': item.photoUrl ?? '',
+                'price': item.price?.toString() ?? '',
+                'sizes': [],
+                'color': '',
+                'onAddCart': controller.selectItemMenu,
+                'item': item,
+                'isAdded': isAdded,
+              },
+            );
+          },
+          child: MenuTile(
+            item: item,
+            selected: isAdded,
+            onAddCart: controller.selectItemMenu,
+          ),
         );
       } else if (item is ClothingItemModel) {
-        return ClothingTile(
-          item: item,
-          selected: controller.detectItemInWardrobe(item),
-          onAddCart: controller.selectItemWard,
+        final isAdded = controller.detectItemInWardrobe(item);
+        return GestureDetector(
+          onTap: () {
+            Get.toNamed(
+              '/product-detail',
+              arguments: {
+                'name': item.name ?? '',
+                'brand': item.brand ?? '',
+                'description': item.name ?? '',
+                'photoUrl': item.photoURL ?? '',
+                'price': item.price?.toString() ?? '',
+                'sizes': item.sizes ?? [],
+                'color': item.color ?? '',
+                'onAddCart': controller.selectItemWard,
+                'item': item,
+                'isAdded': isAdded,
+              },
+            );
+          },
+          child: ClothingTile(
+            item: item,
+            selected: isAdded,
+            onAddCart: controller.selectItemWard,
+          ),
         );
       } else {
         return const SizedBox.shrink(); // fallback para tipos desconocidos

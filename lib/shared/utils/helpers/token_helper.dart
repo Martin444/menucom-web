@@ -10,9 +10,7 @@ String hashAccessToken(String accessToken) {
 
 String decryptAccessToken(String encodedToken) {
   try {
-    debugPrint('[decryptAccessToken] base64Url recibido: $encodedToken');
     final decoded = utf8.decode(base64Url.decode(encodedToken));
-    debugPrint('[decryptAccessToken] token decodificado: $decoded');
     return decoded;
   } catch (e, stack) {
     debugPrint('[decryptAccessToken] Error al decodificar: $e');

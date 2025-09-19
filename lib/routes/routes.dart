@@ -6,4 +6,5 @@ class PURoutes {
   static String CONFIRMORDER = '/confirmar-pedido';
   static String CHECKOUT_STATUS = '/checkout/status';
   static String ROUTE_TEST = '/route-test';
+  static String PRODUCT_DETAIL = '/product-detail';
 }

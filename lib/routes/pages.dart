@@ -7,6 +7,8 @@ import 'package:menucom_catalog/features/my_cart/presentation/pages/my_cart_page
 import 'package:menucom_catalog/features/my_cart/presentation/pages/checkout_status_page.dart';
 import 'package:menucom_catalog/features/route_test/route_test_page.dart';
 import 'package:menucom_catalog/routes/routes.dart';
+import 'package:menucom_catalog/features/product_detail/product_detail_page.dart';
+import 'package:menucom_catalog/features/product_detail/getx/product_detail_binding.dart';
 
 class PUPages {
   static final List<GetPage> pagesRoutes = [
@@ -47,6 +49,12 @@ class PUPages {
     GetPage(
       name: PURoutes.ROUTE_TEST,
       page: () => const RouteTestPage(),
+      transition: Transition.fadeIn,
+    ),
+    GetPage(
+      name: PURoutes.PRODUCT_DETAIL,
+      page: () => ProductDetailPage.fromArguments(),
+      binding: ProductDetailBinding(),
       transition: Transition.fadeIn,
     ),
   ];
