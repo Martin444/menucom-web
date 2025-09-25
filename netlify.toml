@@ -1,3 +1,15 @@
 [build]
     command = "flutter build web --release --dart-define=API_URL=https://menucom-api-60e608ae2f99.herokuapp.com --dart-define=MP_PUBLIC_KEY=APP_USR-3ee7f54a-686a-49b4-8592-40610ab7d742"
     publish = "build/web"
+
+[context.production.environment]
+    API_URL = "https://menucom-api-60e608ae2f99.herokuapp.com"
+
+[functions]
+    directory = "netlify/functions"
+
+[[redirects]]
+    from = "/:id"
+    to = "/.netlify/functions/preview"
+    status = 200
+    force = true
