@@ -1,7 +1,7 @@
 
 const SOCIAL_BOTS = [
 	/facebookexternalhit/i,
-    /Prerender/i
+    /Prerender/i,
 	/Twitterbot/i,
 	/WhatsApp/i,
 	/linkedinbot/i,
@@ -69,44 +69,69 @@ exports.handler = async (event) => {
 
 				// 2. Según el role, obtener menú o wardrobe
 				if (user.role === 'clothes') {
-					const responseWard = await fetch(apiUrlward);
-					if (!responseWard.ok) {
-						const textWard = await responseWard.text();
-						console.error('[preview] Error response wardrobe:', textWard);
-						return {
-							statusCode: responseWard.status,
-							body: `No se encontró el recurso wardrobe. Backend response: ${textWard}`,
-						};
-					}
-					data = await responseWard.json();
-					console.log('[preview] Data recibida wardrobe:', data);
-
-					// Construir descripción con todos los descriptions de listmenu
-					let descriptions = '';
-					if (Array.isArray(data.listmenu) && data.listmenu.length > 0) {
-						descriptions = data.listmenu.map(m => m.description).filter(Boolean).join(', ');
-					}
-
-					html = `
-						<!DOCTYPE html>
-						<html lang=\"es\">
-						<head>
-							<meta charset=\"UTF-8\">
-							<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-							<title>${user.name || 'MenuCom'}</title>
-							<meta property=\"og:title\" content=\"${user.name || ''}\" />
-							<meta property=\"og:description\" content=\"${descriptions}\" />
-							<meta property=\"og:image\" content=\"${user.photoURL || ''}\" />
-							<meta property=\"og:url\" content=\"https://menu-comerce.netlify.app/${id}\" />
-							<meta name=\"twitter:card\" content=\"summary_large_image\" />
-						</head>
-						<body>
-							<h1>${user.name || ''}</h1>
-							<p>${descriptions}</p>
-							<img src=\"${user.photoURL || ''}\" alt=\"Imagen del comercio\" />
-						</body>
-						</html>
-					`;
+										const responseWard = await fetch(apiUrlward);
+										if (!responseWard.ok) {
+												const textWard = await responseWard.text();
+												console.error('[preview] Error response wardrobe:', textWard);
+												// Fallback HTML si wardrobe falla
+												html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>${user.name || 'MenuCom'}</title>
+	<meta property="og:title" content="${user.name || 'MenuCom'}" />
+	<meta property="og:description" content="Catálogo de productos" />
+	<meta property="og:image" content="${user.photoURL || 'https://menu-comerce.netlify.app/default-image.png'}" />
+	<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="MenuCom" />
+	<meta name="twitter:title" content="${user.name || 'MenuCom'}" />
+	<meta name="twitter:description" content="Catálogo de productos" />
+	<meta name="twitter:image" content="${user.photoURL || 'https://menu-comerce.netlify.app/default-image.png'}" />
+	<meta name="twitter:card" content="summary_large_image" />
+</head>
+<body>
+	<h1>${user.name || ''}</h1>
+	<p>No se encontró el wardrobe.</p>
+</body>
+</html>
+												`;
+										} else {
+												data = await responseWard.json();
+												// Construir descripción con todos los descriptions de listmenu
+												let descriptions = '';
+												if (Array.isArray(data.listmenu) && data.listmenu.length > 0) {
+														descriptions = data.listmenu.map(m => m.description).filter(Boolean).join(', ');
+												}
+												html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>${user.name || 'MenuCom'}</title>
+	<meta property="og:title" content="${user.name || 'MenuCom'}" />
+	<meta property="og:description" content="${descriptions || 'Catálogo de productos'}" />
+	<meta property="og:image" content="${user.photoURL || 'https://menu-comerce.netlify.app/default-image.png'}" />
+	<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="MenuCom" />
+	<meta name="twitter:title" content="${user.name || 'MenuCom'}" />
+	<meta name="twitter:description" content="${descriptions || 'Catálogo de productos'}" />
+	<meta name="twitter:image" content="${user.photoURL || 'https://menu-comerce.netlify.app/default-image.png'}" />
+	<meta name="twitter:card" content="summary_large_image" />
+</head>
+<body>
+	<h1>${user.name || ''}</h1>
+	<p>${descriptions}</p>
+	<img src="${user.photoURL || 'https://menu-comerce.netlify.app/default-image.png'}" alt="Imagen del comercio" />
+	<pre>${JSON.stringify(data, null, 2)}</pre>
+</body>
+</html>
+												`;
+										}
 				} else {
 					const responseMenu = await fetch(apiUrlmenu);
 					if (!responseMenu.ok) {
@@ -117,29 +142,34 @@ exports.handler = async (event) => {
 							body: `No se encontró el recurso menu. Backend response: ${textMenu}`,
 						};
 					}
-					data = await responseMenu.json();
-					console.log('[preview] Data recibida menu:', data);
-
-					html = `
-						<!DOCTYPE html>
-						<html lang=\"es\">
-						<head>
-							<meta charset=\"UTF-8\">
-							<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-							<title>${data.nombre || 'MenuCom'}</title>
-							<meta property=\"og:title\" content=\"${data.nombre || ''}\" />
-							<meta property=\"og:description\" content=\"${data.descripcion || ''}\" />
-							<meta property=\"og:image\" content=\"${data.imagen || ''}\" />
-							<meta property=\"og:url\" content=\"https://menu-comerce.netlify.app/${id}\" />
-							<meta name=\"twitter:card\" content=\"summary_large_image\" />
-						</head>
-						<body>
-							<h1>${data.nombre || ''}</h1>
-							<p>${data.descripcion || ''}</p>
-							<img src=\"${data.imagen || ''}\" alt=\"Imagen del comercio\" />
-						</body>
-						</html>
-					`;
+										data = await responseMenu.json();
+										console.log('[preview] Data recibida menu:', data);
+										html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>${data.nombre || 'MenuCom'}</title>
+	<meta property="og:title" content="${data.nombre || 'MenuCom'}" />
+	<meta property="og:description" content="${data.descripcion || 'Catálogo de productos'}" />
+	<meta property="og:image" content="${data.imagen || 'https://menu-comerce.netlify.app/default-image.png'}" />
+	<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="MenuCom" />
+	<meta name="twitter:title" content="${data.nombre || 'MenuCom'}" />
+	<meta name="twitter:description" content="${data.descripcion || 'Catálogo de productos'}" />
+	<meta name="twitter:image" content="${data.imagen || 'https://menu-comerce.netlify.app/default-image.png'}" />
+	<meta name="twitter:card" content="summary_large_image" />
+</head>
+<body>
+	<h1>${data.nombre || ''}</h1>
+	<p>${data.descripcion || ''}</p>
+	<img src="${data.imagen || 'https://menu-comerce.netlify.app/default-image.png'}" alt="Imagen del comercio" />
+	<pre>${JSON.stringify(data, null, 2)}</pre>
+</body>
+</html>
+										`;
 				}
 
 				return {
@@ -151,9 +181,37 @@ exports.handler = async (event) => {
 				};
 			} catch (error) {
 				console.error('[preview] Error general:', error);
+				// Fallback HTML genérico con metatags
+				const fallbackHtml = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MenuCom</title>
+  <meta property="og:title" content="MenuCom" />
+  <meta property="og:description" content="Catálogo de productos" />
+  <meta property="og:image" content="https://menu-comerce.netlify.app/default-image.png" />
+  <meta property="og:url" content="https://menu-comerce.netlify.app/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="MenuCom" />
+  <meta name="twitter:title" content="MenuCom" />
+  <meta name="twitter:description" content="Catálogo de productos" />
+  <meta name="twitter:image" content="https://menu-comerce.netlify.app/default-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+</head>
+<body>
+  <h1>MenuCom</h1>
+  <p>No se encontró el recurso solicitado.</p>
+</body>
+</html>
+				`;
 				return {
-					statusCode: 500,
-					body: 'Error general en preview: ' + error.message,
+					statusCode: 200,
+					headers: {
+						'Content-Type': 'text/html',
+					},
+					body: fallbackHtml,
 				};
 			}
 		};
