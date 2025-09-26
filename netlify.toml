@@ -10,6 +10,6 @@
 
 [[redirects]]
     from = "/:id"
-    to = "/.netlify/functions/preview"
+    to = "/.netlify/functions/preview?id=:id"
     status = 200
     force = true
