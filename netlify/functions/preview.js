@@ -15,6 +15,21 @@ function isSocialBot(userAgent) {
 	return SOCIAL_BOTS.some((regex) => regex.test(userAgent));
 }
 
+// Helper para decodificar la URL proxy (adaptado de RobustNetworkImage._extractOriginalUrl)
+function extractOriginalUrl(proxyUrl) {
+	if (!proxyUrl || typeof proxyUrl !== 'string') return proxyUrl;
+	// Ejemplo de proxy: https://proxy.menucom.com/?url=https%3A%2F%2Fmiimagen.com%2Ffoto.jpg
+	try {
+		const urlObj = new URL(proxyUrl);
+		if (urlObj.searchParams.has('url')) {
+			return decodeURIComponent(urlObj.searchParams.get('url'));
+		}
+	} catch (e) {
+		// No es una URL válida, devolver tal cual
+	}
+	return proxyUrl;
+}
+
 exports.handler = async (event) => {
 
 			const userAgent = event.headers['user-agent'] || '';
@@ -67,71 +82,73 @@ exports.handler = async (event) => {
 				let data = null;
 				let html = '';
 
-				// 2. Según el role, obtener menú o wardrobe
-				if (user.role === 'clothes') {
-										const responseWard = await fetch(apiUrlward);
-										if (!responseWard.ok) {
-												const textWard = await responseWard.text();
-												console.error('[preview] Error response wardrobe:', textWard);
-												// Fallback HTML si wardrobe falla
-												html = `
-<!DOCTYPE html>
-<html lang="es">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>${user.name || 'MenuCom'}</title>
-	<meta property="og:title" content="${user.name || 'MenuCom'}" />
-	<meta property="og:description" content="Catálogo de productos" />
-	<meta property="og:image" content="${user.photoURL || 'https://menu-comerce.netlify.app/default-image.png'}" />
-	<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
-	<meta property="og:type" content="website" />
-	<meta property="og:site_name" content="MenuCom" />
-	<meta name="twitter:title" content="${user.name || 'MenuCom'}" />
-	<meta name="twitter:description" content="Catálogo de productos" />
-	<meta name="twitter:image" content="${user.photoURL || 'https://menu-comerce.netlify.app/default-image.png'}" />
-	<meta name="twitter:card" content="summary_large_image" />
-</head>
-<body>
-	<h1>${user.name || ''}</h1>
-	<p>No se encontró el wardrobe.</p>
-</body>
-</html>
-												`;
-										} else {
-												data = await responseWard.json();
-												// Construir descripción con todos los descriptions de listmenu
-												let descriptions = '';
-												if (Array.isArray(data.listmenu) && data.listmenu.length > 0) {
-														descriptions = data.listmenu.map(m => m.description).filter(Boolean).join(', ');
-												}
-												html = `
-<!DOCTYPE html>
-<html lang="es">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>${user.name || 'MenuCom'}</title>
-	<meta property="og:title" content="${user.name || 'MenuCom'}" />
-	<meta property="og:description" content="${descriptions || 'Catálogo de productos'}" />
-	<meta property="og:image" content="${user.photoURL || 'https://menu-comerce.netlify.app/default-image.png'}" />
-	<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
-	<meta property="og:type" content="website" />
-	<meta property="og:site_name" content="MenuCom" />
-	<meta name="twitter:title" content="${user.name || 'MenuCom'}" />
-	<meta name="twitter:description" content="${descriptions || 'Catálogo de productos'}" />
-	<meta name="twitter:image" content="${user.photoURL || 'https://menu-comerce.netlify.app/default-image.png'}" />
-	<meta name="twitter:card" content="summary_large_image" />
-</head>
-<body>
-	<h1>${user.name || ''}</h1>
-	<p>${descriptions}</p>
-	<img src="${user.photoURL || 'https://menu-comerce.netlify.app/default-image.png'}" alt="Imagen del comercio" />
-	<pre>${JSON.stringify(data, null, 2)}</pre>
-</body>
-</html>
-												`;
-										}
+	               // 2. Según el role, obtener menú o wardrobe
+	               // Decodificar la URL de la foto del usuario si existe
+	               const decodedPhotoURL = extractOriginalUrl(user.photoURL) || 'https://menu-comerce.netlify.app/default-image.png';
+	               if (user.role === 'clothes') {
+	                                       const responseWard = await fetch(apiUrlward);
+	                                       if (!responseWard.ok) {
+	                                               const textWard = await responseWard.text();
+	                                               console.error('[preview] Error response wardrobe:', textWard);
+	                                               // Fallback HTML si wardrobe falla
+	                                               html = `
+	<!DOCTYPE html>
+	<html lang="es">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>${user.name || 'MenuCom'}</title>
+		<meta property="og:title" content="${user.name || 'MenuCom'}" />
+		<meta property="og:description" content="Catálogo de productos" />
+		<meta property="og:image" content="${decodedPhotoURL}" />
+		<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="MenuCom" />
+		<meta name="twitter:title" content="${user.name || 'MenuCom'}" />
+		<meta name="twitter:description" content="Catálogo de productos" />
+		<meta name="twitter:image" content="${decodedPhotoURL}" />
+		<meta name="twitter:card" content="summary_large_image" />
+	</head>
+	<body>
+		<h1>${user.name || ''}</h1>
+		<p>No se encontró el wardrobe.</p>
+	</body>
+	</html>
+	                                               `;
+	                                       } else {
+	                                               data = await responseWard.json();
+	                                               // Construir descripción con todos los descriptions de listmenu
+	                                               let descriptions = '';
+	                                               if (Array.isArray(data.listmenu) && data.listmenu.length > 0) {
+	                                                       descriptions = data.listmenu.map(m => m.description).filter(Boolean).join(', ');
+	                                               }
+	                                               html = `
+	<!DOCTYPE html>
+	<html lang="es">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>${user.name || 'MenuCom'}</title>
+		<meta property="og:title" content="${user.name || 'MenuCom'}" />
+		<meta property="og:description" content="${descriptions || 'Catálogo de productos'}" />
+		<meta property="og:image" content="${decodedPhotoURL}" />
+		<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="MenuCom" />
+		<meta name="twitter:title" content="${user.name || 'MenuCom'}" />
+		<meta name="twitter:description" content="${descriptions || 'Catálogo de productos'}" />
+		<meta name="twitter:image" content="${decodedPhotoURL}" />
+		<meta name="twitter:card" content="summary_large_image" />
+	</head>
+	<body>
+		<h1>${user.name || ''}</h1>
+		<p>${descriptions}</p>
+		<img src="${decodedPhotoURL}" alt="Imagen del comercio" />
+		<pre>${JSON.stringify(data, null, 2)}</pre>
+	</body>
+	</html>
+	                                               `;
+	                                       }
 				} else {
 					const responseMenu = await fetch(apiUrlmenu);
 					if (!responseMenu.ok) {
@@ -144,32 +161,32 @@ exports.handler = async (event) => {
 					}
 										data = await responseMenu.json();
 										console.log('[preview] Data recibida menu:', data);
-										html = `
-<!DOCTYPE html>
-<html lang="es">
-<head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>${data.nombre || 'MenuCom'}</title>
-	<meta property="og:title" content="${data.nombre || 'MenuCom'}" />
-	<meta property="og:description" content="${data.descripcion || 'Catálogo de productos'}" />
-	<meta property="og:image" content="${data.imagen || 'https://menu-comerce.netlify.app/default-image.png'}" />
-	<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
-	<meta property="og:type" content="website" />
-	<meta property="og:site_name" content="MenuCom" />
-	<meta name="twitter:title" content="${data.nombre || 'MenuCom'}" />
-	<meta name="twitter:description" content="${data.descripcion || 'Catálogo de productos'}" />
-	<meta name="twitter:image" content="${data.imagen || 'https://menu-comerce.netlify.app/default-image.png'}" />
-	<meta name="twitter:card" content="summary_large_image" />
-</head>
-<body>
-	<h1>${data.nombre || ''}</h1>
-	<p>${data.descripcion || ''}</p>
-	<img src="${data.imagen || 'https://menu-comerce.netlify.app/default-image.png'}" alt="Imagen del comercio" />
-	<pre>${JSON.stringify(data, null, 2)}</pre>
-</body>
-</html>
-										`;
+	                                       html = `
+	<!DOCTYPE html>
+	<html lang="es">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>${data.nombre || 'MenuCom'}</title>
+		<meta property="og:title" content="${data.nombre || 'MenuCom'}" />
+		<meta property="og:description" content="${data.descripcion || 'Catálogo de productos'}" />
+		<meta property="og:image" content="${data.imagen ? extractOriginalUrl(data.imagen) : 'https://menu-comerce.netlify.app/default-image.png'}" />
+		<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="MenuCom" />
+		<meta name="twitter:title" content="${data.nombre || 'MenuCom'}" />
+		<meta name="twitter:description" content="${data.descripcion || 'Catálogo de productos'}" />
+		<meta name="twitter:image" content="${data.imagen ? extractOriginalUrl(data.imagen) : 'https://menu-comerce.netlify.app/default-image.png'}" />
+		<meta name="twitter:card" content="summary_large_image" />
+	</head>
+	<body>
+		<h1>${data.nombre || ''}</h1>
+		<p>${data.descripcion || ''}</p>
+		<img src="${data.imagen ? extractOriginalUrl(data.imagen) : 'https://menu-comerce.netlify.app/default-image.png'}" alt="Imagen del comercio" />
+		<pre>${JSON.stringify(data, null, 2)}</pre>
+	</body>
+	</html>
+	                                       `;
 				}
 
 				return {
