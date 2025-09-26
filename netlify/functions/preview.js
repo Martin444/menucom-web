@@ -167,12 +167,14 @@ exports.handler = async (event) => {
 	                                               if (Array.isArray(data.listmenu) && data.listmenu.length > 0) {
 	                                                       descriptions = data.listmenu.map(m => m.description).filter(Boolean).join(', ');
 	                                               }
+	                                               // La imagen siempre viene del usuario, no de la respuesta del wardrobe.
+	                                               const imageUrl = extractOriginalUrl(user.photoURL) || 'https://menu-comerce.netlify.app/default-image.png';
 	                                               html = buildHtml({
 	                                                 title: user.name || 'MenuCom',
 	                                                 description: descriptions,
-	                                                 image: safeUserPhotoUrl,
+	                                                 image: imageUrl,
 	                                                 url: `https://menu-comerce.netlify.app/${id}`,
-	                                                 body: `<p>${descriptions}</p><img src="${safeUserPhotoUrl}" alt="Imagen del comercio" />`,
+	                                                 body: `<p>${descriptions || ''}</p><img src="${imageUrl}" alt="Imagen del comercio" />`,
 	                                                 pre: JSON.stringify(data, null, 2),
 	                                               });
 	                                       }
@@ -188,13 +190,17 @@ exports.handler = async (event) => {
 					}
 										data = await responseMenu.json();
 										console.log('[preview] Data recibida menu:', data);
-										const menuImageUrl = extractOriginalUrl(data.imagen) || 'https://menu-comerce.netlify.app/default-image.png';
+										// La imagen y el título principal vienen del objeto 'user', no de la respuesta del menú.
+										// La respuesta del menú ('data') se usa para la descripción.
+										const imageUrl = extractOriginalUrl(user.photoURL) || 'https://menu-comerce.netlify.app/default-image.png';
+										const description = Array.isArray(data.listmenu) ? data.listmenu.map(m => m.description).filter(Boolean).join(', ') : 'Catálogo de productos';
+
 	                                       html = buildHtml({
-	                                         title: data.nombre || 'MenuCom',
-	                                         description: data.descripcion || 'Catálogo de productos',
-	                                         image: menuImageUrl,
+	                                         title: user.name || 'MenuCom',
+	                                         description: description,
+	                                         image: imageUrl,
 	                                         url: `https://menu-comerce.netlify.app/${id}`,
-	                                         body: `<p>${data.descripcion || ''}</p><img src="${menuImageUrl}" alt="Imagen del comercio" />`,
+	                                         body: `<p>${description || ''}</p><img src="${imageUrl}" alt="Imagen del comercio" />`,
 	                                         pre: JSON.stringify(data, null, 2),
 	                                       });
 				}
