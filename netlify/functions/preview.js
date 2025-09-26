@@ -18,16 +18,20 @@ function isSocialBot(userAgent) {
 // Helper para decodificar la URL proxy (adaptado de RobustNetworkImage._extractOriginalUrl)
 function extractOriginalUrl(proxyUrl) {
 	if (!proxyUrl || typeof proxyUrl !== 'string') return proxyUrl;
-	// Ejemplo de proxy: https://proxy.menucom.com/?url=https%3A%2F%2Fmiimagen.com%2Ffoto.jpg
+	let originalUrl = proxyUrl;
 	try {
 		const urlObj = new URL(proxyUrl);
 		if (urlObj.searchParams.has('url')) {
-			return decodeURIComponent(urlObj.searchParams.get('url'));
+			originalUrl = decodeURIComponent(urlObj.searchParams.get('url'));
 		}
 	} catch (e) {
 		// No es una URL válida, devolver tal cual
 	}
-	return proxyUrl;
+	// Forzar https
+	if (typeof originalUrl === 'string' && originalUrl.startsWith('http://')) {
+		originalUrl = 'https://' + originalUrl.substring(7);
+	}
+	return originalUrl;
 }
 
 exports.handler = async (event) => {
