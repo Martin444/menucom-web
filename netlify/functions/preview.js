@@ -160,6 +160,7 @@ exports.handler = async (event) => {
 	                                                 image: safeUserPhotoUrl,
 	                                                 url: `https://menu-comerce.netlify.app/${id}`,
 	                                                 body: `<p>No se encontró el wardrobe.</p>`,
+	                                                 body: `<p>No se encontró el wardrobe.</p><img src="${safeUserPhotoUrl}" alt="Imagen del comercio" />`,
 	                                               });
 	                                       } else {
 	                                               data = await responseWard.json();
