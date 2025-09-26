@@ -112,6 +112,7 @@ exports.handler = async (event) => {
 								return {
 									statusCode: 200,
 									headers: {
+										'Cache-Control': 'no-cache, no-store, must-revalidate',
 										'Content-Type': 'text/html',
 									},
 									body: fallbackHtml,
@@ -146,33 +147,32 @@ exports.handler = async (event) => {
 
 	               // 2. Según el role, obtener menú o wardrobe
 	               // Decodificar la URL de la foto del usuario si existe
-	               const finalUserPhoto = extractOriginalUrl(user.photoURL) || 'https://menu-comerce.netlify.app/default-image.png';
+	               const safeUserPhotoUrl = extractOriginalUrl(user.photoURL) || 'https://menu-comerce.netlify.app/default-image.png';
 
 	               if (user.role === 'clothes') {
 	                                       const responseWard = await fetch(apiUrlward);
 	                                       if (!responseWard.ok) {
 	                                               const textWard = await responseWard.text();
 	                                               console.error('[preview] Error response wardrobe:', textWard);
-	                                               // Fallback HTML si wardrobe falla
 	                                               html = buildHtml({
 	                                                 title: user.name || 'MenuCom',
 	                                                 description: 'Catálogo de productos',
-	                                                 image: finalUserPhoto,
+	                                                 image: safeUserPhotoUrl,
 	                                                 url: `https://menu-comerce.netlify.app/${id}`,
 	                                                 body: `<p>No se encontró el wardrobe.</p>`,
 	                                               });
 	                                       } else {
 	                                               data = await responseWard.json();
-	                                               let descriptions = '';
+	                                               let descriptions = 'Catálogo de productos';
 	                                               if (Array.isArray(data.listmenu) && data.listmenu.length > 0) {
 	                                                       descriptions = data.listmenu.map(m => m.description).filter(Boolean).join(', ');
 	                                               }
 	                                               html = buildHtml({
 	                                                 title: user.name || 'MenuCom',
-	                                                 description: descriptions || 'Catálogo de productos',
-	                                                 image: finalUserPhoto,
+	                                                 description: descriptions,
+	                                                 image: safeUserPhotoUrl,
 	                                                 url: `https://menu-comerce.netlify.app/${id}`,
-	                                                 body: `<p>${descriptions}</p><img src="${finalUserPhoto}" alt="Imagen del comercio" />`,
+	                                                 body: `<p>${descriptions}</p><img src="${safeUserPhotoUrl}" alt="Imagen del comercio" />`,
 	                                                 pre: JSON.stringify(data, null, 2),
 	                                               });
 	                                       }
@@ -202,6 +202,7 @@ exports.handler = async (event) => {
 				return {
 					statusCode: 200,
 					headers: {
+						'Cache-Control': 'no-cache, no-store, must-revalidate',
 						'Content-Type': 'text/html',
 					},
 					body: html,
@@ -219,6 +220,7 @@ exports.handler = async (event) => {
 								return {
 									statusCode: 200,
 									headers: {
+										'Cache-Control': 'no-cache, no-store, must-revalidate',
 										'Content-Type': 'text/html',
 									},
 									body: fallbackHtml,
