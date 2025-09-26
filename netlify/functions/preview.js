@@ -27,9 +27,9 @@ function extractOriginalUrl(proxyUrl) {
 		} catch (e) {
 				// No es una URL válida, devolver tal cual
 		}
-		// Forzar https
-		if (typeof originalUrl === 'string' && originalUrl.startsWith('http://')) {
-				originalUrl = 'https://' + originalUrl.substring(7);
+		// Forzar https incluso si no es proxy
+		if (typeof originalUrl === 'string') {
+				originalUrl = originalUrl.replace(/^http:\/\//i, 'https://');
 		}
 		return originalUrl;
 }
@@ -146,11 +146,7 @@ exports.handler = async (event) => {
 
 	               // 2. Según el role, obtener menú o wardrobe
 	               // Decodificar la URL de la foto del usuario si existe
-	               let userPhotoUrl = extractOriginalUrl(user.photoURL);
-	               if (userPhotoUrl && userPhotoUrl.startsWith('http://')) {
-	                 userPhotoUrl = userPhotoUrl.replace(/^http:\/\//, 'https://');
-	               }
-	               const finalUserPhoto = userPhotoUrl || 'https://menu-comerce.netlify.app/default-image.png';
+	               const finalUserPhoto = extractOriginalUrl(user.photoURL) || 'https://menu-comerce.netlify.app/default-image.png';
 
 	               if (user.role === 'clothes') {
 	                                       const responseWard = await fetch(apiUrlward);
@@ -192,10 +188,7 @@ exports.handler = async (event) => {
 					}
 										data = await responseMenu.json();
 										console.log('[preview] Data recibida menu:', data);
-										let menuImageUrl = data.imagen ? extractOriginalUrl(data.imagen) : 'https://menu-comerce.netlify.app/default-image.png';
-										if (menuImageUrl && menuImageUrl.startsWith('http://')) {
-											menuImageUrl = menuImageUrl.replace(/^http:\/\//, 'https://');
-										}
+										const menuImageUrl = extractOriginalUrl(data.imagen) || 'https://menu-comerce.netlify.app/default-image.png';
 	                                       html = buildHtml({
 	                                         title: data.nombre || 'MenuCom',
 	                                         description: data.descripcion || 'Catálogo de productos',
