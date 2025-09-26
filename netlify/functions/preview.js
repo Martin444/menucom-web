@@ -1,6 +1,7 @@
 
 const SOCIAL_BOTS = [
 	/facebookexternalhit/i,
+    /Prerender/i
 	/Twitterbot/i,
 	/WhatsApp/i,
 	/linkedinbot/i,
@@ -18,6 +19,7 @@ exports.handler = async (event) => {
 
 			const userAgent = event.headers['user-agent'] || '';
 			console.log('[preview] User-Agent:', userAgent);
+            console.log('[preview] Headers:', event.headers);
 			if (!isSocialBot(userAgent)) {
 				console.log('[preview] No es un bot social, ignorando.');
 				return {
