@@ -17,21 +17,58 @@ function isSocialBot(userAgent) {
 
 // Helper para decodificar la URL proxy (adaptado de RobustNetworkImage._extractOriginalUrl)
 function extractOriginalUrl(proxyUrl) {
-	if (!proxyUrl || typeof proxyUrl !== 'string') return proxyUrl;
-	let originalUrl = proxyUrl;
-	try {
-		const urlObj = new URL(proxyUrl);
-		if (urlObj.searchParams.has('url')) {
-			originalUrl = decodeURIComponent(urlObj.searchParams.get('url'));
+		if (!proxyUrl || typeof proxyUrl !== 'string') return proxyUrl;
+		let originalUrl = proxyUrl;
+		try {
+				const urlObj = new URL(proxyUrl);
+				if (urlObj.searchParams.has('url')) {
+						originalUrl = decodeURIComponent(urlObj.searchParams.get('url'));
+				}
+		} catch (e) {
+				// No es una URL válida, devolver tal cual
 		}
-	} catch (e) {
-		// No es una URL válida, devolver tal cual
-	}
-	// Forzar https
-	if (typeof originalUrl === 'string' && originalUrl.startsWith('http://')) {
-		originalUrl = 'https://' + originalUrl.substring(7);
-	}
-	return originalUrl;
+		// Forzar https
+		if (typeof originalUrl === 'string' && originalUrl.startsWith('http://')) {
+				originalUrl = 'https://' + originalUrl.substring(7);
+		}
+		return originalUrl;
+}
+
+// Helper para generar HTML
+function buildHtml({
+	title = 'MenuCom',
+	description = 'Catálogo de productos',
+	image = 'https://menu-comerce.netlify.app/default-image.png',
+	url = 'https://menu-comerce.netlify.app/',
+	body = '',
+	pre = '',
+}) {
+	return `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>${title}</title>
+	<meta property="og:title" content="${title}" />
+	<meta property="og:description" content="${description}" />
+	<meta property="og:image" content="${image}" />
+	<meta property="og:url" content="${url}" />
+	<meta property="og:type" content="website" />
+	<meta property="og:site_name" content="MenuCom" />
+	<meta name="twitter:title" content="${title}" />
+	<meta name="twitter:description" content="${description}" />
+	<meta name="twitter:image" content="${image}" />
+	<meta name="twitter:card" content="summary_large_image" />
+</head>
+<body>
+	<h1>${title}</h1>
+	<p>${description}</p>
+	${body}
+	${pre ? `<pre>${pre}</pre>` : ''}
+</body>
+</html>
+	`;
 }
 
 exports.handler = async (event) => {
@@ -50,15 +87,36 @@ exports.handler = async (event) => {
 			const API_URL = process.env.API_URL || 'https://menucom-api-60e608ae2f99.herokuapp.com';
 			console.log('[preview] API_URL:', API_URL);
 
-			let id = null;
-			if (event.queryStringParameters && event.queryStringParameters.id) {
-				id = event.queryStringParameters.id;
-				console.log('[preview] ID por query:', id);
-			} else {
-				const pathParts = event.path.split('/');
-				id = pathParts.pop() || pathParts.pop();
-				console.log('[preview] ID por path:', id);
-			}
+						let id = null;
+						let idSource = '';
+						if (event.queryStringParameters && event.queryStringParameters.id) {
+								id = event.queryStringParameters.id;
+								idSource = 'query';
+								console.log('[preview] ID por query:', id);
+						} else {
+								const pathParts = event.path.split('/');
+								id = pathParts.pop() || pathParts.pop();
+								idSource = 'path';
+								console.log('[preview] ID por path:', id);
+						}
+						// Validar que el id exista y sea string no vacío
+						if (!id || typeof id !== 'string' || id.trim() === '') {
+								console.warn('[preview] No se encontró un id válido. Source:', idSource);
+								const fallbackHtml = buildHtml({
+									title: 'MenuCom',
+									description: 'No se encontró el recurso solicitado.',
+									image: 'https://menu-comerce.netlify.app/default-image.png',
+									url: 'https://menu-comerce.netlify.app/',
+									body: '<p>No se encontró el recurso solicitado.</p>',
+								});
+								return {
+									statusCode: 200,
+									headers: {
+										'Content-Type': 'text/html',
+									},
+									body: fallbackHtml,
+								};
+						}
 
 
 			let apiUrluser = `${API_URL}/user/user/${id}`;
@@ -95,30 +153,13 @@ exports.handler = async (event) => {
 	                                               const textWard = await responseWard.text();
 	                                               console.error('[preview] Error response wardrobe:', textWard);
 	                                               // Fallback HTML si wardrobe falla
-	                                               html = `
-	<!DOCTYPE html>
-	<html lang="es">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>${user.name || 'MenuCom'}</title>
-		<meta property="og:title" content="${user.name || 'MenuCom'}" />
-		<meta property="og:description" content="Catálogo de productos" />
-		<meta property="og:image" content="${decodedPhotoURL}" />
-		<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
-		<meta property="og:type" content="website" />
-		<meta property="og:site_name" content="MenuCom" />
-		<meta name="twitter:title" content="${user.name || 'MenuCom'}" />
-		<meta name="twitter:description" content="Catálogo de productos" />
-		<meta name="twitter:image" content="${decodedPhotoURL}" />
-		<meta name="twitter:card" content="summary_large_image" />
-	</head>
-	<body>
-		<h1>${user.name || ''}</h1>
-		<p>No se encontró el wardrobe.</p>
-	</body>
-	</html>
-	                                               `;
+	                                               html = buildHtml({
+	                                                 title: user.name || 'MenuCom',
+	                                                 description: 'Catálogo de productos',
+	                                                 image: decodedPhotoURL,
+	                                                 url: `https://menu-comerce.netlify.app/${id}`,
+	                                                 body: `<p>No se encontró el wardrobe.</p>`,
+	                                               });
 	                                       } else {
 	                                               data = await responseWard.json();
 	                                               // Construir descripción con todos los descriptions de listmenu
@@ -126,32 +167,14 @@ exports.handler = async (event) => {
 	                                               if (Array.isArray(data.listmenu) && data.listmenu.length > 0) {
 	                                                       descriptions = data.listmenu.map(m => m.description).filter(Boolean).join(', ');
 	                                               }
-	                                               html = `
-	<!DOCTYPE html>
-	<html lang="es">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>${user.name || 'MenuCom'}</title>
-		<meta property="og:title" content="${user.name || 'MenuCom'}" />
-		<meta property="og:description" content="${descriptions || 'Catálogo de productos'}" />
-		<meta property="og:image" content="${decodedPhotoURL}" />
-		<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
-		<meta property="og:type" content="website" />
-		<meta property="og:site_name" content="MenuCom" />
-		<meta name="twitter:title" content="${user.name || 'MenuCom'}" />
-		<meta name="twitter:description" content="${descriptions || 'Catálogo de productos'}" />
-		<meta name="twitter:image" content="${decodedPhotoURL}" />
-		<meta name="twitter:card" content="summary_large_image" />
-	</head>
-	<body>
-		<h1>${user.name || ''}</h1>
-		<p>${descriptions}</p>
-		<img src="${decodedPhotoURL}" alt="Imagen del comercio" />
-		<pre>${JSON.stringify(data, null, 2)}</pre>
-	</body>
-	</html>
-	                                               `;
+	                                               html = buildHtml({
+	                                                 title: user.name || 'MenuCom',
+	                                                 description: descriptions || 'Catálogo de productos',
+	                                                 image: decodedPhotoURL,
+	                                                 url: `https://menu-comerce.netlify.app/${id}`,
+	                                                 body: `<p>${descriptions}</p><img src="${decodedPhotoURL}" alt="Imagen del comercio" />`,
+	                                                 pre: JSON.stringify(data, null, 2),
+	                                               });
 	                                       }
 				} else {
 					const responseMenu = await fetch(apiUrlmenu);
@@ -165,32 +188,14 @@ exports.handler = async (event) => {
 					}
 										data = await responseMenu.json();
 										console.log('[preview] Data recibida menu:', data);
-	                                       html = `
-	<!DOCTYPE html>
-	<html lang="es">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>${data.nombre || 'MenuCom'}</title>
-		<meta property="og:title" content="${data.nombre || 'MenuCom'}" />
-		<meta property="og:description" content="${data.descripcion || 'Catálogo de productos'}" />
-		<meta property="og:image" content="${data.imagen ? extractOriginalUrl(data.imagen) : 'https://menu-comerce.netlify.app/default-image.png'}" />
-		<meta property="og:url" content="https://menu-comerce.netlify.app/${id}" />
-		<meta property="og:type" content="website" />
-		<meta property="og:site_name" content="MenuCom" />
-		<meta name="twitter:title" content="${data.nombre || 'MenuCom'}" />
-		<meta name="twitter:description" content="${data.descripcion || 'Catálogo de productos'}" />
-		<meta name="twitter:image" content="${data.imagen ? extractOriginalUrl(data.imagen) : 'https://menu-comerce.netlify.app/default-image.png'}" />
-		<meta name="twitter:card" content="summary_large_image" />
-	</head>
-	<body>
-		<h1>${data.nombre || ''}</h1>
-		<p>${data.descripcion || ''}</p>
-		<img src="${data.imagen ? extractOriginalUrl(data.imagen) : 'https://menu-comerce.netlify.app/default-image.png'}" alt="Imagen del comercio" />
-		<pre>${JSON.stringify(data, null, 2)}</pre>
-	</body>
-	</html>
-	                                       `;
+	                                       html = buildHtml({
+	                                         title: data.nombre || 'MenuCom',
+	                                         description: data.descripcion || 'Catálogo de productos',
+	                                         image: data.imagen ? extractOriginalUrl(data.imagen) : 'https://menu-comerce.netlify.app/default-image.png',
+	                                         url: `https://menu-comerce.netlify.app/${id}`,
+	                                         body: `<p>${data.descripcion || ''}</p><img src="${data.imagen ? extractOriginalUrl(data.imagen) : 'https://menu-comerce.netlify.app/default-image.png'}" alt="Imagen del comercio" />`,
+	                                         pre: JSON.stringify(data, null, 2),
+	                                       });
 				}
 
 				return {
@@ -203,36 +208,19 @@ exports.handler = async (event) => {
 			} catch (error) {
 				console.error('[preview] Error general:', error);
 				// Fallback HTML genérico con metatags
-				const fallbackHtml = `
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MenuCom</title>
-  <meta property="og:title" content="MenuCom" />
-  <meta property="og:description" content="Catálogo de productos" />
-  <meta property="og:image" content="https://menu-comerce.netlify.app/default-image.png" />
-  <meta property="og:url" content="https://menu-comerce.netlify.app/" />
-  <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="MenuCom" />
-  <meta name="twitter:title" content="MenuCom" />
-  <meta name="twitter:description" content="Catálogo de productos" />
-  <meta name="twitter:image" content="https://menu-comerce.netlify.app/default-image.png" />
-  <meta name="twitter:card" content="summary_large_image" />
-</head>
-<body>
-  <h1>MenuCom</h1>
-  <p>No se encontró el recurso solicitado.</p>
-</body>
-</html>
-				`;
-				return {
-					statusCode: 200,
-					headers: {
-						'Content-Type': 'text/html',
-					},
-					body: fallbackHtml,
-				};
+								const fallbackHtml = buildHtml({
+									title: 'MenuCom',
+									description: 'No se encontró el recurso solicitado.',
+									image: 'https://menu-comerce.netlify.app/default-image.png',
+									url: 'https://menu-comerce.netlify.app/',
+									body: '<p>No se encontró el recurso solicitado.</p>',
+								});
+								return {
+									statusCode: 200,
+									headers: {
+										'Content-Type': 'text/html',
+									},
+									body: fallbackHtml,
+								};
 			}
 		};
