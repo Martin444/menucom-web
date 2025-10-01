@@ -76,41 +76,16 @@ exports.handler = async (event) => {
 			const userAgent = event.headers['user-agent'] || '';
 			console.log('[preview] User-Agent:', userAgent);
             console.log('[preview] Headers:', event.headers);
+			
+			// Si no es un bot social, pasar al siguiente handler (fallback)
 			if (!isSocialBot(userAgent)) {
-				console.log('[preview] No es un bot social, renderizando index.html Flutter.');
-				// En producción, fetch del index.html publicado
-				try {
-					const protocol = event.headers['x-forwarded-proto'] || 'https';
-					const host = event.headers['host'] || 'menu-comerce.netlify.app';
-					const indexUrl = `${protocol}://${host}/index.html`;
-					console.log('[preview] Fetching index.html desde:', indexUrl);
-					
-					const response = await fetch(indexUrl);
-					if (!response.ok) {
-						throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-					}
-					const indexHtml = await response.text();
-					
-					return {
-						statusCode: 200,
-						headers: {
-							'Content-Type': 'text/html',
-							'Cache-Control': 'no-cache',
-						},
-						body: indexHtml,
-					};
-				} catch (err) {
-					console.error('[preview] Error obteniendo index.html:', err);
-					// Fallback: redireccionar a /index.html
-					return {
-						statusCode: 302,
-						headers: {
-							'Location': '/index.html',
-							'Cache-Control': 'no-cache',
-						},
-						body: '',
-					};
-				}
+				console.log('[preview] No es un bot social, pasando al fallback.');
+				// Retornar null o undefined para que Netlify pase al siguiente redirect
+				// Esto permite que el fallback /* -> /index.html se ejecute
+				return {
+					statusCode: 404,
+					body: 'Not a bot - pass to next handler',
+				};
 			}
 
 			const API_URL = process.env.API_URL || 'https://menucom-api-60e608ae2f99.herokuapp.com';

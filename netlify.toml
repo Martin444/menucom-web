@@ -8,8 +8,16 @@
 [functions]
     directory = "netlify/functions"
 
+# Redirect para UUIDs: intentar la función preview primero
+# Si falla (404), caerá al fallback de abajo
 [[redirects]]
     from = "/:id"
     to = "/.netlify/functions/preview?id=:id"
     status = 200
-    force = true
+    force = false
+
+# Fallback: todas las demás rutas (o si preview retorna 404) van a Flutter
+[[redirects]]
+    from = "/*"
+    to = "/index.html"
+    status = 200
