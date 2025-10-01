@@ -78,24 +78,39 @@ exports.handler = async (event) => {
             console.log('[preview] Headers:', event.headers);
 			if (!isSocialBot(userAgent)) {
 				console.log('[preview] No es un bot social, renderizando index.html Flutter.');
-				const fs = require('fs');
-				const path = require('path');
-				const indexPath = path.join(__dirname, '../../build/web/index.html');
-				let indexHtml = '';
+				// En producción, fetch del index.html publicado
 				try {
-					indexHtml = fs.readFileSync(indexPath, 'utf8');
+					const protocol = event.headers['x-forwarded-proto'] || 'https';
+					const host = event.headers['host'] || 'menu-comerce.netlify.app';
+					const indexUrl = `${protocol}://${host}/index.html`;
+					console.log('[preview] Fetching index.html desde:', indexUrl);
+					
+					const response = await fetch(indexUrl);
+					if (!response.ok) {
+						throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+					}
+					const indexHtml = await response.text();
+					
+					return {
+						statusCode: 200,
+						headers: {
+							'Content-Type': 'text/html',
+							'Cache-Control': 'no-cache',
+						},
+						body: indexHtml,
+					};
 				} catch (err) {
-					console.error('[preview] Error leyendo index.html:', err);
-					indexHtml = '<!DOCTYPE html><html><body><h1>Error cargando la app</h1></body></html>';
+					console.error('[preview] Error obteniendo index.html:', err);
+					// Fallback: redireccionar a /index.html
+					return {
+						statusCode: 302,
+						headers: {
+							'Location': '/index.html',
+							'Cache-Control': 'no-cache',
+						},
+						body: '',
+					};
 				}
-				return {
-					statusCode: 200,
-					headers: {
-						'Content-Type': 'text/html',
-						'Cache-Control': 'no-cache',
-					},
-					body: indexHtml,
-				};
 			}
 
 			const API_URL = process.env.API_URL || 'https://menucom-api-60e608ae2f99.herokuapp.com';

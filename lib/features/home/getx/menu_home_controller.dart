@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:pu_material/widgets/cards/cart/model/cart_item_model.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
+import 'package:menucom_catalog/core/helpers/html_metadata_helper.dart';
 
 class MenuHomeCartController extends GetxController {
   RxList<MenuModel> listMenu = <MenuModel>[].obs;
@@ -243,6 +244,15 @@ class MenuHomeCartController extends GetxController {
       ownerInfo.value = response.owner;
       nameComerce.value = response.owner?.name ?? '';
 
+      // ✅ Actualizar metadatos HTML (título, favicon, meta tags)
+      if (response.owner != null) {
+        HtmlMetadataHelper.updateCommerceMetadata(
+          name: response.owner!.name ?? 'MenuCom',
+          logoUrl: response.owner!.photoURL,
+          description: 'Catálogo de productos y servicios',
+        );
+      }
+
       // Actualizar menús
       if (response.listmenus != null) {
         listMenu.assignAll(response.listmenus!);
@@ -288,6 +298,12 @@ class MenuHomeCartController extends GetxController {
       persistedOwnerId.value = idMenu;
 
       nameComerce.value = responseWar.owner!;
+
+      // ✅ Actualizar metadatos HTML (título, favicon, meta tags)
+      // Nota: En wardrobe no tenemos photoURL en la respuesta actual,
+      // pero actualizamos el título al menos
+      HtmlMetadataHelper.updateTitle('${responseWar.owner} - MenuCom');
+
       for (var e in responseWar.listClothing!) {
         wardList.add(e);
       }
