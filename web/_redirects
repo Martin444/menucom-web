@@ -1,1 +1,14 @@
-/* /index.html 200
+# Rutas para Flutter SPA - todas las rutas que NO sean UUIDs
+/about /index.html 200
+/contact /index.html 200
+/products /index.html 200
+/products/* /index.html 200
+/cart /index.html 200
+/profile /index.html 200
+/settings /index.html 200
+
+# Cualquier otra ruta de tu app Flutter aquí
+# Nota: Las rutas con pattern UUID serán manejadas por netlify.toml -> preview function
+
+# Fallback final para rutas no específicas (solo si es necesario)
+# /* /index.html 200
