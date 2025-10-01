@@ -77,15 +77,24 @@ exports.handler = async (event) => {
 			console.log('[preview] User-Agent:', userAgent);
             console.log('[preview] Headers:', event.headers);
 			if (!isSocialBot(userAgent)) {
-				console.log('[preview] No es un bot social, redirigiendo a Flutter app.');
-				// Redireccionar a la aplicación Flutter principal
+				console.log('[preview] No es un bot social, renderizando index.html Flutter.');
+				const fs = require('fs');
+				const path = require('path');
+				const indexPath = path.join(__dirname, '../../build/web/index.html');
+				let indexHtml = '';
+				try {
+					indexHtml = fs.readFileSync(indexPath, 'utf8');
+				} catch (err) {
+					console.error('[preview] Error leyendo index.html:', err);
+					indexHtml = '<!DOCTYPE html><html><body><h1>Error cargando la app</h1></body></html>';
+				}
 				return {
-					statusCode: 302,
+					statusCode: 200,
 					headers: {
-						'Location': '/index.html',
+						'Content-Type': 'text/html',
 						'Cache-Control': 'no-cache',
 					},
-					body: '',
+					body: indexHtml,
 				};
 			}
 
