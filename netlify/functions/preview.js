@@ -77,10 +77,15 @@ exports.handler = async (event) => {
 			console.log('[preview] User-Agent:', userAgent);
             console.log('[preview] Headers:', event.headers);
 			if (!isSocialBot(userAgent)) {
-				console.log('[preview] No es un bot social, ignorando.');
+				console.log('[preview] No es un bot social, redirigiendo a Flutter app.');
+				// Redireccionar a la aplicación Flutter principal
 				return {
-					statusCode: 404,
-					body: 'Not a social bot',
+					statusCode: 302,
+					headers: {
+						'Location': '/index.html',
+						'Cache-Control': 'no-cache',
+					},
+					body: '',
 				};
 			}
 
