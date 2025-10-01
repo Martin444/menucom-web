@@ -77,14 +77,57 @@ exports.handler = async (event) => {
 			console.log('[preview] User-Agent:', userAgent);
             console.log('[preview] Headers:', event.headers);
 			
-			// Si no es un bot social, pasar al siguiente handler (fallback)
+			// Si no es un bot social, servir un HTML básico que carga la app Flutter
+			// Esto evita el mensaje de error y permite que Flutter maneje el routing
 			if (!isSocialBot(userAgent)) {
-				console.log('[preview] No es un bot social, pasando al fallback.');
-				// Retornar null o undefined para que Netlify pase al siguiente redirect
-				// Esto permite que el fallback /* -> /index.html se ejecute
+				console.log('[preview] No es un bot social, sirviendo shell HTML.');
+				
+				// HTML mínimo que carga los recursos de Flutter
+				// Flutter manejará el routing interno basado en la URL
+				const shellHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MenuCom</title>
+  <link rel="icon" type="image/png" href="/logomenucom.png"/>
+  <link rel="manifest" href="/manifest.json">
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+  <script src="/mercadopago_bridge.js"></script>
+  <style>
+    body { margin: 0; background: #fff; }
+    #loader { 
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <div id="loader">Cargando...</div>
+  <script src="/flutter.js" defer></script>
+  <script>
+    window.addEventListener('load', function() {
+      _flutter.loader.load({
+        serviceWorker: { serviceWorkerVersion: null },
+        onEntrypointLoaded: function(engineInitializer) {
+          engineInitializer.initializeEngine({ renderer: "html" })
+            .then(function(appRunner) { return appRunner.runApp(); });
+        }
+      });
+    });
+  </script>
+</body>
+</html>`;
+				
 				return {
-					statusCode: 404,
-					body: 'Not a bot - pass to next handler',
+					statusCode: 200,
+					headers: {
+						'Content-Type': 'text/html; charset=utf-8',
+						'Cache-Control': 'no-cache',
+					},
+					body: shellHtml,
 				};
 			}
 
