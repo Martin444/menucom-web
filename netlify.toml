@@ -8,62 +8,24 @@
 [functions]
     directory = "netlify/functions"
 
-# Excluir archivos estáticos explícitamente (deben ir ANTES del redirect de UUIDs)
-[[redirects]]
-    from = "/*.js"
-    to = "/:splat.js"
-    status = 200
+# ⚠️ IMPORTANTE: Netlify sirve archivos estáticos automáticamente desde build/web
+# NO necesitamos redirects para .js, .css, .png, etc.
+# Solo definimos redirects para:
+# 1. UUIDs de comercios (/:id -> preview function)
+# 2. Fallback SPA (/* -> index.html)
 
-[[redirects]]
-    from = "/*.css"
-    to = "/:splat.css"
-    status = 200
-
-[[redirects]]
-    from = "/*.json"
-    to = "/:splat.json"
-    status = 200
-
-[[redirects]]
-    from = "/*.wasm"
-    to = "/:splat.wasm"
-    status = 200
-
-[[redirects]]
-    from = "/*.map"
-    to = "/:splat.map"
-    status = 200
-
-[[redirects]]
-    from = "/*.png"
-    to = "/:splat.png"
-    status = 200
-
-[[redirects]]
-    from = "/*.jpg"
-    to = "/:splat.jpg"
-    status = 200
-
-[[redirects]]
-    from = "/*.svg"
-    to = "/:splat.svg"
-    status = 200
-
-[[redirects]]
-    from = "/*.ico"
-    to = "/:splat.ico"
-    status = 200
-
-# Preview para todos los UUIDs: la función detecta User-Agent
-# - Bot social → HTML con Open Graph tags
-# - Usuario normal → fetch index.html y servir con path preservado
+# Preview para UUIDs de comercios: la función detecta User-Agent
+# - Bot social → HTML con Open Graph tags optimizado
+# - Usuario normal → index.html completo con URL preservada
+# Solo aplica a rutas de un segmento que parecen UUIDs
 [[redirects]]
     from = "/:id"
     to = "/.netlify/functions/preview?id=:id"
     status = 200
-    force = true
+    force = false
     
-# SPA Fallback para rutas no-UUID
+# SPA Fallback para todas las demás rutas
+# Aplica solo si el archivo no existe físicamente
 [[redirects]]
     from = "/*"
     to = "/index.html"
