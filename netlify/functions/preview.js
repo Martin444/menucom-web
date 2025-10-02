@@ -77,49 +77,21 @@ exports.handler = async (event) => {
 			console.log('[preview] User-Agent:', userAgent);
             console.log('[preview] Headers:', event.headers);
 			
-			// Si no es un bot social, servir un HTML básico que carga la app Flutter
-			// Esto evita el mensaje de error y permite que Flutter maneje el routing
-			if (!isSocialBot(userAgent)) {
-				console.log('[preview] No es un bot social, sirviendo shell HTML.');
-				
-				// HTML mínimo que carga los recursos de Flutter
-				// Flutter manejará el routing interno basado en la URL
-				const shellHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <base href="/">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MenuCom</title>
-  <link rel="icon" type="image/png" href="/logomenucom.png"/>
-  <link rel="manifest" href="/manifest.json">
-  <script src="https://sdk.mercadopago.com/js/v2"></script>
-  <script src="/mercadopago_bridge.js"></script>
-  <style>
-    body { margin: 0; background: #fff; }
-    #loader { 
-      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-      display: flex; align-items: center; justify-content: center;
-      font-family: sans-serif;
-    }
-  </style>
-</head>
-<body>
-  <div id="loader">Cargando...</div>
-  <script src="/flutter.js" defer></script>
-  <script>
-    window.addEventListener('load', function() {
-      _flutter.loader.load({
-        serviceWorker: { serviceWorkerVersion: null },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine({ renderer: "html" })
-            .then(function(appRunner) { return appRunner.runApp(); });
-        }
-      });
-    });
-  </script>
-</body>
-</html>`;
+		// Si no es un bot social, hacer rewrite interno a index.html
+		// Esto permite que Flutter cargue completamente sin modificar la URL del navegador
+		if (!isSocialBot(userAgent)) {
+			console.log('[preview] No es un bot social, haciendo rewrite a /index.html');
+			
+			// En lugar de servir un shell vacío, hacemos un rewrite interno a /index.html
+			// Netlify Functions puede leer archivos estáticos usando fs
+			const path = require('path');
+			const fs = require('fs');
+			
+			// La ruta al index.html en el build
+			const indexPath = path.join(__dirname, '../../index.html');
+			
+			try {
+				const indexHtml = fs.readFileSync(indexPath, 'utf8');
 				
 				return {
 					statusCode: 200,
@@ -127,11 +99,21 @@ exports.handler = async (event) => {
 						'Content-Type': 'text/html; charset=utf-8',
 						'Cache-Control': 'no-cache',
 					},
-					body: shellHtml,
+					body: indexHtml,
+				};
+			} catch (error) {
+				console.error('[preview] Error leyendo index.html:', error);
+				
+				// Fallback: redirect 302 a /index.html si no podemos leer el archivo
+				return {
+					statusCode: 302,
+					headers: {
+						'Location': '/index.html',
+						'Cache-Control': 'no-cache',
+					},
 				};
 			}
-
-			const API_URL = process.env.API_URL || 'https://menucom-api-60e608ae2f99.herokuapp.com';
+		}			const API_URL = process.env.API_URL || 'https://menucom-api-60e608ae2f99.herokuapp.com';
 			console.log('[preview] API_URL:', API_URL);
 
 						let id = null;
