@@ -8,15 +8,22 @@
 [functions]
     directory = "netlify/functions"
 
-# Redirect condicional: solo aplica la función para rutas que parezcan UUIDs
-# Esto permite que otras rutas pasen directamente a Flutter
+# NO capturar archivos estáticos (JS, CSS, imágenes, etc.)
+[[redirects]]
+    from = "/*"
+    to = "/:splat"
+    status = 200
+    conditions = {Path = ["/**.js", "/**.css", "/**.png", "/**.jpg", "/**.svg", "/**.json", "/**.wasm", "/**.map"]}
+
+# Redirect para UUIDs (formato específico)
+# Solo captura rutas que parecen UUIDs (8-4-4-4-12 caracteres hexadecimales)
 [[redirects]]
     from = "/:id"
     to = "/.netlify/functions/preview?id=:id"
     status = 200
     force = true
     
-# SPA Fallback para todas las demás rutas
+# SPA Fallback para rutas que no son UUIDs ni archivos estáticos
 [[redirects]]
     from = "/*"
     to = "/index.html"
