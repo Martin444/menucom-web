@@ -8,22 +8,60 @@
 [functions]
     directory = "netlify/functions"
 
-# NO capturar archivos estáticos (JS, CSS, imágenes, etc.)
+# Excluir archivos estáticos explícitamente (deben ir ANTES del redirect de UUIDs)
 [[redirects]]
-    from = "/*"
-    to = "/:splat"
+    from = "/*.js"
+    to = "/:splat.js"
     status = 200
-    conditions = {Path = ["/**.js", "/**.css", "/**.png", "/**.jpg", "/**.svg", "/**.json", "/**.wasm", "/**.map"]}
 
-# Redirect para UUIDs (formato específico)
-# Solo captura rutas que parecen UUIDs (8-4-4-4-12 caracteres hexadecimales)
+[[redirects]]
+    from = "/*.css"
+    to = "/:splat.css"
+    status = 200
+
+[[redirects]]
+    from = "/*.json"
+    to = "/:splat.json"
+    status = 200
+
+[[redirects]]
+    from = "/*.wasm"
+    to = "/:splat.wasm"
+    status = 200
+
+[[redirects]]
+    from = "/*.map"
+    to = "/:splat.map"
+    status = 200
+
+[[redirects]]
+    from = "/*.png"
+    to = "/:splat.png"
+    status = 200
+
+[[redirects]]
+    from = "/*.jpg"
+    to = "/:splat.jpg"
+    status = 200
+
+[[redirects]]
+    from = "/*.svg"
+    to = "/:splat.svg"
+    status = 200
+
+[[redirects]]
+    from = "/*.ico"
+    to = "/:splat.ico"
+    status = 200
+
+# Redirect para UUIDs: solo captura rutas que parecen IDs
 [[redirects]]
     from = "/:id"
     to = "/.netlify/functions/preview?id=:id"
     status = 200
-    force = true
+    force = false
     
-# SPA Fallback para rutas que no son UUIDs ni archivos estáticos
+# SPA Fallback para todas las demás rutas
 [[redirects]]
     from = "/*"
     to = "/index.html"
