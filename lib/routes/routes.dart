@@ -7,7 +7,7 @@ class PURoutes {
   static String CHECKOUT_STATUS = '/checkout/status';
   static String ROUTE_TEST = '/route-test';
   static String PRODUCT_DETAIL = '/product-detail';
-  
+
   /// Ruta dinámica para capturar UUIDs de comercios
   /// Ejemplo: /2229f1e3-2152-474a-94fc-efd8327f6d0c
   /// ⚠️ Esta debe ir al final en pages.dart para no capturar rutas específicas
