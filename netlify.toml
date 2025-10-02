@@ -54,16 +54,16 @@
     to = "/:splat.ico"
     status = 200
 
-# Preview para bots sociales: la función detecta User-Agent y decide qué servir
-# - Si es bot social → HTML con Open Graph tags
-# - Si es usuario normal → rewrite interno a index.html (status 200, sin redirect)
+# Preview para todos los UUIDs: la función detecta User-Agent
+# - Bot social → HTML con Open Graph tags
+# - Usuario normal → fetch index.html y servir con path preservado
 [[redirects]]
     from = "/:id"
     to = "/.netlify/functions/preview?id=:id"
     status = 200
     force = true
     
-# SPA Fallback para todas las demás rutas
+# SPA Fallback para rutas no-UUID
 [[redirects]]
     from = "/*"
     to = "/index.html"
