@@ -57,5 +57,16 @@ class PUPages {
       binding: ProductDetailBinding(),
       transition: Transition.fadeIn,
     ),
+    // ⚠️ IMPORTANTE: Esta ruta debe ir AL FINAL para que no capture rutas específicas
+    // Captura cualquier UUID de comercio (ej: /2229f1e3-2152-474a-94fc-efd8327f6d0c)
+    // GetX evalúa rutas en orden, así que las rutas específicas arriba tienen prioridad
+    GetPage(
+      name: PURoutes.COMMERCE_DETAIL,
+      page: () => const HomePage(),
+      transition: Transition.fadeIn,
+      bindings: [
+        MenuHomeBinding(),
+      ],
+    ),
   ];
 }
