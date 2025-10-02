@@ -77,40 +77,62 @@ exports.handler = async (event) => {
 			console.log('[preview] User-Agent:', userAgent);
             console.log('[preview] Headers:', event.headers);
 			
-		// Si no es un bot social, hacer rewrite interno a index.html
-		// Esto permite que Flutter cargue completamente sin modificar la URL del navegador
+		// Si no es un bot social, hacer rewrite interno a index.html SIN modificar la URL
+		// Importante: Servimos el contenido de index.html pero manteniendo la URL original
 		if (!isSocialBot(userAgent)) {
-			console.log('[preview] No es un bot social, haciendo rewrite a /index.html');
+			console.log('[preview] No es un bot social, sirviendo index.html con URL preservada');
 			
-			// En lugar de servir un shell vacío, hacemos un rewrite interno a /index.html
-			// Netlify Functions puede leer archivos estáticos usando fs
 			const path = require('path');
 			const fs = require('fs');
 			
-			// La ruta al index.html en el build
+			// La ruta al index.html en el build (relativa a la función)
 			const indexPath = path.join(__dirname, '../../index.html');
 			
 			try {
-				const indexHtml = fs.readFileSync(indexPath, 'utf8');
+				let indexHtml = fs.readFileSync(indexPath, 'utf8');
+				
+				// CRÍTICO: Reemplazar <base href="/"> por la URL actual para evitar que Flutter redirija
+				// Esto hace que Flutter piense que está siendo servido desde la ruta correcta
+				const currentPath = event.path; // Ej: /2229f1e3-2152-474a-94fc-efd8327f6d0c
+				
+				// NO modificar el base href, dejarlo en "/" para que Flutter maneje el routing correctamente
+				// El truco es que estamos sirviendo el HTML completo en la URL correcta (status 200)
+				// Netlify hace el "rewrite" sin cambiar la URL del navegador
 				
 				return {
 					statusCode: 200,
 					headers: {
 						'Content-Type': 'text/html; charset=utf-8',
 						'Cache-Control': 'no-cache',
+						// Headers para evitar que el navegador cachee o redirija
+						'X-Robots-Tag': 'noindex', // Evitar indexar estas URLs directas
 					},
 					body: indexHtml,
 				};
 			} catch (error) {
 				console.error('[preview] Error leyendo index.html:', error);
 				
-				// Fallback: redirect 302 a /index.html si no podemos leer el archivo
+				// Fallback: devolver HTML simple que redirige con JavaScript (no HTTP redirect)
+				const fallbackHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <script>
+    // Redirect usando JavaScript para preservar la URL en el historial
+    window.location.replace('/');
+  </script>
+</head>
+<body>
+  <p>Redirigiendo...</p>
+</body>
+</html>`;
+				
 				return {
-					statusCode: 302,
+					statusCode: 200,
 					headers: {
-						'Location': '/index.html',
-						'Cache-Control': 'no-cache',
+						'Content-Type': 'text/html; charset=utf-8',
 					},
+					body: fallbackHtml,
 				};
 			}
 		}			const API_URL = process.env.API_URL || 'https://menucom-api-60e608ae2f99.herokuapp.com';
