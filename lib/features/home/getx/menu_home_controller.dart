@@ -302,7 +302,7 @@ class MenuHomeCartController extends GetxController {
       // ✅ Actualizar metadatos HTML (título, favicon, meta tags)
       // Nota: En wardrobe no tenemos photoURL en la respuesta actual,
       // pero actualizamos el título al menos
-      HtmlMetadataHelper.updateTitle('${responseWar.owner} - MenuCom');
+      HtmlMetadataHelper.updateCommerceMetadata(name: '${responseWar.owner}');
 
       for (var e in responseWar.listClothing!) {
         wardList.add(e);
