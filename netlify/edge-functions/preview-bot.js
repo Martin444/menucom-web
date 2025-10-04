@@ -73,8 +73,23 @@ export default async (request, context) => {
   const pathSegments = url.pathname.split('/').filter(Boolean);
   const commerceId = pathSegments[0];
   
-  if (!commerceId) {
-    console.log('[edge-preview] No se encontró commerce ID');
+  // Validar que no sea un archivo estático o ruta del sistema
+  const isSystemFile = commerceId.includes('.') || // archivos con extensión
+                       commerceId === 'robots.txt' ||
+                       commerceId === 'sitemap.xml' ||
+                       commerceId === 'favicon.ico' ||
+                       commerceId.startsWith('_') ||
+                       commerceId.startsWith('.');
+  
+  if (!commerceId || isSystemFile) {
+    console.log('[edge-preview] No es un commerce ID válido:', commerceId);
+    return context.next();
+  }
+  
+  // Validar formato UUID (8-4-4-4-12 caracteres hexadecimales)
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!uuidPattern.test(commerceId)) {
+    console.log('[edge-preview] No es un UUID válido:', commerceId);
     return context.next();
   }
   
@@ -84,21 +99,64 @@ export default async (request, context) => {
   const API_URL = Deno.env.get('API_URL') || 'https://menucom-api-60e608ae2f99.herokuapp.com';
   
   try {
-    const apiResponse = await fetch(`${API_URL}/api/menu/get-items-menu/${commerceId}`);
+    // 1. Primero obtener datos del usuario/owner
+    const userResponse = await fetch(`${API_URL}/user/user/${commerceId}`);
     
-    if (!apiResponse.ok) {
-      console.error('[edge-preview] Error API:', apiResponse.status);
+    if (!userResponse.ok) {
+      console.error('[edge-preview] Error obteniendo usuario:', userResponse.status);
       return context.next();
     }
     
-    const data = await apiResponse.json();
-    const owner = data.owner || {};
+    const user = await userResponse.json();
+    console.log('[edge-preview] Usuario obtenido:', user.name, 'Role:', user.role);
+    
+    // 2. Según el role, obtener menú o wardrobe
+    let description = 'Catálogo de productos';
+    let dataResponse;
+    
+    if (user.role === 'clothes') {
+      // Es wardrobe
+      console.log('[edge-preview] Obteniendo wardrobe...');
+      dataResponse = await fetch(`${API_URL}/wardrobe/bydining/${commerceId}`);
+      
+      if (dataResponse.ok) {
+        const data = await dataResponse.json();
+        if (Array.isArray(data.listmenu) && data.listmenu.length > 0) {
+          description = data.listmenu.map(m => m.description).filter(Boolean).join(', ');
+        }
+      } else {
+        console.error('[edge-preview] Error obteniendo wardrobe:', dataResponse.status);
+      }
+    } else {
+      // Es menú
+      console.log('[edge-preview] Obteniendo menú...');
+      dataResponse = await fetch(`${API_URL}/menu/bydining/${commerceId}`);
+      
+      if (dataResponse.ok) {
+        const data = await dataResponse.json();
+        if (Array.isArray(data.listmenu) && data.listmenu.length > 0) {
+          description = data.listmenu.map(m => m.description).filter(Boolean).join(', ');
+        }
+      } else {
+        console.error('[edge-preview] Error obteniendo menú:', dataResponse.status);
+      }
+    }
+    
+    // Extraer información del owner
+    const owner = {
+      name: user.name || 'MenuCom',
+      photoURL: user.photoURL || '',
+      description: description
+    };
     
     // ✅ Extraer URL original de la imagen (decodificar proxy)
     const originalPhotoURL = extractOriginalUrl(owner.photoURL);
     
     console.log('[edge-preview] Original photoURL:', owner.photoURL);
     console.log('[edge-preview] Extracted photoURL:', originalPhotoURL);
+    console.log('[edge-preview] Type:', user.role === 'clothes' ? 'wardrobe' : 'menu');
+    console.log('[edge-preview] Owner name:', owner.name);
+    console.log('[edge-preview] Description:', description);
     
     // Construir HTML con Open Graph tags
     const html = `<!DOCTYPE html>
@@ -106,19 +164,20 @@ export default async (request, context) => {
 <head>
   <meta charset="UTF-8">
   <meta property="og:title" content="${owner.name || 'MenuCom'}" />
-  <meta property="og:description" content="${owner.description || 'Catálogo de productos'}" />
+  <meta property="og:description" content="${description}" />
   <meta property="og:image" content="${originalPhotoURL}" />
   <meta property="og:url" content="${request.url}" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${owner.name || 'MenuCom'}" />
-  <meta name="twitter:description" content="${owner.description || 'Catálogo de productos'}" />
+  <meta name="twitter:description" content="${description}" />
   <meta name="twitter:image" content="${originalPhotoURL}" />
   <title>${owner.name || 'MenuCom'}</title>
 </head>
 <body>
   <h1>${owner.name || 'MenuCom'}</h1>
-  <p>${owner.description || 'Catálogo de productos'}</p>
+  <p>${description}</p>
+  <img src="${originalPhotoURL}" alt="${owner.name || 'MenuCom'}" style="max-width: 300px;" />
 </body>
 </html>`;
     
