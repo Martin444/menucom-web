@@ -8,24 +8,18 @@
 [functions]
     directory = "netlify/functions"
 
+[[edge_functions]]
+  function = "preview-bot"
+  path = "/:id"
+
 # ⚠️ IMPORTANTE: Netlify sirve archivos estáticos automáticamente desde build/web
 # NO necesitamos redirects para .js, .css, .png, etc.
 # Solo definimos redirects para:
-# 1. UUIDs de comercios (/:id -> preview function)
-# 2. Fallback SPA (/* -> index.html)
+# 1. Fallback SPA (/* -> index.html) para que Flutter maneje el routing
 
-# Preview para UUIDs de comercios: la función detecta User-Agent
-# - Bot social → HTML con Open Graph tags optimizado
-# - Usuario normal → index.html completo con URL preservada
-# Solo aplica a rutas de un segmento que parecen UUIDs
-[[redirects]]
-    from = "/:id"
-    to = "/.netlify/functions/preview?id=:id"
-    status = 200
-    force = false
-    
-# SPA Fallback para todas las demás rutas
-# Aplica solo si el archivo no existe físicamente
+# SPA Fallback: todas las rutas sirven index.html
+# Netlify sirve archivos físicos primero (JS, CSS, etc.) antes de aplicar este redirect
+# Flutter lee la URL del navegador y extrae el commerce ID en runtime
 [[redirects]]
     from = "/*"
     to = "/index.html"
