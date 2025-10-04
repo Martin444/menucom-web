@@ -1,6 +1,45 @@
 // Edge Function para interceptar bots sociales y servir meta tags optimizados
 // Se ejecuta en el Edge (Deno runtime) ANTES de los redirects
 
+/**
+ * Extrae la URL original de una URL de proxy
+ * Ejemplo: http://...herokuapp.com/api/image-proxy/image?url=http%3A%2F%2Fres.cloudinary.com%2F...
+ * Retorna: https://res.cloudinary.com/...
+ */
+function extractOriginalUrl(proxyUrl) {
+  if (!proxyUrl) return '';
+  
+  try {
+    // Si la URL contiene "image-proxy", extraer el parámetro 'url'
+    if (proxyUrl.includes('image-proxy')) {
+      const urlObj = new URL(proxyUrl);
+      const originalUrl = urlObj.searchParams.get('url');
+      
+      if (originalUrl) {
+        // Decodificar la URL
+        const decoded = decodeURIComponent(originalUrl);
+        
+        // Forzar HTTPS si es HTTP
+        if (decoded.startsWith('http://')) {
+          return decoded.replace('http://', 'https://');
+        }
+        
+        return decoded;
+      }
+    }
+    
+    // Si no es proxy, forzar HTTPS si es necesario
+    if (proxyUrl.startsWith('http://')) {
+      return proxyUrl.replace('http://', 'https://');
+    }
+    
+    return proxyUrl;
+  } catch (error) {
+    console.error('[extractOriginalUrl] Error:', error);
+    return proxyUrl;
+  }
+}
+
 export default async (request, context) => {
   const url = new URL(request.url);
   const userAgent = request.headers.get('user-agent') || '';
@@ -55,6 +94,12 @@ export default async (request, context) => {
     const data = await apiResponse.json();
     const owner = data.owner || {};
     
+    // ✅ Extraer URL original de la imagen (decodificar proxy)
+    const originalPhotoURL = extractOriginalUrl(owner.photoURL);
+    
+    console.log('[edge-preview] Original photoURL:', owner.photoURL);
+    console.log('[edge-preview] Extracted photoURL:', originalPhotoURL);
+    
     // Construir HTML con Open Graph tags
     const html = `<!DOCTYPE html>
 <html>
@@ -62,13 +107,13 @@ export default async (request, context) => {
   <meta charset="UTF-8">
   <meta property="og:title" content="${owner.name || 'MenuCom'}" />
   <meta property="og:description" content="${owner.description || 'Catálogo de productos'}" />
-  <meta property="og:image" content="${owner.photoURL || ''}" />
+  <meta property="og:image" content="${originalPhotoURL}" />
   <meta property="og:url" content="${request.url}" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${owner.name || 'MenuCom'}" />
   <meta name="twitter:description" content="${owner.description || 'Catálogo de productos'}" />
-  <meta name="twitter:image" content="${owner.photoURL || ''}" />
+  <meta name="twitter:image" content="${originalPhotoURL}" />
   <title>${owner.name || 'MenuCom'}</title>
 </head>
 <body>
