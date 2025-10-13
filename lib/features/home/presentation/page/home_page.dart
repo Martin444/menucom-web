@@ -11,13 +11,14 @@ import 'package:pu_material/pu_material.dart';
 
 import '../widgets/head_home.dart';
 
-/// HomePage - Página principal del catálogo siguiendo atomic design
+/// HomePage - Página principal del catálogo optimizada para scroll suave
 ///
-/// Refactorizada para usar principios de atomic design:
-/// - StatelessWidget para mejor rendimiento
-/// - Separación clara de responsabilidades
-/// - Uso de widgets de pu_material cuando es posible
-/// - Estructura más limpia y mantenible
+/// Optimizaciones implementadas:
+/// - CustomScrollView con Slivers para scroll unificado y suave
+/// - Eliminación de conflictos de scroll anidado (NestedScrollView + SingleChildScrollView)
+/// - GridLayoutAtom consistente con breakpoints unificados
+/// - Responsive design mejorado manteniendo compatibilidad desktop (6 cols >= 1400px)
+/// - Estructura más limpia y mantenible siguiendo atomic design
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
@@ -28,7 +29,7 @@ class HomePage extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: PUColors.primaryBackground,
-      body: _buildNestedScrollView(),
+      body: _buildMainScrollView(),
     );
   }
 
@@ -52,26 +53,24 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// Construye el NestedScrollView principal con header sticky
-  Widget _buildNestedScrollView() {
-    return NestedScrollView(
-      headerSliverBuilder: (BuildContext context, bool innerBoxIsScrolled) {
-        return [
-          _buildStaticHeader(),
-          // _buildStickySearchFilter(),
-        ];
-      },
-      body: _buildMainContent(),
+  /// Construye el scroll principal optimizado
+  Widget _buildMainScrollView() {
+    return CustomScrollView(
+      slivers: [
+        _buildSliverHeader(),
+        _buildSliverContent(),
+      ],
     );
   }
 
-  /// Construye el header estático que incluye navegación e información del propietario
-  Widget _buildStaticHeader() {
+  /// Construye el header como Sliver
+  Widget _buildSliverHeader() {
     return const SliverToBoxAdapter(
       child: Column(
         children: [
           HeadHome(),
           OwnerInfoWidget(),
+          FilterSummaryWidget(),
         ],
       ),
     );
@@ -85,15 +84,19 @@ class HomePage extends StatelessWidget {
   //   );
   // }
 
-  /// Construye el contenido principal con manejo de estados
-  Widget _buildMainContent() {
+  /// Construye el contenido principal como Sliver
+  Widget _buildSliverContent() {
     return GetBuilder<MenuHomeCartController>(
       builder: (controller) {
         if (controller.isLoadHomeItems.value) {
-          return _buildLoadingOrErrorState(controller);
+          return SliverToBoxAdapter(
+            child: _buildLoadingOrErrorState(controller),
+          );
         }
 
-        return _buildContentGrid();
+        return const SliverFillRemaining(
+          child: ResponsiveItemsGrid(),
+        );
       },
     );
   }
@@ -110,19 +113,6 @@ class HomePage extends StatelessWidget {
                 title: controller.errorText.value,
                 titleStyle: PuTextStyle.title5,
               ),
-      ),
-    );
-  }
-
-  /// Construye la grilla de contenido principal
-  Widget _buildContentGrid() {
-    return const SingleChildScrollView(
-      physics: ClampingScrollPhysics(),
-      child: Column(
-        children: [
-          FilterSummaryWidget(),
-          ResponsiveItemsGrid(),
-        ],
       ),
     );
   }
