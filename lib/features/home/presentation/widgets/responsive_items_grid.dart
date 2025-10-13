@@ -41,7 +41,7 @@ class ResponsiveItemsGrid extends StatelessWidget {
     );
   }
 
-  /// Construye el grid responsivo usando GridLayoutAtom
+  /// Construye el grid responsivo usando GridLayoutAtom optimizado para Sliver
   Widget _buildResponsiveGrid(MenuHomeCartController controller, List<dynamic> filteredData) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -52,6 +52,8 @@ class ResponsiveItemsGrid extends StatelessWidget {
             mainAxisExtent: _calculateItemHeight(constraints),
             mainAxisSpacing: 20,
             crossAxisSpacing: 20,
+            shrinkWrap: true, // En SliverFillRemaining necesitamos shrinkWrap
+            physics: const NeverScrollableScrollPhysics(), // Sin scroll propio
             children: _buildGridItems(controller, filteredData),
           ),
         );
@@ -61,18 +63,34 @@ class ResponsiveItemsGrid extends StatelessWidget {
 
   /// Calcula la altura de los items basada en las dimensiones de la pantalla
   double _calculateItemHeight(BoxConstraints constraints) {
-    double maxWidth = constraints.maxWidth;
-    int columns = _getColumnCount(maxWidth);
-    double itemWidth = maxWidth / columns;
-    return itemWidth * 1.25; // Aspect ratio de 0.8 inverso
+    final maxWidth = constraints.maxWidth;
+    final columns = _getColumnCount(maxWidth);
+
+    // Calcular ancho disponible por item (considerando spacing)
+    final totalSpacing = (columns - 1) * 20; // crossAxisSpacing
+    final horizontalPadding = 24; // padding del container
+    final availableWidth = maxWidth - totalSpacing - horizontalPadding;
+    final itemWidth = availableWidth / columns;
+
+    // Altura adaptativa basada en breakpoints
+    if (maxWidth >= 1200) {
+      return itemWidth * 1.3; // Desktop: más alto para mejor proporción
+    } else if (maxWidth >= 700) {
+      return itemWidth * 1.25; // Tablet: proporción equilibrada
+    } else {
+      return itemWidth * 1.4; // Mobile: más alto para mejor legibilidad
+    }
   }
 
   /// Obtiene el número de columnas basado en el ancho disponible
+  /// Mantiene compatibilidad con desktop (6 columnas para pantallas grandes)
   int _getColumnCount(double maxWidth) {
-    if (maxWidth >= 1200) return 5;
-    if (maxWidth >= 900) return 4;
-    if (maxWidth >= 600) return 3;
-    return 2;
+    if (maxWidth >= 1400) return 6; // Pantallas muy grandes: 6 columnas
+    if (maxWidth >= 1200) return 5; // Desktop grande: 5 columnas
+    if (maxWidth >= 900) return 4; // Desktop: 4 columnas
+    if (maxWidth >= 700) return 3; // Tablet grande: 3 columnas
+    if (maxWidth >= 500) return 2; // Tablet/Mobile grande: 2 columnas
+    return 2; // Mobile: mínimo 2 columnas
   }
 
   /// Construye los items del grid según el tipo (menú o ropa)
