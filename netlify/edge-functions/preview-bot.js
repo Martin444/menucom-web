@@ -2,42 +2,30 @@
 // Se ejecuta en el Edge (Deno runtime) ANTES de los redirects
 
 /**
- * Extrae la URL original de una URL de proxy
+ * Extrae la URL original de una URL de proxy y fuerza HTTPS
  * Ejemplo: http://...herokuapp.com/api/image-proxy/image?url=http%3A%2F%2Fres.cloudinary.com%2F...
  * Retorna: https://res.cloudinary.com/...
  */
 function extractOriginalUrl(proxyUrl) {
-  if (!proxyUrl) return '';
+  if (!proxyUrl || typeof proxyUrl !== 'string') return proxyUrl;
+  
+  let originalUrl = proxyUrl;
   
   try {
-    // Si la URL contiene "image-proxy", extraer el parámetro 'url'
-    if (proxyUrl.includes('image-proxy')) {
-      const urlObj = new URL(proxyUrl);
-      const originalUrl = urlObj.searchParams.get('url');
-      
-      if (originalUrl) {
-        // Decodificar la URL
-        const decoded = decodeURIComponent(originalUrl);
-        
-        // Forzar HTTPS si es HTTP
-        if (decoded.startsWith('http://')) {
-          return decoded.replace('http://', 'https://');
-        }
-        
-        return decoded;
-      }
+    const urlObj = new URL(proxyUrl);
+    if (urlObj.searchParams.has('url')) {
+      originalUrl = decodeURIComponent(urlObj.searchParams.get('url'));
     }
-    
-    // Si no es proxy, forzar HTTPS si es necesario
-    if (proxyUrl.startsWith('http://')) {
-      return proxyUrl.replace('http://', 'https://');
-    }
-    
-    return proxyUrl;
-  } catch (error) {
-    console.error('[extractOriginalUrl] Error:', error);
-    return proxyUrl;
+  } catch (e) {
+    // No es una URL válida, devolver tal cual
   }
+  
+  // Forzar HTTPS incluso si no es proxy
+  if (typeof originalUrl === 'string') {
+    originalUrl = originalUrl.replace(/^http:\/\//i, 'https://');
+  }
+  
+  return originalUrl;
 }
 
 export default async (request, context) => {
