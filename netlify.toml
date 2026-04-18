@@ -1,5 +1,5 @@
 [build]
-    command = "flutter build web --release --dart-define=API_URL=https://menucom-api.onrender.com --dart-define=WS_URL=https://menucom-api.onrender.com --dart-define=MP_PUBLIC_KEY=APP_USR-3ee7f54a-686a-49b4-8592-40610ab7d742"
+    command = "flutter build web --release --dart-define=API_URL=https://menucom-api.onrender.com --dart-define=WS_URL=https://menucom-api.onrender.com --dart-define=MP_PUBLIC_KEY=APP_USR-3ee7f54a-686a-49b4-8592-40610ab7d742 --dart-define=ACCESS_TOKEN_SECRET_KEY=p7Xv9QmL2eR8sTzY4bN1aCwV6jKdFgHu"
     publish = "build/web"
 
 [context.production.environment]

@@ -12,7 +12,7 @@ const String MP_PUBLIC_KEY = String.fromEnvironment('MP_PUBLIC_KEY', defaultValu
 const String MP_LOCALE = String.fromEnvironment('MP_LOCALE', defaultValue: "es-AR");
 
 class AppConfig {
-  static String get webSocketUrl => const String.fromEnvironment('WS_URL', defaultValue: 'https://api.menucom.com');
+  static String get webSocketUrl => const String.fromEnvironment('WS_URL', defaultValue: 'https://menucom-api.onrender.com');
 }
 
 String ACCESS_TOKEN = '';
