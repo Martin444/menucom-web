@@ -11,5 +11,9 @@ const String MP_PUBLIC_KEY = String.fromEnvironment('MP_PUBLIC_KEY', defaultValu
 // Locale opcional para MercadoPago (ej: es-AR, es-MX, pt-BR)
 const String MP_LOCALE = String.fromEnvironment('MP_LOCALE', defaultValue: "es-AR");
 
+class AppConfig {
+  static String get webSocketUrl => const String.fromEnvironment('WS_URL', defaultValue: 'https://api.menucom.com');
+}
+
 String ACCESS_TOKEN = '';
 String NAME_USER = '';
