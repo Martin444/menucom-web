@@ -115,6 +115,7 @@
             engineInitializer.initializeEngine({
               serviceWorkerVersion: swVersion,
               useColorEmoji: true,
+              trustedTypes: false,
             }).then(function(appRunner) {
               console.log('🎯 [SPLASH] Motor OK. Ejecutando app...');
               return appRunner.runApp();
