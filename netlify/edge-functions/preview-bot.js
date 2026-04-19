@@ -84,88 +84,77 @@ export default async (request, context) => {
   console.log('[edge-preview] Bot social detectado, commerce ID:', commerceId);
   
   // Fetch data del commerce desde la API
-  const API_URL = Deno.env.get('API_URL') || 'https://menucom-api-60e608ae2f99.herokuapp.com';
+  const API_URL = Deno.env.get('API_URL') || 'https://menucom-api.onrender.com';
   
   try {
-    // 1. Primero obtener datos del usuario/owner
-    const userResponse = await fetch(`${API_URL}/user/user/${commerceId}`);
+    // 1. Intentar obtener el catálogo directamente (Nueva Arquitectura)
+    console.log('[edge-preview] Buscando catálogo:', commerceId);
+    const catalogResponse = await fetch(`${API_URL}/catalogs/${commerceId}`);
     
-    if (!userResponse.ok) {
-      console.error('[edge-preview] Error obteniendo usuario:', userResponse.status);
-      return context.next();
-    }
-    
-    const user = await userResponse.json();
-    console.log('[edge-preview] Usuario obtenido:', user.name, 'Role:', user.role);
-    
-    // 2. Según el role, obtener menú o wardrobe
-    let description = 'Catálogo de productos';
-    let dataResponse;
-    
-    if (user.role === 'clothes') {
-      // Es wardrobe
-      console.log('[edge-preview] Obteniendo wardrobe...');
-      dataResponse = await fetch(`${API_URL}/wardrobe/bydining/${commerceId}`);
-      
-      if (dataResponse.ok) {
-        const data = await dataResponse.json();
-        if (Array.isArray(data.listmenu) && data.listmenu.length > 0) {
-          description = data.listmenu.map(m => m.description).filter(Boolean).join(', ');
-        }
-      } else {
-        console.error('[edge-preview] Error obteniendo wardrobe:', dataResponse.status);
-      }
+    let title = 'MenuCom';
+    let description = 'Consulta nuestro catálogo de productos y servicios';
+    let imageUrl = 'https://menu-comerce.netlify.app/default-image.png';
+    let found = false;
+
+    if (catalogResponse.ok) {
+        const catalog = await catalogResponse.json();
+        title = catalog.name || 'Menú comercial';
+        description = catalog.description || 'Consulta nuestro catálogo de productos y servicios';
+        imageUrl = extractOriginalUrl(catalog.coverImageUrl) || imageUrl;
+        found = true;
+        console.log('[edge-preview] Catálogo encontrado:', title);
     } else {
-      // Es menú
-      console.log('[edge-preview] Obteniendo menú...');
-      dataResponse = await fetch(`${API_URL}/menu/bydining/${commerceId}`);
-      
-      if (dataResponse.ok) {
-        const data = await dataResponse.json();
-        if (Array.isArray(data.listmenu) && data.listmenu.length > 0) {
-          description = data.listmenu.map(m => m.description).filter(Boolean).join(', ');
+        console.log('[edge-preview] Catálogo no encontrado (status: ' + catalogResponse.status + '), intentando fallback con usuario...');
+        
+        // 2. Fallback: Intentar obtener el usuario (Arquitectura Antigua)
+        const userResponse = await fetch(`${API_URL}/user/user/${commerceId}`);
+        
+        if (userResponse.ok) {
+            const user = await userResponse.json();
+            title = user.name || 'MenuCom';
+            console.log('[edge-preview] Usuario obtenido:', title);
+            
+            // Intentar obtener descripción de menú/wardrobe legado
+            const roleEndpoint = user.role === 'clothes' ? 'wardrobe' : 'menu';
+            const legacyResponse = await fetch(`${API_URL}/${roleEndpoint}/bydining/${commerceId}`);
+            
+            if (legacyResponse.ok) {
+                const legacyData = await legacyResponse.json();
+                if (Array.isArray(legacyData.listmenu) && legacyData.listmenu.length > 0) {
+                    description = legacyData.listmenu.map(m => m.description).filter(Boolean).join(', ');
+                }
+            }
+            
+            imageUrl = extractOriginalUrl(user.photoURL) || imageUrl;
+            found = true;
         }
-      } else {
-        console.error('[edge-preview] Error obteniendo menú:', dataResponse.status);
-      }
     }
-    
-    // Extraer información del owner
-    const owner = {
-      name: user.name || 'MenuCom',
-      photoURL: user.photoURL || '',
-      description: description
-    };
-    
-    // ✅ Extraer URL original de la imagen (decodificar proxy)
-    const originalPhotoURL = extractOriginalUrl(owner.photoURL);
-    
-    console.log('[edge-preview] Original photoURL:', owner.photoURL);
-    console.log('[edge-preview] Extracted photoURL:', originalPhotoURL);
-    console.log('[edge-preview] Type:', user.role === 'clothes' ? 'wardrobe' : 'menu');
-    console.log('[edge-preview] Owner name:', owner.name);
-    console.log('[edge-preview] Description:', description);
+
+    if (!found) {
+        console.warn('[edge-preview] No se encontró información para:', commerceId);
+        return context.next();
+    }
     
     // Construir HTML con Open Graph tags
     const html = `<!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta property="og:title" content="${owner.name || 'MenuCom'}" />
+  <meta property="og:title" content="${title}" />
   <meta property="og:description" content="${description}" />
-  <meta property="og:image" content="${originalPhotoURL}" />
+  <meta property="og:image" content="${imageUrl}" />
   <meta property="og:url" content="${request.url}" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="${owner.name || 'MenuCom'}" />
+  <meta name="twitter:title" content="${title}" />
   <meta name="twitter:description" content="${description}" />
-  <meta name="twitter:image" content="${originalPhotoURL}" />
-  <title>${owner.name || 'MenuCom'}</title>
+  <meta name="twitter:image" content="${imageUrl}" />
+  <title>${title}</title>
 </head>
 <body>
-  <h1>${owner.name || 'MenuCom'}</h1>
+  <h1>${title}</h1>
   <p>${description}</p>
-  <img src="${originalPhotoURL}" alt="${owner.name || 'MenuCom'}" style="max-width: 300px;" />
+  <img src="${imageUrl}" alt="${title}" style="max-width: 300px;" />
 </body>
 </html>`;
     

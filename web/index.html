@@ -91,61 +91,85 @@
   {{flutter_build_config}}
 
   <script>
-    // Función de manejo de errores robusta (Estilo Dashboard)
+    // --- DEBUG MODE: Captura de errores globales ---
+    window.onerror = function(message, source, lineno, colno, error) {
+      handleSplashError('Global Error', error || message + ' at ' + source + ':' + lineno);
+      return false;
+    };
+
+    window.onunhandledrejection = function(event) {
+      handleSplashError('Promise Rejection', event.reason);
+    };
+
     function handleSplashError(errorType, error) {
-      console.error('🔥 [SPLASH ERROR]', errorType, ':', error);
+      console.error('🔥 [FATAL]', errorType, ':', error);
       var text = document.querySelector("#loader > span");
       if (text) {
-        text.innerHTML = "⚠️ Error al cargar: " + (error.message || error);
-        text.style.color = "#FF6B6B";
+        text.innerHTML = '<div style="background: rgba(255,0,0,0.1); padding: 10px; border-radius: 8px; border: 1px solid red; margin-top: 10px;">' +
+                         '<strong style="color: #d32f2f;">' + errorType + ':</strong><br>' +
+                         '<small style="font-family: monospace; font-size: 11px; display: block; margin-top: 5px;">' + (error.message || error) + '</small>' +
+                         '</div>';
       }
       var spinner = document.querySelector("#loader > div");
-      if (spinner) spinner.style.display = "none";
+      if (spinner) spinner.style.animation = "none";
     }
 
-    window.addEventListener('load', function() {
-      console.log('🚀 [SPLASH] Iniciando secuencia de carga maestra en Catálogo...');
+    // --- Inicialización Maestra ---
+    (function() {
+      console.log('🚀 [SPLASH] Preparando arranque de Catálogo...');
       
-      try {
-        var serviceWorkerVersion = '{{flutter_service_worker_version}}';
-        if (serviceWorkerVersion) {
-          serviceWorkerVersion = serviceWorkerVersion.split('/*')[0].replace(/["']/g, '').trim();
-        }
-        console.log('📦 [SPLASH] SW Version:', serviceWorkerVersion || 'N/A');
-
-        if (typeof _flutter === 'undefined' || !_flutter.loader) {
-          throw new Error('El cargador de Flutter (_flutter.loader) no se inicializó.');
-        }
-
-        _flutter.loader.load({
-          serviceWorkerSettings: {
-            serviceWorkerVersion: serviceWorkerVersion,
-          },
-          onEntrypointLoaded: function(engineInitializer) {
-            console.log('✅ [SPLASH] Entrypoint OK. Inicializando motor...');
-            
-            engineInitializer.initializeEngine({
-              serviceWorkerVersion: serviceWorkerVersion,
-              useColorEmoji: true,
-              trustedTypes: false, // Mantenemos esta prueba activa
-            }).then(function(appRunner) {
-              console.log('🎯 [SPLASH] Motor OK. Ejecutando app...');
-              return appRunner.runApp();
-            }).then(function() {
-              console.log('🎉 [SPLASH] Catálogo listo.');
-              setTimeout(function() {
-                var loader = document.getElementById("loader");
-                if (loader) loader.classList.add("hidden");
-              }, 500);
-            }).catch(function(error) {
-              handleSplashError('Error en initializeEngine/runApp', error);
-            });
+      const startFlutter = function() {
+        try {
+          console.log('📦 [SPLASH] Verificando cargador...');
+          if (typeof _flutter === 'undefined' || !_flutter.loader) {
+            // Reintentar brevemente si flutter.js aún no inyectó el loader
+            setTimeout(startFlutter, 100);
+            return;
           }
-        });
-      } catch (e) {
-        handleSplashError('Error crítico de inicialización', e);
+
+          var serviceWorkerVersion = '{{flutter_service_worker_version}}';
+          if (serviceWorkerVersion) {
+            serviceWorkerVersion = serviceWorkerVersion.split('/*')[0].replace(/["']/g, '').trim();
+          }
+
+          console.log('📦 [SPLASH] Ejecutando _flutter.loader.load...');
+          _flutter.loader.load({
+            serviceWorkerSettings: {
+              serviceWorkerVersion: serviceWorkerVersion,
+            },
+            onEntrypointLoaded: function(engineInitializer) {
+              console.log('✅ [SPLASH] Entrypoint OK. Inicializando motor...');
+              
+              engineInitializer.initializeEngine({
+                serviceWorkerVersion: serviceWorkerVersion,
+                useColorEmoji: true,
+                trustedTypes: false, // Desactivado para evitar bloqueos de MP
+              }).then(function(appRunner) {
+                console.log('🎯 [SPLASH] Motor OK. Ejecutando app...');
+                return appRunner.runApp();
+              }).then(function() {
+                console.log('🎉 [SPLASH] Catálogo listo.');
+                setTimeout(function() {
+                  var loader = document.getElementById("loader");
+                  if (loader) loader.classList.add("hidden");
+                }, 500);
+              }).catch(function(error) {
+                handleSplashError('Error Engine Interface', error);
+              });
+            }
+          });
+        } catch (e) {
+          handleSplashError('Error Carga Inicial', e);
+        }
+      };
+
+      // Iniciar lo antes posible sin esperar a que carguen imágenes/externos pesados
+      if (document.readyState === 'complete') {
+        startFlutter();
+      } else {
+        window.addEventListener('load', startFlutter);
       }
-    });
+    })();
   </script>
 </body>
 </html>
