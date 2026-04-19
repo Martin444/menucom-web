@@ -24,6 +24,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <meta name="apple-mobile-web-app-title" content="Menucom Catalogo">
   
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+
   <link rel="apple-touch-icon" href="logomenucom.png">
   <link rel="canonical" href="https://menu-commerce.netlify.app/${id}" />
 
@@ -83,39 +85,49 @@
     <div></div>
     <span>Estamos preparando todo para ti, por favor espera un momento... </span>
   </div>
-  <!-- <script src="flutter_bootstrap.js" async></script> -->
+
   <!-- Inyección de configuración de Flutter -->
   {{flutter_js}}
   {{flutter_build_config}}
 
   <script>
+    // Función de manejo de errores robusta (Estilo Dashboard)
+    function handleSplashError(errorType, error) {
+      console.error('🔥 [SPLASH ERROR]', errorType, ':', error);
+      var text = document.querySelector("#loader > span");
+      if (text) {
+        text.innerHTML = "⚠️ Error al cargar: " + (error.message || error);
+        text.style.color = "#FF6B6B";
+      }
+      var spinner = document.querySelector("#loader > div");
+      if (spinner) spinner.style.display = "none";
+    }
+
     window.addEventListener('load', function() {
       console.log('🚀 [SPLASH] Iniciando secuencia de carga maestra en Catálogo...');
       
       try {
-        // Usamos comillas simples externas para evitar conflictos con las dobles que inyecta Flutter
-        var swVersion = '{{flutter_service_worker_version}}';
-        if (swVersion) {
-          // Limpiamos el comentario y cualquier comilla extra que inyecte el compilador
-          swVersion = swVersion.split('/*')[0].replace(/["']/g, '').trim();
+        var serviceWorkerVersion = '{{flutter_service_worker_version}}';
+        if (serviceWorkerVersion) {
+          serviceWorkerVersion = serviceWorkerVersion.split('/*')[0].replace(/["']/g, '').trim();
         }
-        console.log('📦 [SPLASH] SW Version:', swVersion || 'N/A');
+        console.log('📦 [SPLASH] SW Version:', serviceWorkerVersion || 'N/A');
 
         if (typeof _flutter === 'undefined' || !_flutter.loader) {
-          throw new Error('_flutter.loader no se inicializó.');
+          throw new Error('El cargador de Flutter (_flutter.loader) no se inicializó.');
         }
 
         _flutter.loader.load({
           serviceWorkerSettings: {
-            serviceWorkerVersion: swVersion,
+            serviceWorkerVersion: serviceWorkerVersion,
           },
           onEntrypointLoaded: function(engineInitializer) {
             console.log('✅ [SPLASH] Entrypoint OK. Inicializando motor...');
             
             engineInitializer.initializeEngine({
-              serviceWorkerVersion: swVersion,
+              serviceWorkerVersion: serviceWorkerVersion,
               useColorEmoji: true,
-              trustedTypes: false,
+              trustedTypes: false, // Mantenemos esta prueba activa
             }).then(function(appRunner) {
               console.log('🎯 [SPLASH] Motor OK. Ejecutando app...');
               return appRunner.runApp();
@@ -126,16 +138,12 @@
                 if (loader) loader.classList.add("hidden");
               }, 500);
             }).catch(function(error) {
-              console.error('❌ [SPLASH] Error:', error);
-              var text = document.querySelector("#loader > span");
-              if (text) text.innerHTML = "Error al iniciar: " + error.message;
+              handleSplashError('Error en initializeEngine/runApp', error);
             });
           }
         });
       } catch (e) {
-        console.error('❌ [SPLASH] Error crítico:', e);
-        var text = document.querySelector("#loader > span");
-        if (text) text.innerHTML = "Error crítico de sistema: " + e.message;
+        handleSplashError('Error crítico de inicialización', e);
       }
     });
   </script>
