@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
+import 'package:menu_dart_api/menu_com_api.dart';
+import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
 import 'package:pu_material/atoms/product_image.dart';
 import 'package:pu_material/atoms/product_title.dart';
 import 'package:pu_material/atoms/product_price.dart';
@@ -14,35 +15,36 @@ class ProductDetailPage extends StatelessWidget {
     final args = Get.arguments as Map<String, dynamic>? ?? {};
     return ProductDetailPage(
       name: args['name'] is String ? args['name'] : '',
-      brand: args['brand'] is String ? args['brand'] : '',
       description: args['description'] is String ? args['description'] : '',
       photoUrl: args['photoUrl'] is String ? args['photoUrl'] : '',
-      price: args['price'] is String ? args['price'] : '',
-      sizes: args['sizes'] is List ? (args['sizes'] as List).map((e) => e.toString()).toList() : <String>[],
-      color: args['color'] is String ? args['color'] : '',
+      price: args['price'] is String ? args['price'] : '0.0',
+      brand: args['brand'] as String?,
+      sizes: args['sizes'] as List<String>?,
+      color: args['color'] as String?,
       onAddCart: args['onAddCart'],
-      item: args['item'],
+      item: args['item'] as CatalogItemModel?,
     );
   }
+
   final String name;
-  final String brand;
   final String description;
   final String photoUrl;
   final String price;
-  final List<String> sizes;
-  final String color;
-  final dynamic onAddCart;
-  final dynamic item;
+  final String? brand;
+  final List<String>? sizes;
+  final String? color;
+  final Function(CatalogItemModel)? onAddCart;
+  final CatalogItemModel? item;
 
   const ProductDetailPage({
     super.key,
     required this.name,
-    required this.brand,
     required this.description,
     required this.photoUrl,
     required this.price,
-    required this.sizes,
-    required this.color,
+    this.brand,
+    this.sizes,
+    this.color,
     this.onAddCart,
     this.item,
   });
@@ -68,21 +70,25 @@ class ProductDetailPage extends StatelessWidget {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: GetBuilder<MenuHomeCartController>(
+                      child: GetBuilder<HomeController>(
                         builder: (controller) {
-                          final isMenuItem = item != null && item.runtimeType.toString().contains('MenuItemModel');
                           final isAdded = item != null
-                              ? (isMenuItem ? controller.detectItemInList(item) : controller.detectItemInWardrobe(item))
+                              ? controller.detectItemInList(item!)
                               : false;
+
+                          final displayBrand = brand ?? (item?.attributes?['brand'] as String? ?? '');
+                          final displaySizes = sizes ?? ((item?.attributes?['sizes'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? []);
+                          final displayColor = color ?? (item?.attributes?['color'] as String? ?? '');
+
                           return Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               ProductTitle(title: name),
-                              if (brand.isNotEmpty) ProductAdditionalInfo(text: brand, prefix: 'Marca: '),
+                              if (displayBrand.isNotEmpty) ProductAdditionalInfo(text: displayBrand, prefix: 'Marca: '),
                               const SizedBox(height: 8),
-                              if (sizes.isNotEmpty) ProductAdditionalInfo(text: sizes.join(", "), prefix: 'Talles: '),
-                              if (color.isNotEmpty) ProductAdditionalInfo(text: color, prefix: 'Color: '),
+                              if (displaySizes.isNotEmpty) ProductAdditionalInfo(text: displaySizes.join(", "), prefix: 'Talles: '),
+                              if (displayColor.isNotEmpty) ProductAdditionalInfo(text: displayColor, prefix: 'Color: '),
                               const SizedBox(height: 16),
                               ProductPrice(price: double.tryParse(price) ?? 0.0),
                               const SizedBox(height: 16),
@@ -93,7 +99,7 @@ class ProductDetailPage extends StatelessWidget {
                                 onPressed: () {
                                   if (isAdded) return;
                                   if (onAddCart != null && item != null) {
-                                    onAddCart(item);
+                                    onAddCart!(item!);
                                     controller.update();
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(content: Text('Producto agregado al carrito')),

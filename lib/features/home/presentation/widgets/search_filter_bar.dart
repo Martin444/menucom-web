@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
 import 'package:pu_material/pu_material.dart';
 
-/// Barra de búsqueda y filtros refactorizada para usar atomic design
+/// Barra de búsqueda y filtros refactorizada para usar HomeController (Catalog architecture)
 /// Usa componentes de pu_material para mejor consistencia y mantenibilidad
 class SearchFilterBar extends StatelessWidget {
   const SearchFilterBar({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<MenuHomeCartController>(
+    return GetBuilder<HomeController>(
       builder: (controller) {
         return LayoutBuilder(
           builder: (context, constraints) {
@@ -40,7 +40,7 @@ class SearchFilterBar extends StatelessWidget {
   }
 
   /// Construye la fila con búsqueda y dropdown de ordenamiento
-  Widget _buildSearchAndSortRow(MenuHomeCartController controller, bool isCompact) {
+  Widget _buildSearchAndSortRow(HomeController controller, bool isCompact) {
     return Row(
       children: [
         _buildSearchField(controller, isCompact),
@@ -51,7 +51,7 @@ class SearchFilterBar extends StatelessWidget {
   }
 
   /// Construye el campo de búsqueda usando PUInput
-  Widget _buildSearchField(MenuHomeCartController controller, bool isCompact) {
+  Widget _buildSearchField(HomeController controller, bool isCompact) {
     return Expanded(
       child: ContainerAtom(
         height: isCompact ? 32 : 44,
@@ -65,9 +65,9 @@ class SearchFilterBar extends StatelessWidget {
           ),
         ],
         child: PUInput(
-          controller: TextEditingController()..text = controller.searchQuery.value,
+          controller: TextEditingController()..text = controller.searchQuery,
           hintText: 'Buscar productos...',
-          onChanged: controller.updateSearchQuery,
+          onChanged: (val) => controller.updateSearchQuery(val),
           textInputAction: TextInputAction.search,
           compact: isCompact,
         ),
@@ -76,7 +76,7 @@ class SearchFilterBar extends StatelessWidget {
   }
 
   /// Construye el dropdown de ordenamiento con estilo mejorado
-  Widget _buildSortDropdown(MenuHomeCartController controller, bool isCompact) {
+  Widget _buildSortDropdown(HomeController controller, bool isCompact) {
     return ContainerAtom(
       height: isCompact ? 32 : 44,
       backgroundColor: Colors.white,
@@ -91,7 +91,7 @@ class SearchFilterBar extends StatelessWidget {
       child: Obx(
         () => DropdownButtonHideUnderline(
           child: DropdownButton<String>(
-            value: controller.sortBy.value,
+            value: controller.sortByRx.value,
             borderRadius: BorderRadius.circular(isCompact ? 12 : 24),
             padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 16),
             icon: IconAtom(
@@ -136,69 +136,55 @@ class SearchFilterBar extends StatelessWidget {
   }
 
   /// Construye los filtros de categorías con scroll horizontal mejorado
-  Widget _buildCategoryFilters(MenuHomeCartController controller, bool isCompact) {
-    return Obx(() => controller.availableCategories.isNotEmpty
+  Widget _buildCategoryFilters(HomeController controller, bool isCompact) {
+    return Obx(() => controller.availableCategoriesRx.isNotEmpty
         ? SizedBox(
             height: isCompact ? 24 : 32,
-            child: Builder(
-              builder: (context) => NotificationListener<ScrollNotification>(
-                onNotification: (ScrollNotification notification) {
-                  return true;
-                },
-                child: ScrollConfiguration(
-                  behavior: ScrollConfiguration.of(context).copyWith(
-                    dragDevices: {
-                      PointerDeviceKind.touch,
-                      PointerDeviceKind.mouse,
-                      PointerDeviceKind.trackpad,
-                    },
-                  ),
-                  child: ListView.builder(
-                    padding: EdgeInsets.symmetric(horizontal: isCompact ? 0 : 2),
-                    physics: const ClampingScrollPhysics(),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: controller.availableCategories.length,
-                    itemBuilder: (context, index) {
-                      final category = controller.availableCategories[index];
-                      return _buildCategoryChip(controller, category, isCompact);
-                    },
-                  ),
-                ),
-              ),
+            child: ListView.builder(
+              padding: EdgeInsets.symmetric(horizontal: isCompact ? 0 : 2),
+              physics: const ClampingScrollPhysics(),
+              scrollDirection: Axis.horizontal,
+              itemCount: controller.availableCategoriesRx.length,
+              itemBuilder: (context, index) {
+                final category = controller.availableCategoriesRx[index];
+                return _buildCategoryChip(controller, category, isCompact);
+              },
             ),
           )
         : const SizedBox());
   }
 
   /// Construye un chip de categoría individual
-  Widget _buildCategoryChip(MenuHomeCartController controller, String category, bool isCompact) {
-    final isSelected = controller.selectedCategory.value == category ||
-        (controller.selectedCategory.value.isEmpty && category == 'Todos');
+  Widget _buildCategoryChip(HomeController controller, String category, bool isCompact) {
+    return Obx(() {
+      final isSelected = controller.selectedCategoryRx.value == category ||
+          (controller.selectedCategoryRx.value.isEmpty && category == 'Todos');
 
-    return ContainerAtom(
-      margin: EdgeInsets.only(right: isCompact ? 4 : 8),
-      child: FilterChip(
-        label: Text(
-          category,
-          style: PuTextStyle.ingredientsListStyle.copyWith(
-            fontSize: isCompact ? 11 : 14,
-            color: isSelected ? Colors.white : PUColors.iconColorBlack,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      return ContainerAtom(
+        margin: EdgeInsets.only(right: isCompact ? 4 : 8),
+        child: FilterChip(
+          label: Text(
+            category,
+            style: PuTextStyle.ingredientsListStyle.copyWith(
+              fontSize: isCompact ? 11 : 14,
+              color: isSelected ? Colors.white : PUColors.iconColorBlack,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
           ),
+          selected: isSelected,
+          onSelected: (selected) {
+            controller.selectCategory(selected ? category : '');
+          },
+          backgroundColor: Colors.white,
+          selectedColor: PUColors.primaryColor,
+          checkmarkColor: Colors.white,
+          side: BorderSide(
+            color: isSelected ? PUColors.primaryColor : PUColors.iconColorBlack.withValues(alpha: 0.3),
+          ),
+          visualDensity: isCompact ? VisualDensity.compact : VisualDensity.standard,
+          materialTapTargetSize: isCompact ? MaterialTapTargetSize.shrinkWrap : MaterialTapTargetSize.padded,
         ),
-        selected: isSelected,
-        onSelected: (selected) {
-          controller.selectCategory(selected ? category : '');
-        },
-        backgroundColor: Colors.white,
-        selectedColor: PUColors.primaryColor,
-        checkmarkColor: Colors.white,
-        side: BorderSide(
-          color: isSelected ? PUColors.primaryColor : PUColors.iconColorBlack.withValues(alpha: 0.3),
-        ),
-        visualDensity: isCompact ? VisualDensity.compact : VisualDensity.standard,
-        materialTapTargetSize: isCompact ? MaterialTapTargetSize.shrinkWrap : MaterialTapTargetSize.padded,
-      ),
-    );
+      );
+    });
   }
 }

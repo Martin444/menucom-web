@@ -1,63 +1,122 @@
 import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
-import 'menu_controller.dart';
+import 'catalog_controller.dart';
 import 'filter_controller.dart';
 import 'cart_controller.dart';
+import 'package:pu_material/pu_material.dart';
+import 'package:menucom_catalog/core/helpers/html_metadata_helper.dart';
+import 'package:menucom_catalog/core/config.dart';
+import 'package:menucom_catalog/shared/utils/helpers/token_helper.dart';
 
-/// Controlador coordinador que integra MenuController, FilterController y CartController
-/// Reemplaza al monolítico MenuHomeCartController manteniendo compatibilidad con la UI
+/// Controlador coordinador que integra CatalogController, FilterController y CartController
+/// Reemplaza al monolítico MenuHomeCartController manteniendo compatibilidad con la UI (Catalog architecture)
 class HomeController extends GetxController {
   // Controladores especializados
-  late final MenuController _menuController;
+  late final CatalogController _catalogController;
   late final FilterController _filterController;
   late final CartController _cartController;
 
   // Estado adicional específico de la vista Home
   final RxBool _isGridView = true.obs;
   final RxString _sortBy = 'none'.obs; // 'none', 'name', 'price_low', 'price_high'
+  final RxString _persistedOwnerId = ''.obs;
 
   HomeController({
-    MenuController? menuController,
+    CatalogController? catalogController,
     FilterController? filterController,
     CartController? cartController,
   }) {
-    _menuController = menuController ?? Get.find<MenuController>();
+    _catalogController = catalogController ?? Get.find<CatalogController>();
     _filterController = filterController ?? Get.find<FilterController>();
     _cartController = cartController ?? Get.find<CartController>();
   }
 
   // === GETTERS PÚBLICOS PARA COMPATIBILIDAD CON UI EXISTENTE ===
 
-  // Datos del menú
-  List<MenuModel>? get listMenu => _menuController.menus;
-  List<MenuItemModel> get listMenuItems => _menuController.allMenuItems;
-  OwnerModel? get ownerInfo => _menuController.owner;
-  String get nameComerce => _menuController.owner?.name ?? '';
-  String get currentOwnerId => _menuController.owner?.id ?? '';
+  // Datos del catálogo
+  CatalogModel? get catalog => _catalogController.catalogResponse;
+  Rx<CatalogModel?> get catalogRx => _catalogController.catalogResponseRx;
+  
+  List<CatalogItemModel> get listMenuItems => _catalogController.allMenuItems;
+  RxList<CatalogItemModel> get listMenuItemsRx => _catalogController.allMenuItemsRx;
+  
+  // Compatibilidad con getters antiguos
+  String? get ownerId => _catalogController.ownerId;
+  String get nameComerce => _catalogController.catalogResponse?.name ?? '';
+  String get currentOwnerId => _catalogController.catalogResponse?.id ?? '';
 
   // Estado de carga y errores
-  bool get isLoadHomeItems => _menuController.isLoading || _filterController.isLoading;
-  String get errorText => _menuController.error;
-  bool get hasError => _menuController.hasError;
+  bool get isLoadHomeItems => _catalogController.isLoading || _filterController.isLoading;
+  RxBool get isLoadingRx => _catalogController.isLoadingRx;
+  
+  String get errorText => _catalogController.error;
+  RxString get errorRx => _catalogController.errorRx;
+  
+  bool get hasError => _catalogController.hasError;
 
   // Filtros y búsqueda
   String get searchQuery => _filterController.searchQuery;
+  RxString get searchQueryRx => _filterController.searchQueryRx;
+  
   String get selectedCategory => _filterController.selectedCategory;
+  RxString get selectedCategoryRx => _filterController.selectedCategoryRx;
+  
   List<String> get availableCategories => _filterController.availableCategories;
-  List<MenuItemModel> get filteredMenuItems => _getFilteredAndSortedItems();
+  RxList<String> get availableCategoriesRx => _filterController.availableCategoriesRx;
+  
+  List<CatalogItemModel> get filteredMenuItems => _getFilteredAndSortedItems();
+  RxList<CatalogItemModel> get filteredMenuItemsRx => _filterController.filteredItemsRx;
 
   // Vista
   bool get isGridView => _isGridView.value;
+  RxBool get isGridViewRx => _isGridView;
+  
   String get sortBy => _sortBy.value;
+  RxString get sortByRx => _sortBy;
 
   // Carrito
-  List<CartItem> get cartItems => _cartController.cartItems;
+  List<CartItemModel> get cartItems => _cartController.cartItems;
+  RxList<CartItemModel> get cartItemsRx => _cartController.cartItemsRx;
+  
+  double get totalOrder => _cartController.total;
+  RxDouble get totalOrderRx => _cartController.totalRx;
+  
   double get cartTotal => _cartController.total;
+  RxDouble get cartTotalRx => _cartController.totalRx;
+  
   double get cartSubtotal => _cartController.subtotal;
+  RxDouble get cartSubtotalRx => _cartController.subtotalRx;
+  
   double get cartTax => _cartController.tax;
+  RxDouble get cartTaxRx => _cartController.taxRx;
+  
   int get cartItemCount => _cartController.itemCount;
   int get cartTotalQuantity => _cartController.totalQuantity;
   bool get hasItemsInCart => _cartController.isNotEmpty;
+
+  // Para compatibilidad con MyCartPage y otros
+  List<CartItemModel> get listMenuSelected => _cartController.cartItems;
+
+  /// Verifica si un item ya está en el carrito
+  bool isItemInCart(CatalogItemModel item) {
+    return _cartController.containsItem(item.id);
+  }
+
+  /// Método de compatibilidad para detectar items (usado en grids)
+  bool detectItemInList(CatalogItemModel item) {
+    return isItemInCart(item);
+  }
+
+  /// Agrega un item al carrito (o lo remueve si ya está, según lógica de compatibilidad)
+  void selectItem(CatalogItemModel item) {
+    if (_cartController.containsItem(item.id)) {
+      _cartController.removeItem(item.id);
+    } else {
+      _cartController.addItem(item);
+    }
+    _cartController.update();
+    update();
+  }
 
   @override
   void onInit() {
@@ -67,38 +126,72 @@ class HomeController extends GetxController {
 
   /// Configura listeners entre controladores
   void _setupControllerListeners() {
-    // Cuando se carga un menú, actualizar filtros
-    ever(_menuController.allMenuItems.obs, (List<MenuItemModel> items) {
+    // Cuando se carga un catálogo, actualizar filtros
+    ever(_catalogController.allMenuItemsRx, (List<CatalogItemModel> items) {
       _filterController.setMenuItems(items);
     });
 
     // Cuando cambian los items filtrados, aplicar ordenamiento
-    ever(_filterController.filteredItems.obs, (_) => update());
+    ever(_filterController.filteredItemsRx, (_) => update());
     ever(_sortBy, (_) => update());
   }
 
   // === MÉTODOS PÚBLICOS PARA LA UI ===
 
-  /// Carga el menú de un propietario
-  Future<void> loadMenu(String ownerId) async {
-    await _menuController.loadMenu(ownerId);
+  /// Inicializa los datos del menú basado en la URL actual
+  void initializeFromUrl() {
+    final uri = Uri.base;
+
+    // Extraer el ID del menú desde la ruta
+    final catalogId = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
+
+    // Extraer el token desde los query params y decodificarlo
+    final rawToken = uri.queryParameters['token'] ?? '';
+    final decodedToken = Uri.decodeComponent(rawToken);
+    ACCESS_TOKEN = decryptAccessToken(decodedToken);
+
+    API.setAccessToken(ACCESS_TOKEN);
+
+    if (catalogId.isNotEmpty) {
+      loadMenu(catalogId);
+    }
   }
 
-  // ========================================
-  // MÉTODO NO UTILIZADO - CANDIDATO PARA ELIMINACIÓN
-  // ========================================
-  // Este método no tiene referencias desde la UI.
-  // RECOMENDACIÓN: Mantener comentado hasta que se implemente refresh manual
-  // ========================================
-
-  /*
-  /// Recarga el menú actual
-  Future<void> refreshMenu() async {
-    await _menuController.refreshMenu();
+  /// Carga un catálogo específico
+  Future<void> loadMenu(String catalogId) async {
+    await _catalogController.loadMenu(catalogId);
+    
+    // Actualizar metadatos HTML si la carga fue exitosa
+    if (_catalogController.catalogResponse != null) {
+      final catalog = _catalogController.catalogResponse!;
+      _persistedOwnerId.value = catalog.id;
+      
+      HtmlMetadataHelper.updateCommerceMetadata(
+        name: catalog.name ?? 'MenuCom',
+        logoUrl: catalog.coverImageUrl,
+        description: catalog.description ?? 'Catálogo de productos y servicios',
+      );
+    }
   }
-  */
 
-  // === MÉTODOS DE FILTRADO Y BÚSQUEDA ===
+  /// Getter para el owner ID (compatibilidad con órdenes)
+  RxString get persistedOwnerId => _persistedOwnerId;
+
+  /// Aumenta la cantidad de un item en el carrito
+  void addquantityItem(CartItemModel item) {
+    if (item.id != null) {
+      _cartController.incrementItem(item.id!);
+      update();
+    }
+  }
+
+  /// Disminuye la cantidad de un item en el carrito
+  void removequantityItem(CartItemModel item) {
+    if (item.id != null) {
+      _cartController.decrementItem(item.id!);
+      update();
+    }
+  }
 
   /// Actualiza la consulta de búsqueda
   void updateSearchQuery(String query) {
@@ -131,7 +224,7 @@ class HomeController extends GetxController {
   // === MÉTODOS DEL CARRITO ===
 
   /// Añade un item al carrito
-  void addToCart(MenuItemModel item, {int quantity = 1}) {
+  void addToCart(CatalogItemModel item, {int quantity = 1}) {
     _cartController.addItem(item, quantity: quantity);
   }
 
@@ -165,8 +258,8 @@ class HomeController extends GetxController {
     return _cartController.getItemQuantity(itemId);
   }
 
-  /// Verifica si un item está en el carrito
-  bool isItemInCart(String itemId) {
+  /// Verifica si un item está en el carrito (por ID)
+  bool isItemIdInCart(String itemId) {
     return _cartController.containsItem(itemId);
   }
 
@@ -183,18 +276,18 @@ class HomeController extends GetxController {
   // === MÉTODOS PRIVADOS ===
 
   /// Obtiene los items filtrados y ordenados
-  List<MenuItemModel> _getFilteredAndSortedItems() {
-    List<MenuItemModel> items = List.from(_filterController.filteredItems);
+  List<CatalogItemModel> _getFilteredAndSortedItems() {
+    List<CatalogItemModel> items = List.from(_filterController.filteredItems);
 
     switch (_sortBy.value) {
       case 'name':
-        items.sort((a, b) => (a.name ?? '').compareTo(b.name ?? ''));
+        items.sort((a, b) => a.name.compareTo(b.name));
         break;
       case 'price_low':
-        items.sort((a, b) => (a.price ?? 0).compareTo(b.price ?? 0));
+        items.sort((a, b) => a.price.compareTo(b.price));
         break;
       case 'price_high':
-        items.sort((a, b) => (b.price ?? 0).compareTo(a.price ?? 0));
+        items.sort((a, b) => b.price.compareTo(a.price));
         break;
       case 'none':
       default:
@@ -205,47 +298,11 @@ class HomeController extends GetxController {
     return items;
   }
 
-  // === MÉTODOS DE COMPATIBILIDAD (para migración gradual) ===
-
-  // ========================================
-  // MÉTODO NO UTILIZADO - CANDIDATO PARA ELIMINACIÓN
-  // ========================================
-  // Este método no tiene referencias desde la UI y usa clearMenu que está comentado.
-  // RECOMENDACIÓN: Mantener comentado hasta implementar funcionalidad completa
-  // ========================================
-
-  /*
-  /// Limpia el ID del propietario persistido (compatibilidad)
-  void clearPersistedOwnerId() {
-    _menuController.clearMenu();
-  }
-  */
-
   /// Obtiene información específica de un item por ID
-  MenuItemModel? getItemById(String itemId) {
-    return _menuController.getItemById(itemId);
+  CatalogItemModel? getItemById(String itemId) {
+    return _catalogController.getItemById(itemId);
   }
 
-  // ========================================
-  // MÉTODOS NO UTILIZADOS - CANDIDATOS PARA ELIMINACIÓN
-  // ========================================
-  // Estos métodos fueron creados para funcionalidad avanzada de filtrado por precio
-  // que no se implementó en la UI actual.
-  // RECOMENDACIÓN: Mantener comentados hasta implementar filtrado avanzado
-  // ========================================
-
-  /*
-  /// Obtiene items por rango de precio
-  List<MenuItemModel> getItemsByPriceRange(double minPrice, double maxPrice) {
-    return _filterController.getItemsByPriceRange(minPrice, maxPrice);
-  }
-
-  /// Obtiene el rango de precios actual
-  Map<String, double> getPriceRange() {
-    return _filterController.getPriceRange();
-  }
-  */
-
-  /// Obtiene el tiempo de entrega estimado del carrito
+  /// Obtiene el tiempo de entrega estimado do carrito
   int get estimatedDeliveryTime => _cartController.estimatedDeliveryTime;
 }

@@ -1,55 +1,34 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:menu_dart_api/menu_com_api.dart';
-import 'package:menucom_catalog/core/config.dart';
-import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/owner_info_widget.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/filter_summary_widget.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/responsive_items_grid.dart';
-import 'package:menucom_catalog/shared/utils/helpers/token_helper.dart';
 import 'package:pu_material/pu_material.dart';
 
 import '../widgets/head_home.dart';
 
 /// HomePage - Página principal del catálogo optimizada para scroll suave
-///
-/// Optimizaciones implementadas:
-/// - CustomScrollView con Slivers para scroll unificado y suave
-/// - Eliminación de conflictos de scroll anidado (NestedScrollView + SingleChildScrollView)
-/// - GridLayoutAtom consistente con breakpoints unificados
-/// - Responsive design mejorado manteniendo compatibilidad desktop (6 cols >= 1400px)
-/// - Estructura más limpia y mantenible siguiendo atomic design
+/// 
+/// Estructura:
+/// 1. HeroSection (banner si hay imagen)
+/// 2. HeadHome (header con carrito)
+/// 3. OwnerInfoWidget (info del negocio)
+/// 4. FilterSummaryWidget (filtros activos)
+/// 5. ResponsiveItemsGrid (productos)
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // Inicializar datos del menú al construir la página
-    WidgetsBinding.instance.addPostFrameCallback((_) => _initializeMenuData());
+    // Inicializar datos del menú al construir la página usando el nuevo controlador
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.find<HomeController>().initializeFromUrl();
+    });
 
     return Scaffold(
       backgroundColor: PUColors.primaryBackground,
       body: _buildMainScrollView(),
-    );
-  }
-
-  /// Inicializa los datos del menú basado en la URL actual
-  void _initializeMenuData() {
-    final cartController = Get.find<MenuHomeCartController>();
-    final uri = Uri.base;
-
-    // Extraer el ID del menú desde la ruta
-    final menuId = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
-
-    // Extraer el token desde los query params y decodificarlo
-    final rawToken = uri.queryParameters['token'] ?? '';
-    final decodedToken = Uri.decodeComponent(rawToken);
-    ACCESS_TOKEN = decryptAccessToken(decodedToken);
-
-    API.setAccessToken(ACCESS_TOKEN);
-
-    cartController.getItemsMenu(
-      idMenu: menuId,
     );
   }
 
@@ -63,32 +42,60 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// Construye el header como Sliver
+  /// Construye el header como Sliver con HeroSection opcional
   Widget _buildSliverHeader() {
-    return const SliverToBoxAdapter(
-      child: Column(
-        children: [
-          HeadHome(),
-          OwnerInfoWidget(),
-          FilterSummaryWidget(),
-        ],
+    return SliverToBoxAdapter(
+      child: GetBuilder<HomeController>(
+        builder: (controller) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // HeroSection con imagen del catálogo (si existe)
+              _buildHeroSection(controller),
+              
+              // Header con carrito
+              const HeadHome(),
+              
+              // Info del negocio
+              const OwnerInfoWidget(),
+              
+              // Resumen de filtros
+              const FilterSummaryWidget(),
+            ],
+          );
+        },
       ),
     );
   }
 
-  /// Construye la barra de búsqueda y filtros como header sticky
-  /// Comentado temporalmente para evitar problemas de renderizado
-  // Widget _buildStickySearchFilter() {
-  //   return const SliverToBoxAdapter(
-  //     child: SearchFilterBar(),
-  //   );
-  // }
+  /// Construye el HeroSection si el catálogo tiene imagen de portada
+  Widget _buildHeroSection(HomeController controller) {
+    final catalog = controller.catalog;
+    if (catalog == null) return const SizedBox.shrink();
+    
+    final coverImageUrl = catalog.coverImageUrl;
+    final name = catalog.name ?? 'Catálogo';
+    
+    // Mostrar solo si hay imagen
+    if (coverImageUrl == null || coverImageUrl.isEmpty) {
+      return HeroSimpleAtom(
+        title: name,
+        subtitle: catalog.catalogType.capitalizeFirst ?? 'Consulta nuestro menú',
+      );
+    }
+    
+    return HeroSectionAtom(
+      title: name,
+      subtitle: catalog.catalogType.capitalizeFirst ?? 'Consulta nuestro menú',
+      imageUrl: coverImageUrl,
+    );
+  }
 
   /// Construye el contenido principal como Sliver
   Widget _buildSliverContent() {
-    return GetBuilder<MenuHomeCartController>(
+    return GetBuilder<HomeController>(
       builder: (controller) {
-        if (controller.isLoadHomeItems.value) {
+        if (controller.isLoadHomeItems) {
           return SliverToBoxAdapter(
             child: _buildLoadingOrErrorState(controller),
           );
@@ -102,15 +109,17 @@ class HomePage extends StatelessWidget {
   }
 
   /// Construye el estado de carga o error usando EmptyStateAtom
-  Widget _buildLoadingOrErrorState(MenuHomeCartController controller) {
+  Widget _buildLoadingOrErrorState(HomeController controller) {
     return ContainerAtom(
       height: 400,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Center(
-        child: controller.errorText.value.isEmpty
-            ? const CircularProgressIndicator()
+        child: controller.errorText.isEmpty
+            ? const CircularProgressIndicator(
+                color: PUColors.restaurantPrimary,
+              )
             : EmptyStateAtom(
-                title: controller.errorText.value,
+                title: controller.errorText,
                 titleStyle: PuTextStyle.title5,
               ),
       ),

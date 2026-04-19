@@ -6,7 +6,7 @@ import 'package:menucom_catalog/features/my_cart/getx/order_controller.dart';
 
 import 'package:pu_material/pu_material.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/order_status_config.dart';
-import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
 import 'package:menucom_catalog/core/config.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/require_login_dialog.dart';
 
@@ -31,15 +31,11 @@ class ConfirmOrderActions extends StatelessWidget {
       () {
         final isConfirmed = orderController.orderStatus.value == OrderStatus.confirmed;
         // Obtener nombre del comercio desde el controller global
-        final menuController = Get.find<MenuHomeCartController>();
-        String commerceName = '';
-        if (menuController.ownerInfo.value?.name != null && menuController.ownerInfo.value!.name!.isNotEmpty) {
-          commerceName = menuController.ownerInfo.value!.name!;
-        } else if (menuController.nameComerce.value.isNotEmpty) {
-          commerceName = menuController.nameComerce.value;
-        } else {
-          commerceName = 'Comercio';
-        }
+        final homeController = Get.find<HomeController>();
+        final commerceName = homeController.nameComerce.isNotEmpty 
+            ? homeController.nameComerce 
+            : 'Comercio';
+            
         return Container(
           decoration: const BoxDecoration(
             color: Color(0xFFf8f9fa),

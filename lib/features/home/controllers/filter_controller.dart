@@ -4,11 +4,11 @@ import '../../../shared/utils/debouncer.dart';
 import '../../../shared/utils/text_normalizer.dart';
 
 /// Controlador especializado para manejo de filtros y búsquedas
-/// Trabaja con los modelos de menu_dart_api directamente
+/// Trabaja con los modelos de catálogo (Catalog architecture)
 class FilterController extends GetxController {
   // Estado reactivo
   final RxString _searchQuery = ''.obs;
-  final RxList<MenuItemModel> _filteredItems = <MenuItemModel>[].obs;
+  final RxList<CatalogItemModel> _filteredItems = <CatalogItemModel>[].obs;
   final RxList<String> _availableCategories = <String>[].obs;
   final RxString _selectedCategory = ''.obs;
   final RxBool _isLoading = false.obs;
@@ -16,15 +16,25 @@ class FilterController extends GetxController {
   // Debouncer para búsqueda
   late final Debouncer _searchDebouncer;
 
-  // Lista original de items (proporcionada por MenuController)
-  List<MenuItemModel> _allItems = [];
+  // Lista original de items
+  List<CatalogItemModel> _allItems = [];
 
   // Getters públicos (solo lectura)
   String get searchQuery => _searchQuery.value;
-  List<MenuItemModel> get filteredItems => _filteredItems;
+  RxString get searchQueryRx => _searchQuery;
+
+  List<CatalogItemModel> get filteredItems => _filteredItems;
+  RxList<CatalogItemModel> get filteredItemsRx => _filteredItems;
+
   List<String> get availableCategories => _availableCategories;
+  RxList<String> get availableCategoriesRx => _availableCategories;
+
   String get selectedCategory => _selectedCategory.value;
+  RxString get selectedCategoryRx => _selectedCategory;
+
   bool get isLoading => _isLoading.value;
+  RxBool get isLoadingRx => _isLoading;
+
   bool get hasActiveFilters => searchQuery.isNotEmpty || selectedCategory.isNotEmpty;
   int get filteredItemsCount => _filteredItems.length;
   int get totalItemsCount => _allItems.length;
@@ -43,18 +53,21 @@ class FilterController extends GetxController {
   }
 
   /// Establece la lista inicial de items y extrae categorías
-  void setMenuItems(List<MenuItemModel> items) {
+  void setMenuItems(List<CatalogItemModel> items) {
     _allItems = items;
     _extractCategories();
     _applyFilters();
   }
 
-  /// Extrae categorías únicas de los ingredientes
+  /// Extrae categorías únicas de los atributos (ingredientes)
   void _extractCategories() {
     final categories = <String>{};
     for (final item in _allItems) {
-      if (item.ingredients != null) {
-        categories.addAll(item.ingredients!);
+      final ingredients = item.attributes?['ingredients'];
+      if (ingredients is List) {
+        for (var ingredient in ingredients) {
+          categories.add(ingredient.toString());
+        }
       }
     }
     _availableCategories.value = categories.toList()..sort();
@@ -88,7 +101,7 @@ class FilterController extends GetxController {
     _isLoading.value = true;
 
     try {
-      List<MenuItemModel> result = List.from(_allItems);
+      List<CatalogItemModel> result = List.from(_allItems);
 
       // Aplicar filtro de búsqueda
       if (_searchQuery.value.isNotEmpty) {
@@ -97,7 +110,13 @@ class FilterController extends GetxController {
 
       // Aplicar filtro de categoría
       if (_selectedCategory.value.isNotEmpty) {
-        result = result.where((item) => item.ingredients?.contains(_selectedCategory.value) ?? false).toList();
+        result = result.where((item) {
+          final ingredients = item.attributes?['ingredients'];
+          if (ingredients is List) {
+            return ingredients.map((e) => e.toString()).contains(_selectedCategory.value);
+          }
+          return false;
+        }).toList();
       }
 
       _filteredItems.value = result;
@@ -107,20 +126,21 @@ class FilterController extends GetxController {
   }
 
   /// Filtra items por consulta de búsqueda
-  List<MenuItemModel> _filterBySearchQuery(List<MenuItemModel> items, String query) {
+  List<CatalogItemModel> _filterBySearchQuery(List<CatalogItemModel> items, String query) {
     final normalizedQuery = TextNormalizer.normalize(query);
 
     return items.where((item) {
       // Buscar en el nombre
-      final normalizedName = TextNormalizer.normalize(item.name ?? '');
+      final normalizedName = TextNormalizer.normalize(item.name);
       if (normalizedName.contains(normalizedQuery)) {
         return true;
       }
 
-      // Buscar en los ingredientes
-      if (item.ingredients != null) {
-        for (final ingredient in item.ingredients!) {
-          final normalizedIngredient = TextNormalizer.normalize(ingredient);
+      // Buscar en los ingredientes (dentro de attributes)
+      final ingredients = item.attributes?['ingredients'];
+      if (ingredients is List) {
+        for (final ingredient in ingredients) {
+          final normalizedIngredient = TextNormalizer.normalize(ingredient.toString());
           if (normalizedIngredient.contains(normalizedQuery)) {
             return true;
           }
@@ -131,46 +151,10 @@ class FilterController extends GetxController {
     }).toList();
   }
 
-  // ========================================
-  // MÉTODOS NO UTILIZADOS - CANDIDATOS PARA ELIMINACIÓN
-  // ========================================
-  // Estos métodos fueron creados para filtrado avanzado por rango de precios
-  // que no se implementó en la UI actual.
-  // RECOMENDACIÓN: Mantener comentados hasta implementar filtrado avanzado
-  // ========================================
-
-  /*
-  /// Obtiene items por rango de precio
-  List<MenuItemModel> getItemsByPriceRange(double minPrice, double maxPrice) {
-    return _filteredItems.where((item) {
-      final price = item.price?.toDouble() ?? 0.0;
-      return price >= minPrice && price <= maxPrice;
-    }).toList();
-  }
-
-  /// Obtiene el rango de precios de los items filtrados
-  Map<String, double> getPriceRange() {
-    if (_filteredItems.isEmpty) {
-      return {'min': 0.0, 'max': 0.0};
-    }
-
-    final prices = _filteredItems.map((item) => item.price?.toDouble() ?? 0.0).where((price) => price > 0).toList();
-
-    if (prices.isEmpty) {
-      return {'min': 0.0, 'max': 0.0};
-    }
-
-    prices.sort();
-    return {
-      'min': prices.first,
-      'max': prices.last,
-    };
-  }
-  */
-
   @override
   void onClose() {
     _searchDebouncer.dispose();
     super.onClose();
   }
 }
+

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/getx/menu_home_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
 import 'package:pu_material/utils/pu_colors.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
 
@@ -9,41 +9,12 @@ class FilterSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<MenuHomeCartController>(
+    return GetBuilder<HomeController>(
       builder: (controller) {
-        // Contar totales
-        int totalMenuItems = 0;
-        int totalWardrobeItems = 0;
-
-        for (var menu in controller.filteredMenu) {
-          if (menu.items != null) {
-            totalMenuItems += menu.items!.where((item) {
-              return controller.searchQuery.value.isEmpty ||
-                  item.name!.toLowerCase().contains(controller.searchQuery.value.toLowerCase()) ||
-                  (item.ingredients != null &&
-                      item.ingredients!.any((ingredient) =>
-                          ingredient.toLowerCase().contains(controller.searchQuery.value.toLowerCase())));
-            }).length;
-          }
-        }
-
-        for (var wardrobe in controller.filteredWardList) {
-          if (wardrobe.items != null) {
-            totalWardrobeItems += wardrobe.items!.where((item) {
-              return controller.searchQuery.value.isEmpty ||
-                  item.name!.toLowerCase().contains(controller.searchQuery.value.toLowerCase()) ||
-                  (item.brand != null &&
-                      item.brand!.toLowerCase().contains(controller.searchQuery.value.toLowerCase())) ||
-                  (item.color != null &&
-                      item.color!.toLowerCase().contains(controller.searchQuery.value.toLowerCase()));
-            }).length;
-          }
-        }
-
-        int totalItems = totalMenuItems + totalWardrobeItems;
+        int totalItems = controller.filteredMenuItems.length;
 
         // Solo mostrar si hay filtros activos o elementos para mostrar
-        if (totalItems == 0 && controller.searchQuery.value.isEmpty && controller.selectedCategory.value.isEmpty) {
+        if (totalItems == 0 && controller.searchQuery.isEmpty && (controller.selectedCategory.isEmpty || controller.selectedCategory == 'Todos')) {
           return const SizedBox();
         }
 
@@ -94,37 +65,37 @@ class FilterSummaryWidget extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (controller.searchQuery.value.isNotEmpty ||
-                        (controller.selectedCategory.value.isNotEmpty && controller.selectedCategory.value != 'Todos'))
+                    if (controller.searchQuery.isNotEmpty ||
+                        (controller.selectedCategory.isNotEmpty && controller.selectedCategory != 'Todos'))
                       const SizedBox(height: 4),
-                    if (controller.searchQuery.value.isNotEmpty ||
-                        (controller.selectedCategory.value.isNotEmpty && controller.selectedCategory.value != 'Todos'))
+                    if (controller.searchQuery.isNotEmpty ||
+                        (controller.selectedCategory.isNotEmpty && controller.selectedCategory != 'Todos'))
                       Row(
                         children: [
-                          if (controller.searchQuery.value.isNotEmpty)
+                          if (controller.searchQuery.isNotEmpty)
                             Flexible(
                               child: Text(
-                                'Búsqueda: "${controller.searchQuery.value}"',
+                                'Búsqueda: "${controller.searchQuery}"',
                                 style: PuTextStyle.ingredientsListStyle.copyWith(
                                   color: Colors.grey[600],
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          if (controller.searchQuery.value.isNotEmpty &&
-                              controller.selectedCategory.value.isNotEmpty &&
-                              controller.selectedCategory.value != 'Todos')
+                          if (controller.searchQuery.isNotEmpty &&
+                              controller.selectedCategory.isNotEmpty &&
+                              controller.selectedCategory != 'Todos')
                             Text(
                               ' • ',
                               style: PuTextStyle.ingredientsListStyle.copyWith(
                                 color: Colors.grey[600],
                               ),
                             ),
-                          if (controller.selectedCategory.value.isNotEmpty &&
-                              controller.selectedCategory.value != 'Todos')
+                          if (controller.selectedCategory.isNotEmpty &&
+                              controller.selectedCategory != 'Todos')
                             Flexible(
                               child: Text(
-                                'Categoría: ${controller.selectedCategory.value}',
+                                'Categoría: ${controller.selectedCategory}',
                                 style: PuTextStyle.ingredientsListStyle.copyWith(
                                   color: Colors.grey[600],
                                 ),
@@ -138,8 +109,8 @@ class FilterSummaryWidget extends StatelessWidget {
               ),
 
               // Botón limpiar filtros
-              if (controller.searchQuery.value.isNotEmpty ||
-                  (controller.selectedCategory.value.isNotEmpty && controller.selectedCategory.value != 'Todos'))
+              if (controller.searchQuery.isNotEmpty ||
+                  (controller.selectedCategory.isNotEmpty && controller.selectedCategory != 'Todos'))
                 IconButton(
                   onPressed: controller.clearFilters,
                   icon: Icon(

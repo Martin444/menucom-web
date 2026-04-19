@@ -12,9 +12,9 @@ Helper para actualizar dinámicamente los metadatos HTML de la aplicación web F
 lib/core/helpers/html_metadata_helper.dart
 ```
 
-## Uso en MenuHomeCartController
+## Uso en CatalogController
 
-### ✅ Actualización automática al cargar menú
+### ✅ Actualización automática al cargar catálogo
 
 Cuando se ejecuta `getItemsMenu()`, el helper actualiza automáticamente:
 
@@ -24,32 +24,21 @@ Cuando se ejecuta `getItemsMenu()`, el helper actualiza automáticamente:
 4. **Meta tags Open Graph**: Para compartir en redes sociales
 
 ```dart
-void getItemsMenu({String? idMenu}) async {
-  var response = await GetMenuUseCase().execute(idMenu!);
+void loadMenu(String catalogId) async {
+  var response = await GetCatalogByIdUseCase().execute(catalogId);
   
   // Actualizar metadatos HTML automáticamente
-  if (response.owner != null) {
+  if (response != null) {
     HtmlMetadataHelper.updateCommerceMetadata(
-      name: response.owner!.name ?? 'MenuCom',
-      logoUrl: response.owner!.photoURL,
+      name: response.name ?? 'MenuCom',
+      logoUrl: response.coverImageUrl,
       description: 'Catálogo de productos y servicios',
     );
   }
 }
 ```
 
-### ✅ Actualización al cargar wardrobe
 
-Para wardrobes, solo se actualiza el título (ya que no hay photoURL disponible):
-
-```dart
-Future<List<WardrobeModel>?> getWardrobebyDining({String? idMenu}) async {
-  final responseWar = await GetClothingUserUsescase().execute(idMenu!);
-  
-  // Actualizar título
-  HtmlMetadataHelper.updateTitle('${responseWar.owner} - MenuCom');
-}
-```
 
 ## API del Helper
 
@@ -146,7 +135,7 @@ https://res.cloudinary.com/photographer/image/upload/v1757809490/o5ijxvu14ir4zvm
 ## Arquitectura
 
 ```
-MenuHomeCartController (Controller)
+CatalogController (Controller)
     ↓
 HtmlMetadataHelper (Helper/Atom)
     ↓

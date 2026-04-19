@@ -1,95 +1,77 @@
 import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
-
-/// Modelo para items en el carrito con cantidad
-class CartItem {
-  final MenuItemModel menuItem;
-  final RxInt quantity;
-
-  CartItem({
-    required this.menuItem,
-    int initialQuantity = 1,
-  }) : quantity = initialQuantity.obs;
-
-  /// Precio total del item (precio unitario * cantidad)
-  double get totalPrice => (menuItem.price?.toDouble() ?? 0.0) * quantity.value;
-
-  /// ID único del item de menú
-  String get itemId => menuItem.id ?? '';
-
-  /// Nombre del item
-  String get name => menuItem.name ?? '';
-
-  /// URL de la foto del item
-  String? get photoUrl => menuItem.photoUrl;
-
-  /// Precio unitario
-  double get unitPrice => menuItem.price?.toDouble() ?? 0.0;
-
-  /// Ingredientes del item
-  List<String> get ingredients => menuItem.ingredients ?? [];
-
-  /// Tiempo de entrega estimado
-  int get deliveryTime => menuItem.deliveryTime ?? 30;
-}
+import 'package:pu_material/pu_material.dart';
 
 /// Controlador especializado para manejo del carrito de compras
 /// Responsable de gestionar items, cantidades, totales y persistencia
 class CartController extends GetxController {
   // Estado reactivo del carrito
-  final RxList<CartItem> _cartItems = <CartItem>[].obs;
+  final RxList<CartItemModel> _cartItems = <CartItemModel>[].obs;
   final RxDouble _subtotal = 0.0.obs;
   final RxDouble _tax = 0.0.obs;
   final RxDouble _total = 0.0.obs;
   final RxBool _isLoading = false.obs;
 
   // Configuración de impuestos (puede ser configurable)
-  static const double _taxRate = 0.12; // 12% IVA
+  static const double _taxRate = 0.0; // Desactivado por ahora según lógica previa
 
   // Getters públicos (solo lectura)
-  List<CartItem> get cartItems => _cartItems;
+  List<CartItemModel> get cartItems => _cartItems;
+  RxList<CartItemModel> get cartItemsRx => _cartItems;
+
   double get subtotal => _subtotal.value;
+  RxDouble get subtotalRx => _subtotal;
+
   double get tax => _tax.value;
+  RxDouble get taxRx => _tax;
+
   double get total => _total.value;
+  RxDouble get totalRx => _total;
+
   bool get isLoading => _isLoading.value;
+  RxBool get isLoadingRx => _isLoading;
   bool get isEmpty => _cartItems.isEmpty;
   bool get isNotEmpty => _cartItems.isNotEmpty;
   int get itemCount => _cartItems.length;
-  int get totalQuantity => _cartItems.fold(0, (sum, item) => sum + item.quantity.value);
+  int get totalQuantity => _cartItems.fold(0, (sum, item) => sum + (item.quantity ?? 0));
 
   /// Tiempo de entrega estimado (mayor tiempo entre todos los items)
   int get estimatedDeliveryTime {
     if (_cartItems.isEmpty) return 0;
-    return _cartItems.map((item) => item.deliveryTime).reduce((a, b) => a > b ? a : b);
+    return _cartItems.map((item) => item.deliveryTime ?? 30).reduce((a, b) => a > b ? a : b);
   }
 
   @override
   void onInit() {
     super.onInit();
-    // Escuchar cambios en las cantidades de items individuales
+    // Escuchar cambios en la lista
     ever(_cartItems, (_) => _calculateTotals());
   }
 
   /// Añade un item al carrito o incrementa la cantidad si ya existe
-  void addItem(MenuItemModel menuItem, {int quantity = 1}) {
+  void addItem(CatalogItemModel catalogItem, {int quantity = 1}) {
     if (quantity <= 0) return;
 
     final existingItemIndex = _cartItems.indexWhere(
-      (cartItem) => cartItem.itemId == menuItem.id,
+      (item) => item.id == catalogItem.id,
     );
 
     if (existingItemIndex != -1) {
       // Item ya existe, incrementar cantidad
-      _cartItems[existingItemIndex].quantity.value += quantity;
+      final item = _cartItems[existingItemIndex];
+      _cartItems[existingItemIndex] = item.copyWith(
+        quantity: (item.quantity ?? 0) + quantity,
+      );
     } else {
       // Nuevo item, añadir al carrito
-      final cartItem = CartItem(
-        menuItem: menuItem,
-        initialQuantity: quantity,
+      final cartItem = CartItemModel(
+        id: catalogItem.id,
+        name: catalogItem.name,
+        photoUrl: catalogItem.photoURL,
+        price: catalogItem.price,
+        quantity: quantity,
+        deliveryTime: _extractDeliveryTime(catalogItem),
       );
-
-      // Escuchar cambios en la cantidad de este item específico
-      ever(cartItem.quantity, (_) => _calculateTotals());
 
       _cartItems.add(cartItem);
     }
@@ -99,7 +81,7 @@ class CartController extends GetxController {
 
   /// Remueve un item del carrito completamente
   void removeItem(String itemId) {
-    _cartItems.removeWhere((cartItem) => cartItem.itemId == itemId);
+    _cartItems.removeWhere((item) => item.id == itemId);
     _calculateTotals();
   }
 
@@ -111,36 +93,38 @@ class CartController extends GetxController {
     }
 
     final itemIndex = _cartItems.indexWhere(
-      (cartItem) => cartItem.itemId == itemId,
+      (item) => item.id == itemId,
     );
 
     if (itemIndex != -1) {
-      _cartItems[itemIndex].quantity.value = newQuantity;
+      _cartItems[itemIndex] = _cartItems[itemIndex].copyWith(quantity: newQuantity);
       _calculateTotals();
     }
   }
 
   /// Incrementa la cantidad de un item
   void incrementItem(String itemId) {
-    final item = _cartItems.firstWhereOrNull(
-      (cartItem) => cartItem.itemId == itemId,
+    final itemIndex = _cartItems.indexWhere(
+      (item) => item.id == itemId,
     );
 
-    if (item != null) {
-      item.quantity.value++;
+    if (itemIndex != -1) {
+      final item = _cartItems[itemIndex];
+      _cartItems[itemIndex] = item.copyWith(quantity: (item.quantity ?? 0) + 1);
       _calculateTotals();
     }
   }
 
   /// Decrementa la cantidad de un item
   void decrementItem(String itemId) {
-    final item = _cartItems.firstWhereOrNull(
-      (cartItem) => cartItem.itemId == itemId,
+    final itemIndex = _cartItems.indexWhere(
+      (item) => item.id == itemId,
     );
 
-    if (item != null) {
-      if (item.quantity.value > 1) {
-        item.quantity.value--;
+    if (itemIndex != -1) {
+      final item = _cartItems[itemIndex];
+      if ((item.quantity ?? 0) > 1) {
+        _cartItems[itemIndex] = item.copyWith(quantity: (item.quantity ?? 0) - 1);
         _calculateTotals();
       } else {
         removeItem(itemId);
@@ -154,34 +138,24 @@ class CartController extends GetxController {
     _calculateTotals();
   }
 
-  /// Obtiene un item del carrito por ID
-  CartItem? getCartItem(String itemId) {
-    try {
-      return _cartItems.firstWhere(
-        (cartItem) => cartItem.itemId == itemId,
-      );
-    } catch (e) {
-      return null;
-    }
-  }
-
   /// Verifica si un item está en el carrito
-  bool containsItem(String itemId) {
-    return _cartItems.any((cartItem) => cartItem.itemId == itemId);
+  bool containsItem(String? itemId) {
+    if (itemId == null) return false;
+    return _cartItems.any((item) => item.id == itemId);
   }
 
   /// Obtiene la cantidad de un item específico en el carrito
   int getItemQuantity(String itemId) {
-    final item = getCartItem(itemId);
-    return item?.quantity.value ?? 0;
+    final item = _cartItems.firstWhereOrNull((item) => item.id == itemId);
+    return item?.quantity ?? 0;
   }
 
   /// Calcula los totales del carrito
   void _calculateTotals() {
     double newSubtotal = 0.0;
 
-    for (final cartItem in _cartItems) {
-      newSubtotal += cartItem.totalPrice;
+    for (final item in _cartItems) {
+      newSubtotal += (item.price ?? 0.0) * (item.quantity ?? 0);
     }
 
     _subtotal.value = newSubtotal;
@@ -194,11 +168,11 @@ class CartController extends GetxController {
     return {
       'items': _cartItems
           .map((item) => {
-                'id': item.itemId,
+                'id': item.id,
                 'name': item.name,
-                'quantity': item.quantity.value,
-                'unitPrice': item.unitPrice,
-                'totalPrice': item.totalPrice,
+                'quantity': item.quantity,
+                'unitPrice': item.price,
+                'totalPrice': (item.price ?? 0.0) * (item.quantity ?? 0),
               })
           .toList(),
       'subtotal': _subtotal.value,
@@ -213,12 +187,20 @@ class CartController extends GetxController {
   /// Convierte el carrito a formato para OrderParam (compatibilidad con menu_dart_api)
   List<OrderItemModel> toOrderItems() {
     return _cartItems
-        .map((cartItem) => OrderItemModel(
-              id: int.tryParse(cartItem.itemId) ?? 0, // Convertir String ID a int
-              productName: cartItem.name,
-              quantity: cartItem.quantity.value,
-              price: cartItem.unitPrice,
+        .map((item) => OrderItemModel(
+              id: int.tryParse(item.id ?? '') ?? 0, 
+              productName: item.name ?? '',
+              quantity: item.quantity ?? 0,
+              price: item.price ?? 0.0,
             ))
         .toList();
   }
+
+  int _extractDeliveryTime(CatalogItemModel item) {
+    final time = item.attributes?['deliveryTime'];
+    if (time is int) return time;
+    if (time is String) return int.tryParse(time) ?? 30;
+    return 30;
+  }
 }
+

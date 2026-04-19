@@ -1,5 +1,5 @@
 import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/getx/menu_binding.dart';
+import 'package:menucom_catalog/features/home/getx/catalog_binding.dart';
 import 'package:menucom_catalog/features/home/presentation/page/home_page.dart';
 import 'package:menucom_catalog/features/my_cart/getx/order_binding.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/pages/confirm_order_page.dart';
@@ -17,14 +17,14 @@ class PUPages {
       page: () => const HomePage(),
       transition: Transition.fadeIn,
       bindings: [
-        MenuHomeBinding(),
+        CatalogBinding(),
       ],
     ),
     GetPage(
       name: PURoutes.MYCART,
       page: () => const MyCartPage(),
       bindings: [
-        MenuHomeBinding(),
+        CatalogBinding(),
         OrderBinding(),
       ],
       transition: Transition.fadeIn,
@@ -33,7 +33,7 @@ class PUPages {
       name: PURoutes.CONFIRMORDER,
       page: () => const ConfirmOrderPage(),
       bindings: [
-        MenuHomeBinding(),
+        CatalogBinding(),
         OrderBinding(),
       ],
       transition: Transition.fadeIn,
@@ -65,7 +65,7 @@ class PUPages {
       page: () => const HomePage(),
       transition: Transition.fadeIn,
       bindings: [
-        MenuHomeBinding(),
+        CatalogBinding(),
       ],
     ),
   ];
