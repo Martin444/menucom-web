@@ -86,10 +86,6 @@
     <span>Estamos preparando todo para ti, por favor espera un momento... </span>
   </div>
 
-  <!-- Inyección de configuración de Flutter -->
-  {{flutter_js}}
-  {{flutter_build_config}}
-
   <script>
     // --- DEBUG MODE: Captura de errores globales ---
     window.onerror = function(message, source, lineno, colno, error) {
@@ -114,6 +110,10 @@
       if (spinner) spinner.style.animation = "none";
     }
 
+    // Inyección de configuración de Flutter (Reemplazado por el build)
+    {{flutter_js}}
+    {{flutter_build_config}}
+
     // --- Inicialización Maestra ---
     (function() {
       console.log('🚀 [SPLASH] Preparando arranque de Catálogo...');
@@ -122,17 +122,18 @@
         try {
           console.log('📦 [SPLASH] Verificando cargador...');
           if (typeof _flutter === 'undefined' || !_flutter.loader) {
-            // Reintentar brevemente si flutter.js aún no inyectó el loader
+            console.warn('⚠️ [SPLASH] Cargador no listo, reintentando...');
             setTimeout(startFlutter, 100);
             return;
           }
 
-          var serviceWorkerVersion = '{{flutter_service_worker_version}}';
+          // Usamos backticks para mayor seguridad con el string inyectado
+          var serviceWorkerVersion = `{{flutter_service_worker_version}}`;
           if (serviceWorkerVersion) {
             serviceWorkerVersion = serviceWorkerVersion.split('/*')[0].replace(/["']/g, '').trim();
           }
 
-          console.log('📦 [SPLASH] Ejecutando _flutter.loader.load...');
+          console.log('📦 [SPLASH] Ejecutando _flutter.loader.load... SW:', serviceWorkerVersion || 'N/A');
           _flutter.loader.load({
             serviceWorkerSettings: {
               serviceWorkerVersion: serviceWorkerVersion,
@@ -143,7 +144,6 @@
               engineInitializer.initializeEngine({
                 serviceWorkerVersion: serviceWorkerVersion,
                 useColorEmoji: true,
-                trustedTypes: false, // Desactivado para evitar bloqueos de MP
               }).then(function(appRunner) {
                 console.log('🎯 [SPLASH] Motor OK. Ejecutando app...');
                 return appRunner.runApp();
@@ -163,7 +163,7 @@
         }
       };
 
-      // Iniciar lo antes posible sin esperar a que carguen imágenes/externos pesados
+      // Iniciar cuando el DOM esté listo
       if (document.readyState === 'complete') {
         startFlutter();
       } else {
