@@ -10,8 +10,6 @@
             "type": "dart",
             "program": "lib/main.dart",
             "args": [
-                "--web-renderer",
-                "canvaskit",
                 //"--web-port=52245",
                 //"--no-sound-null-safety",
                 "--dart-define=API_URL=http://localhost:3001",
@@ -25,8 +23,6 @@
             "type": "dart",
             "program": "lib/main.dart",
             "args": [
-                "--web-renderer",
-                "canvaskit",
                 //"--web-port=52245",
                 //"--no-sound-null-safety",
                 "--dart-define=API_URL=https://menucom-api.onrender.com",
@@ -40,8 +36,6 @@
             "type": "dart",
             "program": "lib/main.dart",
             "args": [
-                "--web-renderer",
-                "html",
                 //"--web-port=52245",
                 //"--no-sound-null-safety",
                 "--dart-define=ACCESS_TOKEN_SECRET_KEY=p7Xv9QmL2eR8sTzY4bN1aCwV6jKdFgHu",
