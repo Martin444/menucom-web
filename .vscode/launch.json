@@ -29,7 +29,7 @@
                 "canvaskit",
                 //"--web-port=52245",
                 //"--no-sound-null-safety",
-                "--dart-define=API_URL=https://menucom-api-60e608ae2f99.herokuapp.com",
+                "--dart-define=API_URL=https://menucom-api.onrender.com",
                 "--dart-define=ACCESS_TOKEN_SECRET_KEY=p7Xv9QmL2eR8sTzY4bN1aCwV6jKdFgHu",
                 "--dart-define=MP_PUBLIC_KEY=APP_USR-3ee7f54a-686a-49b4-8592-40610ab7d742",
             ],

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
@@ -21,55 +22,54 @@ class HeadHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetX<HomeController>(builder: (_) {
-      return Container(
-        padding: const EdgeInsets.only(
-          top: 15,
-          right: 20,
-          left: 10,
-          bottom: 15,
-        ),
-        decoration: PuStyleContainers.borderBottomContainer,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            withBack ?? false
-                ? Flexible(
-                    flex: 1,
-                    child: Row(
-                      children: [
-                        _buildBackButton(),
-                        const SizedBox(width: 8),
-                        Text(
-                          titleHead ?? '',
-                          style: PuTextStyle.titleHeadTextStyle,
-                        ),
-                      ],
+    return GetBuilder<HomeController>(builder: (controller) {
+      return ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            decoration: BoxDecoration(
+              color: PUColors.glassBg,
+              border: Border(
+                bottom: BorderSide(
+                  color: PUColors.glassBorder,
+                  width: 1,
+                ),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: PUColors.glassShadow,
+                  blurRadius: 20,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Row(
+                children: [
+                  if (withBack ?? false) ...[
+                    _buildBackButton(),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        titleHead ?? '',
+                        style: PuTextStyle.titleHeadTextStyle,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  )
-                : const Flexible(
-                    flex: 1,
-                    child: SizedBox(
-                      width: 70,
+                  ] else ...[
+                    // Logo o Título de la marca en Home si no hay back
+                    const Expanded(
+                      child: SizedBox(),
                     ),
-                  ),
-            withBack ?? false
-                ? const Flexible(
-                    flex: 1,
-                    child: SizedBox(
-                      width: 50,
-                    ),
-                  )
-                : Flexible(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        _buildCartButton(),
-                      ],
-                    ),
-                  ),
-          ],
+                  ],
+                  _buildCartButton(controller),
+                ],
+              ),
+            ),
+          ),
         ),
       );
     });
@@ -108,7 +108,7 @@ class HeadHome extends StatelessWidget {
   }
 
   /// Icono del carrito con hover state, badge y accessibility
-  Widget _buildCartButton() {
+  Widget _buildCartButton(HomeController controller) {
     return Semantics(
       label: 'Ver carrito de compras',
       button: true,
@@ -140,7 +140,7 @@ class HeadHome extends StatelessWidget {
                 // Cart badge con animación
                 Positioned(
                   child: Obx(() {
-                    final count = HomeController().cartItemCount;
+                    final count = controller.cartItemCount;
                     if (count <= 0) return const SizedBox.shrink();
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 200),

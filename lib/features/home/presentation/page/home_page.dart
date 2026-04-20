@@ -36,34 +36,44 @@ class HomePage extends StatelessWidget {
   Widget _buildMainScrollView() {
     return CustomScrollView(
       slivers: [
-        _buildSliverHeader(),
+        _buildHeroSliver(),
+        _buildStickyHeaderSliver(),
+        _buildInfoAndFiltersSliver(),
         _buildSliverContent(),
       ],
     );
   }
 
-  /// Construye el header como Sliver con HeroSection opcional
-  Widget _buildSliverHeader() {
+  /// Sliver para el HeroSection (no persistente)
+  Widget _buildHeroSliver() {
     return SliverToBoxAdapter(
       child: GetBuilder<HomeController>(
-        builder: (controller) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // HeroSection con imagen del catálogo (si existe)
-              _buildHeroSection(controller),
-              
-              // Header con carrito
-              const HeadHome(),
-              
-              // Info del negocio
-              const OwnerInfoWidget(),
-              
-              // Resumen de filtros
-              const FilterSummaryWidget(),
-            ],
-          );
-        },
+        builder: (controller) => _buildHeroSection(controller),
+      ),
+    );
+  }
+
+  /// Sliver persistente para el HeadHome (vidrio líquido)
+  Widget _buildStickyHeaderSliver() {
+    return const SliverAppBar(
+      pinned: true,
+      floating: true,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      automaticallyImplyLeading: false,
+      toolbarHeight: 70,
+      flexibleSpace: HeadHome(),
+    );
+  }
+
+  /// Sliver para info y filtros (no persistente)
+  Widget _buildInfoAndFiltersSliver() {
+    return SliverToBoxAdapter(
+      child: Column(
+        children: const [
+          OwnerInfoWidget(),
+          FilterSummaryWidget(),
+        ],
       ),
     );
   }
@@ -101,9 +111,7 @@ class HomePage extends StatelessWidget {
           );
         }
 
-        return const SliverFillRemaining(
-          child: ResponsiveItemsGrid(),
-        );
+        return const ResponsiveItemsGrid(isSliver: true);
       },
     );
   }

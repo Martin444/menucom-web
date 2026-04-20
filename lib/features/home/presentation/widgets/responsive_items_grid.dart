@@ -7,7 +7,13 @@ import 'package:pu_material/pu_material.dart';
 
 /// Grid responsivo para mostrar items del catálogo
 class ResponsiveItemsGrid extends StatelessWidget {
-  const ResponsiveItemsGrid({super.key});
+  /// Si debe retornar un Sliver en lugar de un Widget normal
+  final bool isSliver;
+
+  const ResponsiveItemsGrid({
+    super.key,
+    this.isSliver = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -15,9 +21,10 @@ class ResponsiveItemsGrid extends StatelessWidget {
       builder: (controller) {
         final filteredData = controller.filteredMenuItems;
 
-        // Estado vacío usando EmptyStateAtom
+        // Estado vacío
         if (filteredData.isEmpty && !controller.isLoadHomeItems) {
-          return _buildEmptyState();
+          final emptyContent = _buildEmptyState();
+          return isSliver ? SliverToBoxAdapter(child: emptyContent) : emptyContent;
         }
 
         return _buildResponsiveGrid(controller, filteredData);
@@ -41,20 +48,45 @@ class ResponsiveItemsGrid extends StatelessWidget {
     );
   }
 
-  /// Construye el grid responsivo usando GridLayoutAtom
+  /// Construye el grid responsivo usando GridLayoutAtom o SliverGridLayoutAtom
   Widget _buildResponsiveGrid(HomeController controller, List<CatalogItemModel> filteredData) {
+    if (isSliver) {
+      return SliverLayoutBuilder(
+        builder: (context, sliverConstraints) {
+          // Convertir SliverConstraints a BoxConstraints para reutilizar la lógica de cálculo
+          final constraints = BoxConstraints(maxWidth: sliverConstraints.crossAxisExtent);
+          final mainAxisExtent = _calculateItemHeight(constraints);
+          final children = _buildGridItems(controller, filteredData);
+
+          return SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+            sliver: SliverGridLayoutAtom(
+              constraints: constraints,
+              mainAxisExtent: mainAxisExtent,
+              mainAxisSpacing: 20,
+              crossAxisSpacing: 20,
+              children: children,
+            ),
+          );
+        },
+      );
+    }
+
     return LayoutBuilder(
       builder: (context, constraints) {
+        final mainAxisExtent = _calculateItemHeight(constraints);
+        final children = _buildGridItems(controller, filteredData);
+
         return ContainerAtom(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
           child: GridLayoutAtom(
             constraints: constraints,
-            mainAxisExtent: _calculateItemHeight(constraints),
+            mainAxisExtent: mainAxisExtent,
             mainAxisSpacing: 20,
             crossAxisSpacing: 20,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            children: _buildGridItems(controller, filteredData),
+            children: children,
           ),
         );
       },
@@ -67,17 +99,21 @@ class ResponsiveItemsGrid extends StatelessWidget {
     final columns = _getColumnCount(maxWidth);
 
     final totalSpacing = (columns - 1) * 20;
-    final horizontalPadding = 24;
-    final availableWidth = maxWidth - totalSpacing - horizontalPadding;
+    const horizontalPadding = 24.0;
+    final availableWidth = (maxWidth - totalSpacing - horizontalPadding).clamp(0.0, double.infinity);
     final itemWidth = availableWidth / columns;
 
+    double height;
     if (maxWidth >= 1200) {
-      return itemWidth * 1.35;
+      height = itemWidth * 1.35;
     } else if (maxWidth >= 700) {
-      return itemWidth * 1.3;
+      height = itemWidth * 1.3;
     } else {
-      return itemWidth * 1.5;
+      height = itemWidth * 1.5;
     }
+    
+    // Garantizar una altura mínima para evitar errores de layout
+    return height.clamp(250.0, double.infinity);
   }
 
   int _getColumnCount(double maxWidth) {
@@ -94,27 +130,11 @@ class ResponsiveItemsGrid extends StatelessWidget {
     return filteredData.map((item) {
       final isAdded = controller.detectItemInList(item);
       
-      return GestureDetector(
-        onTap: () {
-          Get.toNamed(
-            '/product-detail',
-            arguments: {
-              'item': item,
-              'isAdded': isAdded,
-              'onAddCart': (CatalogItemModel i) => controller.selectItem(i),
-              'name': item.name,
-              'description': item.description,
-              'photoUrl': item.photoURL,
-              'price': item.price.toString(),
-            },
-          );
-        },
-        child: CatalogItemTile(
-          item: item,
-          selected: isAdded,
-          catalogType: controller.catalog?.catalogType ?? 'wardrobe',
-          onAddCart: (i) => controller.selectItem(i),
-        ),
+      return CatalogItemTile(
+        item: item,
+        selected: isAdded,
+        catalogType: controller.catalog?.catalogType ?? 'wardrobe',
+        onAddCart: (i) => controller.selectItem(i),
       );
     }).toList();
   }

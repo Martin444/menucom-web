@@ -5,6 +5,8 @@ import 'package:menucom_catalog/core/config.dart';
 import 'package:menucom_catalog/routes/pages.dart';
 import 'package:menucom_catalog/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:pu_material/pu_material.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,7 +38,25 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Menu com',
       theme: ThemeData(
-        useMaterial3: false,
+        useMaterial3: true,
+        primaryColor: PUColors.primaryColor,
+        scaffoldBackgroundColor: PUColors.primaryBackground,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: PUColors.primaryColor,
+          primary: PUColors.primaryColor,
+          secondary: PUColors.accentColor,
+          surface: Colors.white,
+          error: PUColors.bgError,
+          brightness: Brightness.light,
+        ),
+        textTheme: GoogleFonts.jostTextTheme(
+          Theme.of(context).textTheme,
+        ),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          iconTheme: IconThemeData(color: PUColors.iconColorBlack),
+        ),
       ),
       getPages: PUPages.pagesRoutes,
       textDirection: TextDirection.ltr,

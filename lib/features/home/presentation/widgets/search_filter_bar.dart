@@ -54,52 +54,52 @@ class SearchFilterBar extends StatelessWidget {
   Widget _buildSearchField(HomeController controller, bool isCompact) {
     return Expanded(
       child: ContainerAtom(
-        height: isCompact ? 32 : 44,
+        height: isCompact ? 36 : 48,
         backgroundColor: Colors.white,
-        borderRadius: BorderRadius.circular(isCompact ? 12 : 24),
+        borderRadius: BorderRadius.circular(isCompact ? 18 : 24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: isCompact ? 2 : 4,
-            offset: const Offset(0, 1),
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
         child: PUInput(
           controller: TextEditingController()..text = controller.searchQuery,
-          hintText: 'Buscar productos...',
+          hintText: 'Buscar en el catálogo...',
           onChanged: (val) => controller.updateSearchQuery(val),
           textInputAction: TextInputAction.search,
           compact: isCompact,
+          activeBorderColor: PUColors.accentColor,
         ),
       ),
     );
   }
 
-  /// Construye el dropdown de ordenamiento con estilo mejorado
   Widget _buildSortDropdown(HomeController controller, bool isCompact) {
     return ContainerAtom(
-      height: isCompact ? 32 : 44,
+      height: isCompact ? 36 : 48,
       backgroundColor: Colors.white,
-      borderRadius: BorderRadius.circular(isCompact ? 12 : 24),
+      borderRadius: BorderRadius.circular(isCompact ? 18 : 24),
       boxShadow: [
         BoxShadow(
-          color: Colors.black.withValues(alpha: 0.08),
-          blurRadius: isCompact ? 2 : 4,
-          offset: const Offset(0, 1),
+          color: Colors.black.withOpacity(0.04),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
         ),
       ],
       child: Obx(
         () => DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: controller.sortByRx.value,
-            borderRadius: BorderRadius.circular(isCompact ? 12 : 24),
-            padding: EdgeInsets.symmetric(horizontal: isCompact ? 8 : 16),
-            icon: IconAtom(
-              icon: Icons.sort,
-              color: PUColors.iconColorBlack,
-              size: isCompact ? 18 : 24,
+            borderRadius: BorderRadius.circular(24),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            icon: Icon(
+              Icons.sort_rounded,
+              color: PUColors.iconColor,
+              size: isCompact ? 18 : 22,
             ),
-            style: TextStyle(fontSize: isCompact ? 13 : 16),
+            style: PuTextStyle.bodyMedium,
             items: _buildSortMenuItems(isCompact),
             onChanged: (String? value) {
               if (value != null) {
@@ -112,13 +112,12 @@ class SearchFilterBar extends StatelessWidget {
     );
   }
 
-  /// Construye los items del menú de ordenamiento
   List<DropdownMenuItem<String>> _buildSortMenuItems([bool isCompact = false]) {
-    final style = TextStyle(fontSize: isCompact ? 13 : 16);
+    final style = PuTextStyle.bodySmall;
     return [
       DropdownMenuItem(
         value: 'none',
-        child: Text('Ordenar por', style: style),
+        child: Text('Ordenar', style: style),
       ),
       DropdownMenuItem(
         value: 'name',
@@ -126,23 +125,23 @@ class SearchFilterBar extends StatelessWidget {
       ),
       DropdownMenuItem(
         value: 'price_low',
-        child: Text('Precio: menor a mayor', style: style),
+        child: Text('Menor precio', style: style),
       ),
       DropdownMenuItem(
         value: 'price_high',
-        child: Text('Precio: mayor a menor', style: style),
+        child: Text('Mayor precio', style: style),
       ),
     ];
   }
 
-  /// Construye los filtros de categorías con scroll horizontal mejorado
   Widget _buildCategoryFilters(HomeController controller, bool isCompact) {
     return Obx(() => controller.availableCategoriesRx.isNotEmpty
-        ? SizedBox(
-            height: isCompact ? 24 : 32,
+        ? Container(
+            height: isCompact ? 32 : 40,
+            margin: const EdgeInsets.only(top: 8),
             child: ListView.builder(
-              padding: EdgeInsets.symmetric(horizontal: isCompact ? 0 : 2),
-              physics: const ClampingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              physics: const BouncingScrollPhysics(),
               scrollDirection: Axis.horizontal,
               itemCount: controller.availableCategoriesRx.length,
               itemBuilder: (context, index) {
@@ -154,35 +153,29 @@ class SearchFilterBar extends StatelessWidget {
         : const SizedBox());
   }
 
-  /// Construye un chip de categoría individual
   Widget _buildCategoryChip(HomeController controller, String category, bool isCompact) {
     return Obx(() {
       final isSelected = controller.selectedCategoryRx.value == category ||
           (controller.selectedCategoryRx.value.isEmpty && category == 'Todos');
 
-      return ContainerAtom(
-        margin: EdgeInsets.only(right: isCompact ? 4 : 8),
-        child: FilterChip(
-          label: Text(
-            category,
-            style: PuTextStyle.ingredientsListStyle.copyWith(
-              fontSize: isCompact ? 11 : 14,
-              color: isSelected ? Colors.white : PUColors.iconColorBlack,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            ),
-          ),
+      return Padding(
+        padding: const EdgeInsets.only(right: 8),
+        child: ChoiceChip(
+          label: Text(category),
           selected: isSelected,
-          onSelected: (selected) {
-            controller.selectCategory(selected ? category : '');
-          },
+          onSelected: (selected) => controller.selectCategory(selected ? category : ''),
           backgroundColor: Colors.white,
-          selectedColor: PUColors.primaryColor,
-          checkmarkColor: Colors.white,
-          side: BorderSide(
-            color: isSelected ? PUColors.primaryColor : PUColors.iconColorBlack.withValues(alpha: 0.3),
+          selectedColor: PUColors.accentColor,
+          labelStyle: isSelected 
+            ? PuTextStyle.bodySmall.copyWith(color: Colors.white, fontWeight: FontWeight.bold)
+            : PuTextStyle.bodySmall,
+          shape: StadiumBorder(
+            side: BorderSide(
+              color: isSelected ? Colors.transparent : Colors.black.withOpacity(0.05),
+            )
           ),
-          visualDensity: isCompact ? VisualDensity.compact : VisualDensity.standard,
-          materialTapTargetSize: isCompact ? MaterialTapTargetSize.shrinkWrap : MaterialTapTargetSize.padded,
+          elevation: isSelected ? 4 : 0,
+          shadowColor: PUColors.accentColor.withValues(alpha: 0.4),
         ),
       );
     });

@@ -142,30 +142,66 @@ class HomeController extends GetxController {
   void initializeFromUrl() {
     final uri = Uri.base;
 
-    // Extraer el ID del menú desde la ruta
-    final catalogId = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
+    final ownerId = uri.pathSegments.isNotEmpty ? uri.pathSegments.last : '';
 
-    // Extraer el token desde los query params y decodificarlo
     final rawToken = uri.queryParameters['token'] ?? '';
     final decodedToken = Uri.decodeComponent(rawToken);
-    ACCESS_TOKEN = decryptAccessToken(decodedToken);
+    final hasValidToken = rawToken.isNotEmpty;
 
-    API.setAccessToken(ACCESS_TOKEN);
+    if (hasValidToken) {
+      ACCESS_TOKEN = decryptAccessToken(decodedToken);
+      API.setAccessToken(ACCESS_TOKEN);
+    }
 
-    if (catalogId.isNotEmpty) {
-      loadMenu(catalogId);
+    if (ownerId.isNotEmpty) {
+      if (hasValidToken) {
+        loadMenu(ownerId);
+      } else {
+        loadPublicCatalogsByOwnerId(ownerId);
+      }
     }
   }
 
-  /// Carga un catálogo específico
+  /// Carga un catálogo específico (con auth)
   Future<void> loadMenu(String catalogId) async {
     await _catalogController.loadMenu(catalogId);
-    
-    // Actualizar metadatos HTML si la carga fue exitosa
+
     if (_catalogController.catalogResponse != null) {
       final catalog = _catalogController.catalogResponse!;
       _persistedOwnerId.value = catalog.id;
-      
+
+      HtmlMetadataHelper.updateCommerceMetadata(
+        name: catalog.name ?? 'MenuCom',
+        logoUrl: catalog.coverImageUrl,
+        description: catalog.description ?? 'Catálogo de productos y servicios',
+      );
+    }
+  }
+
+  /// Carga un catálogo público sin autenticación
+  Future<void> loadPublicMenu(String catalogId) async {
+    await _catalogController.loadPublicMenu(catalogId);
+
+    if (_catalogController.catalogResponse != null) {
+      final catalog = _catalogController.catalogResponse!;
+      _persistedOwnerId.value = catalog.id;
+
+      HtmlMetadataHelper.updateCommerceMetadata(
+        name: catalog.name ?? 'MenuCom',
+        logoUrl: catalog.coverImageUrl,
+        description: catalog.description ?? 'Catálogo de productos y servicios',
+      );
+    }
+  }
+
+  /// Carga catálogos públicos por ownerId
+  Future<void> loadPublicCatalogsByOwnerId(String ownerId) async {
+    await _catalogController.loadPublicCatalogsByOwnerId(ownerId);
+
+    if (_catalogController.catalogResponse != null) {
+      final catalog = _catalogController.catalogResponse!;
+      _persistedOwnerId.value = ownerId;
+
       HtmlMetadataHelper.updateCommerceMetadata(
         name: catalog.name ?? 'MenuCom',
         logoUrl: catalog.coverImageUrl,

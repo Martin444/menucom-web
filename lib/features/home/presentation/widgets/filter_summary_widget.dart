@@ -20,105 +20,93 @@ class FilterSummaryWidget extends StatelessWidget {
 
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: PUColors.primaryColor.withValues(alpha: 0.3),
-              width: 1,
-            ),
+            borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
               ),
             ],
           ),
           child: Row(
             children: [
-              // Icono informativo
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: PUColors.primaryColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  color: PUColors.accentColor.withOpacity(0.08),
+                  shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.info_outline,
-                  color: PUColors.primaryColor,
-                  size: 20,
+                  Icons.auto_awesome_rounded,
+                  color: PUColors.accentColor,
+                  size: 18,
                 ),
               ),
-
               const SizedBox(width: 12),
-
-              // Información de filtros
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Mostrando $totalItems productos',
-                      style: PuTextStyle.nameProductStyle.copyWith(
-                        fontWeight: FontWeight.bold,
+                      'Encontramos $totalItems opciones para ti',
+                      style: PuTextStyle.bodySmall.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: PUColors.textColorRich,
                       ),
                     ),
                     if (controller.searchQuery.isNotEmpty ||
-                        (controller.selectedCategory.isNotEmpty && controller.selectedCategory != 'Todos'))
-                      const SizedBox(height: 4),
-                    if (controller.searchQuery.isNotEmpty ||
-                        (controller.selectedCategory.isNotEmpty && controller.selectedCategory != 'Todos'))
-                      Row(
-                        children: [
-                          if (controller.searchQuery.isNotEmpty)
-                            Flexible(
-                              child: Text(
-                                'Búsqueda: "${controller.searchQuery}"',
-                                style: PuTextStyle.ingredientsListStyle.copyWith(
-                                  color: Colors.grey[600],
+                        (controller.selectedCategory.isNotEmpty && controller.selectedCategory != 'Todos')) ...[
+                      const SizedBox(height: 2),
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: [
+                            if (controller.searchQuery.isNotEmpty)
+                              Text(
+                                'Buscando "${controller.searchQuery}"',
+                                style: PuTextStyle.bodySmall.copyWith(
+                                  color: PUColors.textColorMuted,
+                                  fontSize: 11,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                          if (controller.searchQuery.isNotEmpty &&
-                              controller.selectedCategory.isNotEmpty &&
-                              controller.selectedCategory != 'Todos')
-                            Text(
-                              ' • ',
-                              style: PuTextStyle.ingredientsListStyle.copyWith(
-                                color: Colors.grey[600],
+                            if (controller.searchQuery.isNotEmpty &&
+                                controller.selectedCategory.isNotEmpty &&
+                                controller.selectedCategory != 'Todos')
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 6),
+                                child: Text('•', style: TextStyle(color: PUColors.textColorLight, fontSize: 10)),
                               ),
-                            ),
-                          if (controller.selectedCategory.isNotEmpty &&
-                              controller.selectedCategory != 'Todos')
-                            Flexible(
-                              child: Text(
-                                'Categoría: ${controller.selectedCategory}',
-                                style: PuTextStyle.ingredientsListStyle.copyWith(
-                                  color: Colors.grey[600],
+                            if (controller.selectedCategory.isNotEmpty &&
+                                controller.selectedCategory != 'Todos')
+                              Text(
+                                'Filtro: ${controller.selectedCategory}',
+                                style: PuTextStyle.bodySmall.copyWith(
+                                  color: PUColors.textColorMuted,
+                                  fontSize: 11,
                                 ),
-                                overflow: TextOverflow.ellipsis,
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
+                    ],
                   ],
                 ),
               ),
-
-              // Botón limpiar filtros
               if (controller.searchQuery.isNotEmpty ||
                   (controller.selectedCategory.isNotEmpty && controller.selectedCategory != 'Todos'))
                 IconButton(
                   onPressed: controller.clearFilters,
                   icon: Icon(
-                    Icons.clear,
-                    color: Colors.grey[600],
+                    Icons.refresh_rounded,
+                    color: PUColors.textColorLight,
                     size: 20,
                   ),
                   tooltip: 'Limpiar filtros',
+                  splashRadius: 20,
                 ),
             ],
           ),
