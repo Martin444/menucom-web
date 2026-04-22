@@ -10,7 +10,7 @@ class CatalogController extends GetxController {
 
   // Estado reactivo
   final Rx<CatalogModel?> _catalogResponse = Rx<CatalogModel?>(null);
-  final RxBool _isLoading = false.obs;
+  final RxBool _isLoading = true.obs;
   final RxString _error = ''.obs;
 
   // Lista plana de todos los items para facilitar búsquedas y filtros
@@ -127,6 +127,11 @@ class CatalogController extends GetxController {
   void _flattenMenuItems() {
     final items = _catalogResponse.value?.items ?? [];
     _allMenuItems.value = items;
+  }
+
+  /// Permite establecer el estado de carga manualmente
+  void setLoading(bool loading) {
+    _isLoading.value = loading;
   }
 
   /// Obtiene un item específico por ID

@@ -122,6 +122,7 @@ class HomeController extends GetxController {
   void onInit() {
     super.onInit();
     _setupControllerListeners();
+    initializeFromUrl();
   }
 
   /// Configura listeners entre controladores
@@ -159,6 +160,9 @@ class HomeController extends GetxController {
       } else {
         loadPublicCatalogsByOwnerId(ownerId);
       }
+    } else {
+      // Si no hay ownerId, dejamos de cargar
+      _catalogController.setLoading(false);
     }
   }
 

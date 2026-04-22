@@ -9,7 +9,7 @@ import 'package:pu_material/pu_material.dart';
 import '../widgets/head_home.dart';
 
 /// HomePage - Página principal del catálogo optimizada para scroll suave
-/// 
+///
 /// Estructura:
 /// 1. HeroSection (banner si hay imagen)
 /// 2. HeadHome (header con carrito)
@@ -21,35 +21,20 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Inicializar datos del menú al construir la página usando el nuevo controlador
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Get.find<HomeController>().initializeFromUrl();
-    });
-
-    return Scaffold(
-      backgroundColor: PUColors.primaryBackground,
-      body: _buildMainScrollView(),
-    );
+    return Scaffold(backgroundColor: PUColors.primaryBackground, body: _buildMainScrollView());
   }
 
   /// Construye el scroll principal optimizado
   Widget _buildMainScrollView() {
     return CustomScrollView(
-      slivers: [
-        _buildHeroSliver(),
-        _buildStickyHeaderSliver(),
-        _buildInfoAndFiltersSliver(),
-        _buildSliverContent(),
-      ],
+      slivers: [_buildHeroSliver(), _buildStickyHeaderSliver(), _buildInfoAndFiltersSliver(), _buildSliverContent()],
     );
   }
 
   /// Sliver para el HeroSection (no persistente)
   Widget _buildHeroSliver() {
     return SliverToBoxAdapter(
-      child: GetBuilder<HomeController>(
-        builder: (controller) => _buildHeroSection(controller),
-      ),
+      child: GetBuilder<HomeController>(builder: (controller) => _buildHeroSection(controller)),
     );
   }
 
@@ -68,32 +53,22 @@ class HomePage extends StatelessWidget {
 
   /// Sliver para info y filtros (no persistente)
   Widget _buildInfoAndFiltersSliver() {
-    return SliverToBoxAdapter(
-      child: Column(
-        children: const [
-          OwnerInfoWidget(),
-          FilterSummaryWidget(),
-        ],
-      ),
-    );
+    return SliverToBoxAdapter(child: Column(children: const [OwnerInfoWidget(), FilterSummaryWidget()]));
   }
 
   /// Construye el HeroSection si el catálogo tiene imagen de portada
   Widget _buildHeroSection(HomeController controller) {
     final catalog = controller.catalog;
     if (catalog == null) return const SizedBox.shrink();
-    
+
     final coverImageUrl = catalog.coverImageUrl;
     final name = catalog.name ?? 'Catálogo';
-    
+
     // Mostrar solo si hay imagen
     if (coverImageUrl == null || coverImageUrl.isEmpty) {
-      return HeroSimpleAtom(
-        title: name,
-        subtitle: catalog.catalogType.capitalizeFirst ?? 'Consulta nuestro menú',
-      );
+      return HeroSimpleAtom(title: name, subtitle: catalog.catalogType.capitalizeFirst ?? 'Consulta nuestro menú');
     }
-    
+
     return HeroSectionAtom(
       title: name,
       subtitle: catalog.catalogType.capitalizeFirst ?? 'Consulta nuestro menú',
@@ -106,9 +81,7 @@ class HomePage extends StatelessWidget {
     return GetBuilder<HomeController>(
       builder: (controller) {
         if (controller.isLoadHomeItems) {
-          return SliverToBoxAdapter(
-            child: _buildLoadingOrErrorState(controller),
-          );
+          return SliverToBoxAdapter(child: _buildLoadingOrErrorState(controller));
         }
 
         return const ResponsiveItemsGrid(isSliver: true);
@@ -122,14 +95,23 @@ class HomePage extends StatelessWidget {
       height: 400,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Center(
-        child: controller.errorText.isEmpty
-            ? const CircularProgressIndicator(
-                color: PUColors.restaurantPrimary,
-              )
-            : EmptyStateAtom(
-                title: controller.errorText,
-                titleStyle: PuTextStyle.title5,
-              ),
+        child:
+            controller.errorText.isEmpty
+                ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const CircularProgressIndicator(
+                      color: Color(0xFF1336E5), // Color del splash en index.html
+                      strokeWidth: 3,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'Preparando el catálogo...',
+                      style: PuTextStyle.bodyMedium.copyWith(color: Colors.grey[600], letterSpacing: 0.5),
+                    ),
+                  ],
+                )
+                : EmptyStateAtom(title: controller.errorText, titleStyle: PuTextStyle.title5),
       ),
     );
   }
