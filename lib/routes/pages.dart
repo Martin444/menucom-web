@@ -35,11 +35,7 @@ class PUPages {
       bindings: [OrderBinding()],
       transition: Transition.fadeIn,
     ),
-    // GetPage(
-    //   name: PURoutes.ROUTE_TEST,
-    //   page: () => const RouteTestPage(),
-    //   transition: Transition.fadeIn,
-    // ),
+
     GetPage(
       name: PURoutes.PRODUCT_DETAIL,
       page: () => ProductDetailPage.fromArguments(),

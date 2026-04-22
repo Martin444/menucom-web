@@ -5,7 +5,7 @@ class PURoutes {
   static String MYCART = '/mi-carrito';
   static String CONFIRMORDER = '/confirmar-pedido';
   static String CHECKOUT_STATUS = '/checkout/status';
-  static String ROUTE_TEST = '/route-test';
+
   static String PRODUCT_DETAIL = '/product-detail';
 
   /// Ruta dinámica para capturar UUIDs de comercios
