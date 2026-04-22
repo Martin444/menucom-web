@@ -17,3 +17,5 @@ class AppConfig {
 
 String ACCESS_TOKEN = '';
 String NAME_USER = '';
+String USER_LAST_NAME = '';
+String USER_EMAIL = '';

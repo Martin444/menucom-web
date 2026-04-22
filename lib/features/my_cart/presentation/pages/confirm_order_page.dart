@@ -4,7 +4,6 @@ import 'package:menucom_catalog/features/my_cart/getx/order_controller.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/confirm_order_header.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/products_section.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/totals_section.dart';
-import 'package:menucom_catalog/features/my_cart/presentation/widgets/contact_form_section.dart';
 
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/confirm_order_actions.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/order_status_config.dart';
@@ -18,8 +17,6 @@ class ConfirmOrderPage extends StatefulWidget {
 }
 
 class _ConfirmOrderPageState extends State<ConfirmOrderPage> with TickerProviderStateMixin {
-  final _formKey = GlobalKey<FormState>();
-  final _contactController = TextEditingController();
   final orderController = Get.find<OrderController>();
   late AnimationController _slideController;
   late Animation<double> _slideAnimation;
@@ -48,7 +45,6 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> with TickerProvider
 
   @override
   void dispose() {
-    _contactController.dispose();
     _slideController.dispose();
     super.dispose();
   }
@@ -105,14 +101,10 @@ class _ConfirmOrderPageState extends State<ConfirmOrderPage> with TickerProvider
                                     isMobile: isMobile,
                                     isTablet: isTablet,
                                     orderController: orderController,
-                                    formKey: _formKey,
-                                    contactController: _contactController,
                                   ),
                                   const SizedBox(height: 14),
                                   ConfirmOrderActions(
                                     isMobile: isMobile,
-                                    formKey: _formKey,
-                                    contactController: _contactController,
                                     orderController: orderController,
                                   ),
                                 ],
@@ -138,16 +130,11 @@ class ConfirmOrderContent extends StatelessWidget {
   final bool isMobile;
   final bool isTablet;
   final OrderController orderController;
-  final GlobalKey<FormState> formKey;
-  final TextEditingController contactController;
-
   const ConfirmOrderContent({
     Key? key,
     required this.isMobile,
     required this.isTablet,
     required this.orderController,
-    required this.formKey,
-    required this.contactController,
   }) : super(key: key);
 
   @override
@@ -165,12 +152,6 @@ class ConfirmOrderContent extends StatelessWidget {
           const SizedBox(height: 32),
           TotalsSection(orderController: orderController),
           const SizedBox(height: 24),
-          if (orderController.orderStatus.value != OrderStatus.confirmed)
-            ContactFormSection(
-              formKey: formKey,
-              contactController: contactController,
-              orderController: orderController,
-            ),
         ],
       ),
     );

@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:pu_material/pu_material.dart';
 
-/// Diálogo atómico para requerir login en Menucom
 class RequireLoginDialog extends StatelessWidget {
   final String commerceName;
   final VoidCallback onLogin;
   final VoidCallback onCancel;
+  final bool isLoading;
 
   const RequireLoginDialog({
     super.key,
     required this.commerceName,
     required this.onLogin,
     required this.onCancel,
+    this.isLoading = false,
   });
 
   @override
@@ -26,12 +27,12 @@ class RequireLoginDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Iniciar sesión requerido',
+              'Casi listo para tu pedido',
               style: PuTextStyle.title1,
             ),
             const SizedBox(height: 16),
             Text(
-              'Para seguir comprando en "$commerceName" tienes que iniciar sesión con Menucom.',
+              'Para completar tu compra en "$commerceName", inicia sesión con Google. Tu pedido se confirmará automáticamente al terminar.',
               style: PuTextStyle.description1,
             ),
             const SizedBox(height: 24),
@@ -42,13 +43,13 @@ class RequireLoginDialog extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   ButtonPrimary(
-                    title: 'Iniciar sesión',
-                    onPressed: onLogin,
-                    load: false,
+                    title: 'Iniciar sesión con Google',
+                    onPressed: isLoading ? () {} : onLogin,
+                    load: isLoading,
                   ),
                   ButtonSecundary(
                     title: 'Cancelar orden',
-                    onPressed: onCancel,
+                    onPressed: isLoading ? () {} : onCancel,
                     load: false,
                   ),
                 ],

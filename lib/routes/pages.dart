@@ -5,7 +5,6 @@ import 'package:menucom_catalog/features/my_cart/getx/order_binding.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/pages/confirm_order_page.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/pages/my_cart_page.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/pages/checkout_status_page.dart';
-import 'package:menucom_catalog/features/route_test/route_test_page.dart';
 import 'package:menucom_catalog/routes/routes.dart';
 import 'package:menucom_catalog/features/product_detail/product_detail_page.dart';
 import 'package:menucom_catalog/features/product_detail/getx/product_detail_binding.dart';
@@ -16,41 +15,31 @@ class PUPages {
       name: PURoutes.HOME,
       page: () => const HomePage(),
       transition: Transition.fadeIn,
-      bindings: [
-        CatalogBinding(),
-      ],
+      bindings: [CatalogBinding()],
     ),
     GetPage(
       name: PURoutes.MYCART,
       page: () => const MyCartPage(),
-      bindings: [
-        CatalogBinding(),
-        OrderBinding(),
-      ],
+      bindings: [CatalogBinding(), OrderBinding()],
       transition: Transition.fadeIn,
     ),
     GetPage(
       name: PURoutes.CONFIRMORDER,
       page: () => const ConfirmOrderPage(),
-      bindings: [
-        CatalogBinding(),
-        OrderBinding(),
-      ],
+      bindings: [CatalogBinding(), OrderBinding()],
       transition: Transition.fadeIn,
     ),
     GetPage(
       name: PURoutes.CHECKOUT_STATUS,
       page: () => const CheckoutStatusPage(),
-      bindings: [
-        OrderBinding(),
-      ],
+      bindings: [OrderBinding()],
       transition: Transition.fadeIn,
     ),
-    GetPage(
-      name: PURoutes.ROUTE_TEST,
-      page: () => const RouteTestPage(),
-      transition: Transition.fadeIn,
-    ),
+    // GetPage(
+    //   name: PURoutes.ROUTE_TEST,
+    //   page: () => const RouteTestPage(),
+    //   transition: Transition.fadeIn,
+    // ),
     GetPage(
       name: PURoutes.PRODUCT_DETAIL,
       page: () => ProductDetailPage.fromArguments(),
@@ -64,9 +53,7 @@ class PUPages {
       name: PURoutes.COMMERCE_DETAIL,
       page: () => const HomePage(),
       transition: Transition.fadeIn,
-      bindings: [
-        CatalogBinding(),
-      ],
+      bindings: [CatalogBinding()],
     ),
   ];
 }

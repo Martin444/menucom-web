@@ -1,5 +1,3 @@
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:menucom_catalog/features/my_cart/getx/order_controller.dart';
@@ -9,28 +7,66 @@ import 'package:menucom_catalog/features/my_cart/presentation/widgets/order_stat
 import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
 import 'package:menucom_catalog/core/config.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/require_login_dialog.dart';
+import 'package:menucom_catalog/core/services/google_auth_service.dart';
 
-/// Confirm Order Actions Widget
-class ConfirmOrderActions extends StatelessWidget {
+class ConfirmOrderActions extends StatefulWidget {
   final bool isMobile;
-  final GlobalKey<FormState> formKey;
-  final TextEditingController contactController;
   final OrderController orderController;
 
   const ConfirmOrderActions({
-    Key? key,
+    super.key,
     required this.isMobile,
-    required this.formKey,
-    required this.contactController,
     required this.orderController,
-  }) : super(key: key);
+  });
+
+  @override
+  State<ConfirmOrderActions> createState() => _ConfirmOrderActionsState();
+}
+
+class _ConfirmOrderActionsState extends State<ConfirmOrderActions> {
+  bool _isLoggingIn = false;
+
+  Future<void> _handleGoogleLogin(BuildContext context, String commerceName) async {
+    setState(() => _isLoggingIn = true);
+    
+    try {
+      final googleAuthService = GoogleAuthService();
+      await googleAuthService.signInWithGoogle();
+      
+      if (!context.mounted) return;
+
+      Navigator.of(context).pop();
+      
+      // Automatización: Confirmamos la orden inmediatamente después del login
+      widget.orderController.saveContactToLastOrder(NAME_USER);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('¡Sesión iniciada! Procesando tu orden...'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al iniciar sesión: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoggingIn = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final isConfirmed = orderController.orderStatus.value == OrderStatus.confirmed;
-        // Obtener nombre del comercio desde el controller global
+        final isConfirmed = widget.orderController.orderStatus.value == OrderStatus.confirmed;
         final homeController = Get.find<HomeController>();
         final commerceName = homeController.nameComerce.isNotEmpty 
             ? homeController.nameComerce 
@@ -48,15 +84,14 @@ class ConfirmOrderActions extends StatelessWidget {
                   if (isConfirmed) {
                     Get.back();
                   } else {
-                    // Interceptar si no hay token
                     if (ACCESS_TOKEN.isEmpty) {
                       showDialog(
                         context: context,
                         builder: (ctx) => RequireLoginDialog(
                           commerceName: commerceName,
+                          isLoading: _isLoggingIn,
                           onLogin: () async {
-                            Navigator.of(ctx).pop();
-                            html.window.location.href = 'https://menucom-dashboard.netlify.app/';
+                            await _handleGoogleLogin(ctx, commerceName);
                           },
                           onCancel: () {
                             Navigator.of(ctx).pop();
@@ -65,12 +100,11 @@ class ConfirmOrderActions extends StatelessWidget {
                       );
                       return;
                     }
-                    if (formKey.currentState?.validate() ?? false) {
-                      orderController.saveContactToLastOrder(contactController.text);
-                    }
+                    // No validamos formulario porque el nombre viene del login
+                    widget.orderController.saveContactToLastOrder(NAME_USER);
                   }
                 },
-                load: orderController.isOrderLoading.value,
+                load: widget.orderController.isOrderLoading.value || _isLoggingIn,
                 title: isConfirmed ? 'Seguir comprando' : 'Confirmar',
               ),
             ),

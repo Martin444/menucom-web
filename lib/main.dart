@@ -2,14 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:menu_dart_api/core/api.dart';
 import 'package:menucom_catalog/core/config.dart';
+import 'package:menucom_catalog/core/firebase_config.dart';
 import 'package:menucom_catalog/routes/pages.dart';
 import 'package:menucom_catalog/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pu_material/pu_material.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(options: FirebaseConfig.currentPlatform);
+  } else {
+    // Si ya existe, usamos la instancia actual
+    Firebase.app();
+  }
+  
   await inicialiceServiceMenucomAPi();
   runApp(const MyApp());
 }
