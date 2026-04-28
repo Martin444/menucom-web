@@ -1,6 +1,9 @@
+import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
 import 'package:pu_material/pu_material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 /// Controlador especializado para manejo del carrito de compras
 /// Responsable de gestionar items, cantidades, totales y persistencia
@@ -11,6 +14,9 @@ class CartController extends GetxController {
   final RxDouble _tax = 0.0.obs;
   final RxDouble _total = 0.0.obs;
   final RxBool _isLoading = false.obs;
+  
+  // Clave para persistencia
+  static const String _cartStorageKey = 'shopping_cart_items';
 
   // Configuración de impuestos (puede ser configurable)
   static const double _taxRate = 0.0; // Desactivado por ahora según lógica previa
@@ -44,8 +50,48 @@ class CartController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    _loadCart();
     // Escuchar cambios en la lista
-    ever(_cartItems, (_) => _calculateTotals());
+    ever(_cartItems, (_) {
+      _calculateTotals();
+      _saveCart();
+    });
+  }
+
+  /// Carga el carrito desde el almacenamiento persistente
+  Future<void> _loadCart() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? cartJson = prefs.getString(_cartStorageKey);
+      
+      if (cartJson != null && cartJson.isNotEmpty) {
+        final List<dynamic> decodedList = jsonDecode(cartJson);
+        final List<CartItemModel> loadedItems = decodedList
+            .map((item) => CartItemModel.fromJson(item as Map<String, dynamic>))
+            .toList();
+        
+        if (loadedItems.isNotEmpty) {
+          _cartItems.assignAll(loadedItems);
+          _calculateTotals();
+          debugPrint('[CART] Carrito cargado exitosamente: ${loadedItems.length} items');
+        }
+      }
+    } catch (e) {
+      debugPrint('[CART] Error al cargar el carrito: $e');
+    }
+  }
+
+  /// Guarda el carrito en el almacenamiento persistente
+  Future<void> _saveCart() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String cartJson = jsonEncode(_cartItems.map((item) => item.toJson()).toList());
+      await prefs.setString(_cartStorageKey, cartJson);
+      // No logueamos cada cambio para no saturar, pero útil para debug inicial
+      // debugPrint('[CART] Carrito guardado');
+    } catch (e) {
+      debugPrint('[CART] Error al guardar el carrito: $e');
+    }
   }
 
   /// Añade un item al carrito o incrementa la cantidad si ya existe
