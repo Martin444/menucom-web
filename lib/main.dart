@@ -9,6 +9,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pu_material/pu_material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:menucom_catalog/core/services/google_auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,15 @@ void main() async {
   
   await inicialiceServiceMenucomAPi();
   runApp(const MyApp());
+
+  // Intentar restaurar sesión de forma silenciosa en segundo plano
+  // (útil para persistir login tras recargas en Flutter Web)
+  try {
+    // ignore: unawaited_futures
+    GoogleAuthService().signInSilently();
+  } catch (_) {
+    // Silencioso, no bloqueamos el inicio de la app
+  }
 }
 
 Future<void> inicialiceServiceMenucomAPi() async {

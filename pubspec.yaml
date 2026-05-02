@@ -23,7 +23,7 @@ dependencies:
   flutter_svg: ^2.0.10+1
   flutter_localizations:
     sdk: flutter
-  google_fonts: ^6.2.1
+  google_fonts: 6.2.1
   shared_preferences: ^2.2.3
   url_launcher: ^6.3.2
   socket_io_client: ^2.0.3

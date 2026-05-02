@@ -80,11 +80,26 @@ class _ConfirmOrderActionsState extends State<ConfirmOrderActions> {
             child: SizedBox(
               width: 300,
               child: ButtonPrimary(
-                onPressed: () {
+                onPressed: () async {
                   if (isConfirmed) {
                     Get.back();
                   } else {
                     if (ACCESS_TOKEN.isEmpty) {
+                      // Intentar login silencioso primero (por si hubo reload o ya está en Firebase)
+                      setState(() => _isLoggingIn = true);
+                      try {
+                        await GoogleAuthService().signInSilently();
+                      } finally {
+                        if (mounted) setState(() => _isLoggingIn = false);
+                      }
+                      
+                      if (ACCESS_TOKEN.isNotEmpty) {
+                        widget.orderController.saveContactToLastOrder(NAME_USER);
+                        return;
+                      }
+
+                      if (!context.mounted) return;
+
                       showDialog(
                         context: context,
                         builder: (ctx) => RequireLoginDialog(
