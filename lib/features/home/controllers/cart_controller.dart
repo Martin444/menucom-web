@@ -16,8 +16,9 @@ class CartController extends GetxController {
   final RxDouble _total = 0.0.obs;
   final RxBool _isLoading = false.obs;
   
-  // Clave para persistencia
+  // Claves para persistencia
   static const String _cartStorageKey = 'shopping_cart_items';
+  static const String _cartOwnerKey = 'shopping_cart_owner_id';
 
   // Configuración de impuestos (puede ser configurable)
   static const double _taxRate = 0.0; // Desactivado por ahora según lógica previa
@@ -82,14 +83,30 @@ class CartController extends GetxController {
     }
   }
 
+  /// Valida si el carrito pertenece al owner actual. Si cambió, lo limpia.
+  Future<void> validateCartOwner(String currentOwnerId) async {
+    if (currentOwnerId.isEmpty) return;
+    
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedOwnerId = prefs.getString(_cartOwnerKey);
+      
+      if (savedOwnerId == null || savedOwnerId != currentOwnerId) {
+        clearCart();
+        await prefs.setString(_cartOwnerKey, currentOwnerId);
+        debugPrint('[CART] Nuevo owner detectado, carrito limpiado');
+      }
+    } catch (e) {
+      debugPrint('[CART] Error al validar owner del carrito: $e');
+    }
+  }
+
   /// Guarda el carrito en el almacenamiento persistente
   Future<void> _saveCart() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final String cartJson = jsonEncode(_cartItems.map((item) => item.toJson()).toList());
       await prefs.setString(_cartStorageKey, cartJson);
-      // No logueamos cada cambio para no saturar, pero útil para debug inicial
-      // debugPrint('[CART] Carrito guardado');
     } catch (e) {
       debugPrint('[CART] Error al guardar el carrito: $e');
     }

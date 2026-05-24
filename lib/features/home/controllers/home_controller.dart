@@ -173,6 +173,7 @@ class HomeController extends GetxController {
     if (_catalogController.catalogResponse != null) {
       final catalog = _catalogController.catalogResponse!;
       _persistedOwnerId.value = catalog.id;
+      await _cartController.validateCartOwner(catalog.ownerId ?? catalog.id);
 
       HtmlMetadataHelper.updateCommerceMetadata(
         name: catalog.name ?? 'MenuCom',
@@ -183,12 +184,14 @@ class HomeController extends GetxController {
   }
 
   /// Carga un catálogo público sin autenticación
+  /// Usado cuando el usuario no está logeado
   Future<void> loadPublicMenu(String catalogId) async {
     await _catalogController.loadPublicMenu(catalogId);
 
     if (_catalogController.catalogResponse != null) {
       final catalog = _catalogController.catalogResponse!;
       _persistedOwnerId.value = catalog.id;
+      await _cartController.validateCartOwner(catalog.ownerId ?? catalog.id);
 
       HtmlMetadataHelper.updateCommerceMetadata(
         name: catalog.name ?? 'MenuCom',
@@ -205,6 +208,7 @@ class HomeController extends GetxController {
     if (_catalogController.catalogResponse != null) {
       final catalog = _catalogController.catalogResponse!;
       _persistedOwnerId.value = ownerId;
+      await _cartController.validateCartOwner(ownerId);
 
       HtmlMetadataHelper.updateCommerceMetadata(
         name: catalog.name ?? 'MenuCom',

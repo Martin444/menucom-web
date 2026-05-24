@@ -13,6 +13,7 @@ import 'package:pu_material/pu_material.dart' hide Order, OrderItem;
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import '../presentation/widgets/order_status_config.dart';
+import 'package:menucom_catalog/features/home/controllers/cart_controller.dart';
 
 class OrderController extends GetxController {
   IO.Socket? _socket;
@@ -334,7 +335,12 @@ class OrderController extends GetxController {
       _socket?.disconnect();
       _socket?.destroy();
       
-      // Limpiar orden persistida tras éxito
+      // Limpiar carrito y orden persistida tras éxito
+      try {
+        final cartController = Get.find<CartController>();
+        cartController.clearCart();
+        debugPrint('[SOCKET] Carrito limpiado tras pago exitoso');
+      } catch (_) {}
       clearPersistedOrder();
     });
 
