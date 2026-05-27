@@ -51,9 +51,7 @@ class CatalogItemTile extends StatelessWidget {
               price: item.price,
               imageUrl: item.photoURL,
               deliveryTime: item.attributes?['deliveryTime'] as int? ?? 30,
-              ingredients: item.attributes?['ingredients'] != null
-                  ? (item.attributes?['ingredients'] as String).split(',').map((e) => e.trim()).toList()
-                  : null,
+              ingredients: item.ingredientsList.isNotEmpty ? item.ingredientsList : null,
               isSelected: selected,
               layout: ProductCardLayout.vertical,
               onAddToCart: () => onAddCart(item),

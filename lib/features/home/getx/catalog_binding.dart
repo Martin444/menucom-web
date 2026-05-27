@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 // Importar los nuevos controladores
 import 'package:menu_dart_api/menu_com_api.dart';
+import 'package:menucom_catalog/core/pwa/pwa_install_controller.dart';
 import '../controllers/catalog_controller.dart';
 import '../controllers/filter_controller.dart';
 import '../controllers/cart_controller.dart';
@@ -22,6 +23,9 @@ class CatalogBinding extends Bindings {
     Get.lazyPut<FilterController>(() => FilterController());
 
     Get.lazyPut<CartController>(() => CartController());
+
+    // PWA Install controller
+    Get.lazyPut<PwaInstallController>(() => PwaInstallController());
 
     // Controlador coordinador (Reemplaza a MenuHomeCartController)
     Get.lazyPut<HomeController>(

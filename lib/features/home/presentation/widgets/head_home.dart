@@ -2,12 +2,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:menucom_catalog/core/pwa/pwa_install_controller.dart';
 import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
 import 'package:menucom_catalog/routes/routes.dart';
 import 'package:pu_material/utils/pu_assets.dart';
 import 'package:pu_material/utils/pu_colors.dart';
-import 'package:pu_material/utils/style/pu_style_containers.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
+import 'package:pu_material/atoms/pwa_install_button_atom.dart';
 
 class HeadHome extends StatelessWidget {
   final bool? withBack;
@@ -65,6 +66,17 @@ class HeadHome extends StatelessWidget {
                       child: SizedBox(),
                     ),
                   ],
+                  Obx(() {
+                    final pwaCtrl = Get.find<PwaInstallController>();
+                    if (!pwaCtrl.isInstallable) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: PwaInstallButtonAtom(
+                        onPressed: () => pwaCtrl.install(),
+                        tooltip: 'Instalar aplicación',
+                      ),
+                    );
+                  }),
                   _buildCartButton(controller),
                 ],
               ),

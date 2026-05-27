@@ -16,9 +16,7 @@ class HomeController extends GetxController {
   late final FilterController _filterController;
   late final CartController _cartController;
 
-  // Estado adicional específico de la vista Home
   final RxBool _isGridView = true.obs;
-  final RxString _sortBy = 'none'.obs; // 'none', 'name', 'price_low', 'price_high'
   final RxString _persistedOwnerId = ''.obs;
 
   HomeController({
@@ -58,21 +56,38 @@ class HomeController extends GetxController {
   String get searchQuery => _filterController.searchQuery;
   RxString get searchQueryRx => _filterController.searchQueryRx;
   
-  String get selectedCategory => _filterController.selectedCategory;
-  RxString get selectedCategoryRx => _filterController.selectedCategoryRx;
+  List<String> get selectedCategories => _filterController.selectedCategories;
+  RxList<String> get selectedCategoriesRx => _filterController.selectedCategoriesRx;
   
   List<String> get availableCategories => _filterController.availableCategories;
   RxList<String> get availableCategoriesRx => _filterController.availableCategoriesRx;
   
-  List<CatalogItemModel> get filteredMenuItems => _getFilteredAndSortedItems();
-  RxList<CatalogItemModel> get filteredMenuItemsRx => _filterController.filteredItemsRx;
+  List<CatalogItemModel> get filteredMenuItems => _filterController.sortedFilteredItems;
+  RxList<CatalogItemModel> get filteredMenuItemsRx => _filterController.sortedFilteredItemsRx;
 
-  // Vista
   bool get isGridView => _isGridView.value;
   RxBool get isGridViewRx => _isGridView;
-  
-  String get sortBy => _sortBy.value;
-  RxString get sortByRx => _sortBy;
+
+  String get sortBy => _filterController.sortBy;
+  RxString get sortByRx => _filterController.sortByRx;
+
+  bool get showOnlyAvailable => _filterController.showOnlyAvailable;
+  RxBool get showOnlyAvailableRx => _filterController.showOnlyAvailableRx;
+
+  bool get showOnlyOnSale => _filterController.showOnlyOnSale;
+  RxBool get showOnlyOnSaleRx => _filterController.showOnlyOnSaleRx;
+
+  bool get showOnlyFeatured => _filterController.showOnlyFeatured;
+  RxBool get showOnlyFeaturedRx => _filterController.showOnlyFeaturedRx;
+
+  double get minPrice => _filterController.minPrice;
+  RxDouble get minPriceRx => _filterController.minPriceRx;
+
+  double get maxPrice => _filterController.maxPrice;
+  RxDouble get maxPriceRx => _filterController.maxPriceRx;
+
+  double get priceUpperBound => _filterController.priceUpperBound;
+  RxDouble get priceUpperBoundRx => _filterController.priceUpperBoundRx;
 
   // Carrito
   List<CartItemModel> get cartItems => _cartController.cartItems;
@@ -127,14 +142,11 @@ class HomeController extends GetxController {
 
   /// Configura listeners entre controladores
   void _setupControllerListeners() {
-    // Cuando se carga un catálogo, actualizar filtros
     ever(_catalogController.allMenuItemsRx, (List<CatalogItemModel> items) {
       _filterController.setMenuItems(items);
     });
 
-    // Cuando cambian los items filtrados, aplicar ordenamiento
-    ever(_filterController.filteredItemsRx, (_) => update());
-    ever(_sortBy, (_) => update());
+    ever(_filterController.sortedFilteredItemsRx, (_) => update());
   }
 
   // === MÉTODOS PÚBLICOS PARA LA UI ===
@@ -242,21 +254,37 @@ class HomeController extends GetxController {
     _filterController.updateSearchQuery(query);
   }
 
-  /// Selecciona/deselecciona una categoría
-  void selectCategory(String category) {
-    _filterController.selectCategory(category);
+  /// Alterna selección de categoría (multi-select)
+  void toggleCategory(String category) {
+    _filterController.toggleCategory(category);
   }
 
-  /// Limpia todos los filtros
+  void toggleAvailableOnly() {
+    _filterController.toggleAvailableOnly();
+  }
+
+  void toggleOnSale() {
+    _filterController.toggleOnSale();
+  }
+
+  void toggleFeatured() {
+    _filterController.toggleFeatured();
+  }
+
+  void setPriceRange(double min, double max) {
+    _filterController.setPriceRange(min, max);
+  }
+
+  void clearPriceRange() {
+    _filterController.clearPriceRange();
+  }
+
   void clearFilters() {
     _filterController.clearFilters();
-    _sortBy.value = 'none';
   }
 
-  /// Establece el ordenamiento
   void setSortBy(String sortOption) {
-    _sortBy.value = sortOption;
-    update();
+    _filterController.setSortBy(sortOption);
   }
 
   /// Alterna entre vista de cuadrícula y lista
@@ -319,30 +347,6 @@ class HomeController extends GetxController {
 
   // === MÉTODOS PRIVADOS ===
 
-  /// Obtiene los items filtrados y ordenados
-  List<CatalogItemModel> _getFilteredAndSortedItems() {
-    List<CatalogItemModel> items = List.from(_filterController.filteredItems);
-
-    switch (_sortBy.value) {
-      case 'name':
-        items.sort((a, b) => a.name.compareTo(b.name));
-        break;
-      case 'price_low':
-        items.sort((a, b) => a.price.compareTo(b.price));
-        break;
-      case 'price_high':
-        items.sort((a, b) => b.price.compareTo(a.price));
-        break;
-      case 'none':
-      default:
-        // Mantener orden original
-        break;
-    }
-
-    return items;
-  }
-
-  /// Obtiene información específica de un item por ID
   CatalogItemModel? getItemById(String itemId) {
     return _catalogController.getItemById(itemId);
   }

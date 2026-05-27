@@ -33,11 +33,64 @@
   <link rel="icon" type="image/png" href="logomenucom.png"/>
 
   <title>Menu com</title>
-  <link rel="manifest" href="manifest.json">
+  <link rel="manifest" id="manifest-link" href="manifest.json">
+  <script>
+    // Manifest dinámico: detecta commerce ID en la URL y apunta el manifest
+    // a la Netlify Function para que la app instalada tenga nombre/logo del comercio
+    (function() {
+      var commerceId = null;
+      var pathParts = window.location.pathname.split('/').filter(Boolean);
+      if (pathParts.length > 0) {
+        var last = pathParts[pathParts.length - 1];
+        var uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+        if (uuidPattern.test(last)) {
+          commerceId = last;
+        }
+      }
+      if (commerceId) {
+        var link = document.getElementById('manifest-link');
+        if (link) {
+          link.href = '/.netlify/functions/manifest?id=' + commerceId;
+        }
+      }
+    })();
+  </script>
   <!-- MercadoPago.js V2 -->
   <script src="https://sdk.mercadopago.com/js/v2"></script>
   <!-- Bridge sencillo para usar MercadoPago desde Flutter Web -->
   <script src="mercadopago_bridge.js"></script>
+  <!-- PWA Install Prompt Handler -->
+  <script>
+    window._deferredPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', function(e) {
+      e.preventDefault();
+      window._deferredPrompt = e;
+      // Dispatch custom event so Dart can react
+      window.dispatchEvent(new CustomEvent('pwa-install-available'));
+    });
+
+    window.addEventListener('appinstalled', function() {
+      window._deferredPrompt = null;
+      window.dispatchEvent(new CustomEvent('pwa-installed'));
+    });
+
+    window.isPwaInstallAvailable = function() {
+      return window._deferredPrompt !== null;
+    };
+
+    window.triggerPwaInstall = function() {
+      var prompt = window._deferredPrompt;
+      if (prompt) {
+        prompt.prompt();
+        return prompt.userChoice.then(function(result) {
+          window._deferredPrompt = null;
+          return result.outcome === 'accepted';
+        });
+      }
+      return Promise.resolve(false);
+    };
+  </script>
   <style>
     #loader {
       position: fixed;

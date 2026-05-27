@@ -11,11 +11,40 @@ class FilterSummaryWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<HomeController>(
       builder: (controller) {
-        int totalItems = controller.filteredMenuItems.length;
+        final totalItems = controller.filteredMenuItems.length;
+        final hasActiveFilters = controller.searchQuery.isNotEmpty ||
+            controller.selectedCategories.isNotEmpty ||
+            controller.showOnlyAvailable ||
+            controller.showOnlyOnSale ||
+            controller.showOnlyFeatured ||
+            controller.minPrice > 0 ||
+            controller.maxPrice < controller.priceUpperBound;
 
-        // Solo mostrar si hay filtros activos o elementos para mostrar
-        if (totalItems == 0 && controller.searchQuery.isEmpty && (controller.selectedCategory.isEmpty || controller.selectedCategory == 'Todos')) {
+        if (totalItems == 0 && !hasActiveFilters) {
           return const SizedBox();
+        }
+
+        final filterBadges = <Widget>[];
+        if (controller.searchQuery.isNotEmpty) {
+          filterBadges.add(_buildBadge('"${controller.searchQuery}"', Icons.search));
+        }
+        if (controller.selectedCategories.isNotEmpty) {
+          filterBadges.add(_buildBadge(controller.selectedCategories.join(', '), Icons.label));
+        }
+        if (controller.showOnlyAvailable) {
+          filterBadges.add(_buildBadge('Disponibles', Icons.check_circle));
+        }
+        if (controller.showOnlyOnSale) {
+          filterBadges.add(_buildBadge('En oferta', Icons.discount));
+        }
+        if (controller.showOnlyFeatured) {
+          filterBadges.add(_buildBadge('Destacados', Icons.star));
+        }
+        if (controller.minPrice > 0 || controller.maxPrice < controller.priceUpperBound) {
+          filterBadges.add(_buildBadge(
+            '\$${controller.minPrice.toStringAsFixed(0)}–\$${controller.maxPrice.toStringAsFixed(0)}',
+            Icons.attach_money,
+          ));
         }
 
         return Container(
@@ -26,7 +55,7 @@ class FilterSummaryWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.04),
+                color: Colors.black.withValues(alpha: 0.04),
                 blurRadius: 12,
                 offset: const Offset(0, 4),
               ),
@@ -37,7 +66,7 @@ class FilterSummaryWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: PUColors.accentColor.withOpacity(0.08),
+                  color: PUColors.accentColor.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -58,46 +87,24 @@ class FilterSummaryWidget extends StatelessWidget {
                         color: PUColors.textColorRich,
                       ),
                     ),
-                    if (controller.searchQuery.isNotEmpty ||
-                        (controller.selectedCategory.isNotEmpty && controller.selectedCategory != 'Todos')) ...[
-                      const SizedBox(height: 2),
+                    if (filterBadges.isNotEmpty) ...[
+                      const SizedBox(height: 4),
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         child: Row(
-                          children: [
-                            if (controller.searchQuery.isNotEmpty)
-                              Text(
-                                'Buscando "${controller.searchQuery}"',
-                                style: PuTextStyle.bodySmall.copyWith(
-                                  color: PUColors.textColorMuted,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            if (controller.searchQuery.isNotEmpty &&
-                                controller.selectedCategory.isNotEmpty &&
-                                controller.selectedCategory != 'Todos')
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 6),
-                                child: Text('•', style: TextStyle(color: PUColors.textColorLight, fontSize: 10)),
-                              ),
-                            if (controller.selectedCategory.isNotEmpty &&
-                                controller.selectedCategory != 'Todos')
-                              Text(
-                                'Filtro: ${controller.selectedCategory}',
-                                style: PuTextStyle.bodySmall.copyWith(
-                                  color: PUColors.textColorMuted,
-                                  fontSize: 11,
-                                ),
-                              ),
-                          ],
+                          children: filterBadges
+                              .map((b) => Padding(
+                                    padding: const EdgeInsets.only(right: 4),
+                                    child: b,
+                                  ))
+                              .toList(),
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-              if (controller.searchQuery.isNotEmpty ||
-                  (controller.selectedCategory.isNotEmpty && controller.selectedCategory != 'Todos'))
+              if (hasActiveFilters)
                 IconButton(
                   onPressed: controller.clearFilters,
                   icon: Icon(
@@ -112,6 +119,31 @@ class FilterSummaryWidget extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildBadge(String text, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: PUColors.accentColor.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: PUColors.accentColor),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: PuTextStyle.bodySmall.copyWith(
+              color: PUColors.accentColor,
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

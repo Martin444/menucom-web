@@ -7,6 +7,7 @@ import 'package:menucom_catalog/features/home/presentation/widgets/responsive_it
 import 'package:pu_material/pu_material.dart';
 
 import '../widgets/head_home.dart';
+import '../widgets/search_filter_bar.dart';
 
 /// HomePage - Página principal del catálogo optimizada para scroll suave
 ///
@@ -53,7 +54,7 @@ class HomePage extends StatelessWidget {
 
   /// Sliver para info y filtros (no persistente)
   Widget _buildInfoAndFiltersSliver() {
-    return SliverToBoxAdapter(child: Column(children: const [OwnerInfoWidget(), FilterSummaryWidget()]));
+    return SliverToBoxAdapter(child: Column(children: const [OwnerInfoWidget(), SearchFilterBar(), FilterSummaryWidget()]));
   }
 
   /// Construye el HeroSection si el catálogo tiene imagen de portada
