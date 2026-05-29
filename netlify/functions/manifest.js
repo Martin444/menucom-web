@@ -100,7 +100,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const response = await fetchWithTimeout(`${API_URL}/catalogs/public/id/${id}`);
+    const response = await fetchWithTimeout(`${API_URL}/catalogs/public/owner/${id}`);
     if (!response.ok) {
       return {
         statusCode: 200,

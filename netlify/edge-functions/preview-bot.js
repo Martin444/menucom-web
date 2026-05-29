@@ -98,7 +98,7 @@ export default async (request, context) => {
   
   try {
     // 1. Intentar obtener el catálogo público por ID (sin auth)
-    const catalogResponse = await fetchWithTimeout(`${API_URL}/catalogs/public/id/${commerceId}`);
+    const catalogResponse = await fetchWithTimeout(`${API_URL}/catalogs/public/owner/${commerceId}`);
     
     let title = 'MenuCom';
     let description = 'Consulta nuestro catálogo de productos y servicios';
