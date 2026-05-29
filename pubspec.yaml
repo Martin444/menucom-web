@@ -35,14 +35,13 @@ dependencies:
   firebase_core: ^3.8.1
   firebase_auth: ^5.3.4
   google_sign_in: ^6.2.2
+  web: ^1.1.0
 
 dependency_overrides:
   intl: ^0.20.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
-  # rules and activating additional ones.
   flutter_lints: ^3.0.0
 
 flutter:

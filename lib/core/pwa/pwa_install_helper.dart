@@ -1,24 +1,34 @@
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:js' as js;
-// ignore: avoid_web_libraries_in_flutter
-import 'dart:html' as html;
+import 'dart:js_interop';
+
+import 'package:web/web.dart' show window;
+
+@JS('isPwaInstallAvailable')
+external bool _isPwaInstallAvailable();
+
+@JS('triggerPwaInstall')
+external JSPromise<JSBoolean> _triggerPwaInstall();
 
 class PwaInstallHelper {
   static bool get isAvailable {
-    final result = js.context.callMethod('isPwaInstallAvailable', []);
-    return result == true;
+    return _isPwaInstallAvailable();
   }
 
   static Future<bool> triggerInstall() async {
-    final result = await js.context.callMethod('triggerPwaInstall', []);
-    return result == true;
+    final result = await _triggerPwaInstall().toDart;
+    return result.toDart;
   }
 
   static void onInstallAvailable(void Function() callback) {
-    html.window.addEventListener('pwa-install-available', (_) => callback());
+    window.addEventListener(
+      'pwa-install-available',
+      ((JSAny _) => callback()).toJS,
+    );
   }
 
   static void onInstalled(void Function() callback) {
-    html.window.addEventListener('pwa-installed', (_) => callback());
+    window.addEventListener(
+      'pwa-installed',
+      ((JSAny _) => callback()).toJS,
+    );
   }
 }

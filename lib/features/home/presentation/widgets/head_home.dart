@@ -143,7 +143,7 @@ class HeadHome extends StatelessWidget {
                 SvgPicture.asset(
                   PUIcons.iconCart,
                   height: 36,
-                  colorFilter: ColorFilter.mode(
+                  colorFilter: const ColorFilter.mode(
                     PUColors.iconColorBlack,
                     BlendMode.srcIn,
                   ),
