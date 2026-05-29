@@ -1,13 +1,15 @@
 {
     "name": "Menucom Catalogo",
-    "short_name": "Menucom Catalogo",
-    "start_url": ".",
+    "short_name": "Menucom",
+    "start_url": "/",
+    "scope": "/",
     "display": "standalone",
     "background_color": "#FFFFFF",
     "theme_color": "#CEDDFE",
     "description": "Catalogo para clientes CSM",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
+    "categories": ["business", "shopping"],
     "icons": [
         {
             "src": "icons/menucom-192.png",

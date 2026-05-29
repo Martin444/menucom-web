@@ -33,10 +33,9 @@
   <link rel="icon" type="image/png" href="logomenucom.png"/>
 
   <title>Menu com</title>
-  <link rel="manifest" id="manifest-link" href="manifest.json">
   <script>
-    // Manifest dinámico: detecta commerce ID en la URL y apunta el manifest
-    // a la Netlify Function para que la app instalada tenga nombre/logo del comercio
+    // Manifest dinámico: detecta commerce ID en la URL y crea el link
+    // al manifest ANTES de que el navegador lo descargue
     (function() {
       var commerceId = null;
       var pathParts = window.location.pathname.split('/').filter(Boolean);
@@ -47,12 +46,13 @@
           commerceId = last;
         }
       }
-      if (commerceId) {
-        var link = document.getElementById('manifest-link');
-        if (link) {
-          link.href = '/.netlify/functions/manifest?id=' + commerceId;
-        }
-      }
+      var link = document.createElement('link');
+      link.rel = 'manifest';
+      link.id = 'manifest-link';
+      link.href = commerceId
+        ? '/.netlify/functions/manifest?id=' + commerceId
+        : 'manifest.json';
+      document.head.appendChild(link);
     })();
   </script>
   <!-- MercadoPago.js V2 -->

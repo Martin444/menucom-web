@@ -6,12 +6,14 @@ const DEFAULT_MANIFEST = {
   name: 'Menucom Catalogo',
   short_name: 'Menucom',
   description: 'Catalogo para clientes CSM',
-  start_url: '.',
+  start_url: '/',
+  scope: '/',
   display: 'standalone',
   background_color: '#FFFFFF',
   theme_color: '#CEDDFE',
   orientation: 'portrait-primary',
   prefer_related_applications: false,
+  categories: ['business', 'shopping'],
   icons: [
     { src: 'icons/menucom-192.png', sizes: '192x192', type: 'image/png' },
     { src: 'icons/menucom-512.png', sizes: '512x512', type: 'image/png' },
@@ -66,7 +68,7 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=3600',
+        'Cache-Control': 'no-cache',
       },
       body: JSON.stringify(DEFAULT_MANIFEST),
     };
@@ -79,7 +81,7 @@ exports.handler = async (event) => {
         statusCode: 200,
         headers: {
           'Content-Type': 'application/json',
-          'Cache-Control': 'public, max-age=3600',
+          'Cache-Control': 'no-cache',
         },
         body: JSON.stringify(DEFAULT_MANIFEST),
       };
@@ -100,14 +102,16 @@ exports.handler = async (event) => {
 
     const manifest = {
       name: name,
-      short_name: name.length > 12 ? name.substring(0, 12) + '...' : name,
+      short_name: name.length > 12 ? name.substring(0, 12) : name,
       description: description,
-      start_url: '.',
+      start_url: '/',
+      scope: '/',
       display: 'standalone',
       background_color: backgroundColor,
       theme_color: themeColor,
       orientation: 'portrait-primary',
       prefer_related_applications: false,
+      categories: ['business', 'shopping'],
       icons: buildIcons(imageUrl),
     };
 
@@ -125,7 +129,7 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=3600',
+        'Cache-Control': 'no-cache',
       },
       body: JSON.stringify(DEFAULT_MANIFEST),
     };

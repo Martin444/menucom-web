@@ -29,6 +29,11 @@ class PwaInstallController extends GetxController {
 
   void _checkInitialState() {
     _isInstallable.value = PwaInstallHelper.isAvailable;
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!_isInstallable.value) {
+        _isInstallable.value = PwaInstallHelper.isAvailable;
+      }
+    });
   }
 
   void _setupListeners() {
