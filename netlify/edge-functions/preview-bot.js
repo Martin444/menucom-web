@@ -1,6 +1,8 @@
 // Edge Function para interceptar bots sociales y servir meta tags optimizados
 // Se ejecuta en el Edge (Deno runtime) ANTES de los redirects
 
+console.log('[edge-preview] Función cargada');
+
 /**
  * Extrae la URL original de una URL de proxy y fuerza HTTPS
  */
@@ -31,15 +33,7 @@ export default async (request, context) => {
   const userAgent = request.headers.get('user-agent') || '';
   const pathname = url.pathname;
   
-  // Skip archivos estáticos y rutas del sistema
-  if (pathname.includes('.') || 
-      pathname.startsWith('/_') || 
-      pathname.startsWith('/.') ||
-      pathname === '/robots.txt' ||
-      pathname === '/sitemap.xml' ||
-      pathname === '/favicon.ico') {
-    return context.next();
-  }
+  console.log('[edge-preview] Request:', pathname, 'UA:', userAgent.substring(0, 50));
   
   // Detectar bots sociales
   const socialBots = [
@@ -59,8 +53,11 @@ export default async (request, context) => {
     userAgent.toLowerCase().includes(bot.toLowerCase())
   );
   
+  console.log('[edge-preview] Is social bot:', isSocialBot);
+  
   // Si NO es un bot social, dejar que Netlify sirva normalmente
   if (!isSocialBot) {
+    console.log('[edge-preview] Not a bot, passing through');
     return context.next();
   }
   
@@ -68,15 +65,21 @@ export default async (request, context) => {
   const pathSegments = pathname.split('/').filter(Boolean);
   const commerceId = pathSegments[0];
   
+  console.log('[edge-preview] Commerce ID:', commerceId);
+  
   if (!commerceId) {
+    console.log('[edge-preview] No commerce ID, passing through');
     return context.next();
   }
   
   // Validar formato UUID (8-4-4-4-12 caracteres hexadecimales)
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (!uuidPattern.test(commerceId)) {
+    console.log('[edge-preview] Not a UUID, passing through');
     return context.next();
   }
+  
+  console.log('[edge-preview] Valid UUID detected, fetching data...');
   
   // Fetch data del commerce desde la API
   const API_URL = Deno.env.get('API_URL') || 'https://menucom-api.onrender.com';
@@ -98,7 +101,10 @@ export default async (request, context) => {
   
   try {
     // 1. Intentar obtener el catálogo público por owner (sin auth)
+    console.log('[edge-preview] Fetching:', `${API_URL}/catalogs/public/owner/${commerceId}`);
     const catalogResponse = await fetchWithTimeout(`${API_URL}/catalogs/public/owner/${commerceId}`);
+    
+    console.log('[edge-preview] Catalog response status:', catalogResponse.status);
     
     let title = 'MenuCom';
     let description = 'Consulta nuestro catálogo de productos y servicios';
@@ -107,14 +113,19 @@ export default async (request, context) => {
 
     if (catalogResponse.ok) {
         const data = await catalogResponse.json();
+        console.log('[edge-preview] Catalog data received:', JSON.stringify(data).substring(0, 200));
         const catalog = data.data || data;
         title = catalog.name || 'Menú comercial';
         description = catalog.description || 'Consulta nuestro catálogo de productos y servicios';
         imageUrl = extractOriginalUrl(catalog.coverImageUrl) || imageUrl;
         found = true;
+        console.log('[edge-preview] Catalog found:', title);
     } else {
+        console.log('[edge-preview] Catalog not found, trying user...');
         // 2. Fallback: Intentar obtener el usuario (Arquitectura Antigua)
         const userResponse = await fetchWithTimeout(`${API_URL}/user/user/${commerceId}`);
+        
+        console.log('[edge-preview] User response status:', userResponse.status);
         
         if (userResponse.ok) {
             const user = await userResponse.json();
@@ -133,10 +144,12 @@ export default async (request, context) => {
             
             imageUrl = extractOriginalUrl(user.photoURL) || imageUrl;
             found = true;
+            console.log('[edge-preview] User found:', title);
         }
     }
 
     if (!found) {
+        console.log('[edge-preview] No data found, passing through');
         return context.next();
     }
     
@@ -154,6 +167,8 @@ export default async (request, context) => {
     const safeTitle = sanitize(title);
     const safeDescription = sanitize(description);
     const safeUrl = request.url;
+    
+    console.log('[edge-preview] Returning HTML with OG tags for:', safeTitle);
     
     // Construir HTML con Open Graph tags
     const html = `<!DOCTYPE html>
@@ -188,7 +203,13 @@ export default async (request, context) => {
     });
     
   } catch (error) {
+    console.error('[edge-preview] Error:', error.message);
     // En caso de error, dejar que Netlify sirva la SPA normalmente
     return context.next();
   }
+};
+
+export const config = {
+  path: "/*",
+  excludedPath: ["/.netlify/*", "/*.css", "/*.js", "/*.png", "/*.jpg", "/*.jpeg", "/*.gif", "/*.svg", "/*.ico", "/*.woff", "/*.woff2", "/*.ttf", "/*.eot"]
 };
