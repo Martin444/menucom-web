@@ -1,6 +1,7 @@
 // Netlify Function: Manifest.json dinámico por comercio
 // Sirve un manifest.json personalizado con nombre, logo y color del comercio.
 // Se llama desde index.html como: /.netlify/functions/manifest?id={commerceId}
+// O como: /manifest.json?id={commerceId} (via redirect en netlify.toml)
 
 const DEFAULT_MANIFEST = {
   name: 'Menucom Catalogo',
@@ -23,6 +24,18 @@ const DEFAULT_MANIFEST = {
 };
 
 const API_URL = process.env.API_URL || 'https://menucom-api.onrender.com';
+
+// Helper para fetch con timeout (Render cold start puede tardar)
+async function fetchWithTimeout(url, timeoutMs = 15000) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    return response;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
 
 function extractOriginalUrl(proxyUrl) {
   if (!proxyUrl || typeof proxyUrl !== 'string') return proxyUrl;
@@ -60,29 +73,38 @@ function buildIcons(coverImageUrl) {
 }
 
 exports.handler = async (event) => {
+  // Extraer ID de query string o path
   const id = event.queryStringParameters?.id || event.path?.split('/').pop();
-  const origin = event.headers?.origin || event.headers?.referer || '';
+  
+  // Headers CORS y caché
+  const headers = {
+    'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
 
-  if (!id || id === 'manifest') {
+  // Manejar preflight OPTIONS
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers, body: '' };
+  }
+
+  // Si no hay ID o el ID es "manifest", devolver manifest por defecto
+  if (!id || id === 'manifest' || id === '') {
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-      },
+      headers,
       body: JSON.stringify(DEFAULT_MANIFEST),
     };
   }
 
   try {
-    const response = await fetch(`${API_URL}/catalogs/public/id/${id}`);
+    const response = await fetchWithTimeout(`${API_URL}/catalogs/public/id/${id}`);
     if (!response.ok) {
       return {
         statusCode: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache',
-        },
+        headers,
         body: JSON.stringify(DEFAULT_MANIFEST),
       };
     }
@@ -118,20 +140,14 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-      },
+      headers,
       body: JSON.stringify(manifest),
     };
   } catch (error) {
     console.error('[manifest] Error:', error);
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache',
-      },
+      headers,
       body: JSON.stringify(DEFAULT_MANIFEST),
     };
   }

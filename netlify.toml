@@ -13,13 +13,15 @@
   function = "preview-bot"
   path = "/:id"
 
-# ⚠️ IMPORTANTE: Netlify sirve archivos estáticos automáticamente desde build/web
-# NO necesitamos redirects para .js, .css, .png, etc.
-# Solo definimos redirects para:
-# 1. Fallback SPA (/* -> index.html) para que Flutter maneje el routing
+# Redirect para la función manifest (accesible como /manifest.json o /.netlify/functions/manifest)
+[[redirects]]
+    from = "/manifest.json"
+    to = "/.netlify/functions/manifest"
+    status = 200
 
 # SPA Fallback: todas las rutas sirven index.html
-# Netlify sirve archivos físicos primero (JS, CSS, etc.) antes de aplicar este redirect
+# IMPORTANTE: Este redirect va AL FINAL y solo aplica a rutas que no sean archivos estáticos
+# Netlify sirve archivos físicos primero (JS, CSS, imágenes) antes de aplicar redirects
 # Flutter lee la URL del navegador y extrae el commerce ID en runtime
 [[redirects]]
     from = "/*"
