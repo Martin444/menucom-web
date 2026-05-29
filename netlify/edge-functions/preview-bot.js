@@ -87,9 +87,9 @@ export default async (request, context) => {
   const API_URL = Deno.env.get('API_URL') || 'https://menucom-api.onrender.com';
   
   try {
-    // 1. Intentar obtener el catálogo directamente (Nueva Arquitectura)
-    console.log('[edge-preview] Buscando catálogo:', commerceId);
-    const catalogResponse = await fetch(`${API_URL}/catalogs/${commerceId}`);
+    // 1. Intentar obtener el catálogo público por ID (sin auth)
+    console.log('[edge-preview] Buscando catálogo público:', commerceId);
+    const catalogResponse = await fetch(`${API_URL}/catalogs/public/id/${commerceId}`);
     
     let title = 'MenuCom';
     let description = 'Consulta nuestro catálogo de productos y servicios';
@@ -97,7 +97,8 @@ export default async (request, context) => {
     let found = false;
 
     if (catalogResponse.ok) {
-        const catalog = await catalogResponse.json();
+        let data = await catalogResponse.json();
+        const catalog = data.data || data;
         title = catalog.name || 'Menú comercial';
         description = catalog.description || 'Consulta nuestro catálogo de productos y servicios';
         imageUrl = extractOriginalUrl(catalog.coverImageUrl) || imageUrl;

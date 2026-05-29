@@ -75,7 +75,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const response = await fetch(`${API_URL}/catalogs/${id}`);
+    const response = await fetch(`${API_URL}/catalogs/public/id/${id}`);
     if (!response.ok) {
       return {
         statusCode: 200,
@@ -87,7 +87,8 @@ exports.handler = async (event) => {
       };
     }
 
-    const catalog = await response.json();
+    const data = await response.json();
+    const catalog = data.data || data;
     const name = catalog.name || 'Menucom Catalogo';
     const description = catalog.description || 'Catalogo para clientes CSM';
     const imageUrl = extractOriginalUrl(catalog.coverImageUrl);

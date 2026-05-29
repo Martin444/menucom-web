@@ -141,9 +141,9 @@ exports.handler = async (event) => {
 			}
 
 			try {
-				// 1. Intentar obtener el catálogo (Nueva Arquitectura)
-				console.log('[preview] Buscando catálogo:', id);
-				const catalogResponse = await fetch(`${API_URL}/catalogs/${id}`);
+				// 1. Intentar obtener el catálogo público (Nueva Arquitectura)
+				console.log('[preview] Buscando catálogo público:', id);
+				const catalogResponse = await fetch(`${API_URL}/catalogs/public/id/${id}`);
 				
 				let title = 'MenuCom';
 				let description = 'Consulta nuestro catálogo de productos';
@@ -151,7 +151,8 @@ exports.handler = async (event) => {
 				let found = false;
 
 				if (catalogResponse.ok) {
-					const catalog = await catalogResponse.json();
+					let data = await catalogResponse.json();
+					const catalog = data.data || data;
 					title = catalog.name || 'Menú comercial';
 					description = catalog.description || description;
 					imageUrl = extractOriginalUrl(catalog.coverImageUrl) || imageUrl;
