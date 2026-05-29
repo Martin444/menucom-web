@@ -1,0 +1,9 @@
+# Redirect para manifest dinámico
+/manifest.json /.netlify/functions/manifest 200
+
+# Edge function para social bots (se ejecuta antes que los redirects)
+# NOTA: Las edge functions se configuran en netlify.toml, no aquí
+
+# SPA Fallback: todas las rutas sirven index.html
+# Netlify sirve archivos físicos primero (JS, CSS, imágenes) antes de aplicar redirects
+/* /index.html 200

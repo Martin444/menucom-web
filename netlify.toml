@@ -11,19 +11,4 @@
 
 [[edge_functions]]
   function = "preview-bot"
-  path = "/:id"
-
-# Redirect para la función manifest (accesible como /manifest.json o /.netlify/functions/manifest)
-[[redirects]]
-    from = "/manifest.json"
-    to = "/.netlify/functions/manifest"
-    status = 200
-
-# SPA Fallback: todas las rutas sirven index.html
-# IMPORTANTE: Este redirect va AL FINAL y solo aplica a rutas que no sean archivos estáticos
-# Netlify sirve archivos físicos primero (JS, CSS, imágenes) antes de aplicar redirects
-# Flutter lee la URL del navegador y extrae el commerce ID en runtime
-[[redirects]]
-    from = "/*"
-    to = "/index.html"
-    status = 200
+  path = "/*"

@@ -3,8 +3,6 @@
 
 /**
  * Extrae la URL original de una URL de proxy y fuerza HTTPS
- * Ejemplo: http://...herokuapp.com/api/image-proxy/image?url=http%3A%2F%2Fres.cloudinary.com%2F...
- * Retorna: https://res.cloudinary.com/...
  */
 function extractOriginalUrl(proxyUrl) {
   if (!proxyUrl || typeof proxyUrl !== 'string') return proxyUrl;
@@ -33,6 +31,16 @@ export default async (request, context) => {
   const userAgent = request.headers.get('user-agent') || '';
   const pathname = url.pathname;
   
+  // Skip archivos estáticos y rutas del sistema
+  if (pathname.includes('.') || 
+      pathname.startsWith('/_') || 
+      pathname.startsWith('/.') ||
+      pathname === '/robots.txt' ||
+      pathname === '/sitemap.xml' ||
+      pathname === '/favicon.ico') {
+    return context.next();
+  }
+  
   // Detectar bots sociales
   const socialBots = [
     'facebookexternalhit',
@@ -60,15 +68,7 @@ export default async (request, context) => {
   const pathSegments = pathname.split('/').filter(Boolean);
   const commerceId = pathSegments[0];
   
-  // Validar que no sea un archivo estático o ruta del sistema
-  const isSystemFile = commerceId.includes('.') || // archivos con extensión
-                       commerceId === 'robots.txt' ||
-                       commerceId === 'sitemap.xml' ||
-                       commerceId === 'favicon.ico' ||
-                       commerceId.startsWith('_') ||
-                       commerceId.startsWith('.');
-  
-  if (!commerceId || isSystemFile) {
+  if (!commerceId) {
     return context.next();
   }
   
@@ -97,7 +97,7 @@ export default async (request, context) => {
   }
   
   try {
-    // 1. Intentar obtener el catálogo público por ID (sin auth)
+    // 1. Intentar obtener el catálogo público por owner (sin auth)
     const catalogResponse = await fetchWithTimeout(`${API_URL}/catalogs/public/owner/${commerceId}`);
     
     let title = 'MenuCom';
@@ -191,8 +191,4 @@ export default async (request, context) => {
     // En caso de error, dejar que Netlify sirva la SPA normalmente
     return context.next();
   }
-};
-
-export const config = {
-  path: "/:id",
 };
