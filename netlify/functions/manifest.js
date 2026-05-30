@@ -110,15 +110,15 @@ exports.handler = async (event) => {
     }
 
     const data = await response.json();
-    const catalog = data.data || data;
-    const name = catalog.name || 'Menucom Catalogo';
-    const description = catalog.description || 'Catalogo para clientes CSM';
-    const imageUrl = extractOriginalUrl(catalog.coverImageUrl);
+    const raw = data?.data || data;
+    const catalog = Array.isArray(raw) ? raw[0] : raw;
+    const name = catalog?.name || 'Menucom Catalogo';
+    const description = catalog?.description || 'Catalogo para clientes CSM';
+    const imageUrl = extractOriginalUrl(catalog?.coverImageUrl);
 
-    // Intentar extraer theme_color del settings del catálogo
     let themeColor = '#CEDDFE';
     let backgroundColor = '#FFFFFF';
-    if (catalog.settings && typeof catalog.settings === 'object') {
+    if (catalog?.settings && typeof catalog.settings === 'object') {
       themeColor = catalog.settings.themeColor || catalog.settings.primaryColor || themeColor;
       backgroundColor = catalog.settings.backgroundColor || backgroundColor;
     }
