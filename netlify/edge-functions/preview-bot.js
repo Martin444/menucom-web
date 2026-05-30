@@ -1,5 +1,5 @@
 // Edge Function para interceptar bots sociales y servir meta tags optimizados
-// Usa /catalogs/public/owner/{id} que retorna { data: [catalog, ...] }
+// API: /catalogs/public/owner/{id} → { data: [{ name, owner: { name, photoURL } }, ...] }
 
 function extractOriginalUrl(proxyUrl) {
   if (!proxyUrl || typeof proxyUrl !== 'string') return proxyUrl;
@@ -14,12 +14,6 @@ function extractOriginalUrl(proxyUrl) {
     originalUrl = originalUrl.replace(/^http:\/\//i, 'https://');
   }
   return originalUrl;
-}
-
-function parseCatalog(data) {
-  const raw = data?.data || data;
-  if (Array.isArray(raw)) return raw[0];
-  return raw;
 }
 
 export default async (request, context) => {
@@ -57,19 +51,20 @@ export default async (request, context) => {
   }
 
   try {
-    const catalogResponse = await fetchWithTimeout(`${API_URL}/catalogs/public/owner/${commerceId}`);
-
     let title = 'MenuCom';
     let description = 'Consulta nuestro catálogo de productos y servicios';
     let imageUrl = 'https://menu-comerce.netlify.app/default-image.png';
 
+    const catalogResponse = await fetchWithTimeout(`${API_URL}/catalogs/public/owner/${commerceId}`);
+
     if (catalogResponse.ok) {
-      const data = await catalogResponse.json();
-      const catalog = parseCatalog(data);
-      if (catalog?.name) {
-        title = catalog.name;
-        description = catalog.description || description;
-        imageUrl = extractOriginalUrl(catalog.coverImageUrl) || imageUrl;
+      const body = await catalogResponse.json();
+      const catalogs = body?.data;
+      if (Array.isArray(catalogs) && catalogs.length > 0) {
+        const owner = catalogs[0].owner;
+        title = owner?.name || catalogs[0].name || title;
+        imageUrl = extractOriginalUrl(owner?.photoURL) || extractOriginalUrl(catalogs[0].coverImageUrl) || imageUrl;
+        description = catalogs.map(c => c.name).filter(Boolean).join(', ') || description;
       }
     } else {
       const userResponse = await fetchWithTimeout(`${API_URL}/user/user/${commerceId}`);

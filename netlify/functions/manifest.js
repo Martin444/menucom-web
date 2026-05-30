@@ -109,18 +109,26 @@ exports.handler = async (event) => {
       };
     }
 
-    const data = await response.json();
-    const raw = data?.data || data;
-    const catalog = Array.isArray(raw) ? raw[0] : raw;
-    const name = catalog?.name || 'Menucom Catalogo';
-    const description = catalog?.description || 'Catalogo para clientes CSM';
-    const imageUrl = extractOriginalUrl(catalog?.coverImageUrl);
+    const body = await response.json();
+    const catalogs = body?.data;
+    let name = 'Menucom Catalogo';
+    let description = 'Catalogo para clientes CSM';
+    let imageUrl = null;
+    let catalogSettings = null;
+
+    if (Array.isArray(catalogs) && catalogs.length > 0) {
+      const owner = catalogs[0].owner;
+      name = owner?.name || catalogs[0].name || name;
+      imageUrl = extractOriginalUrl(owner?.photoURL) || extractOriginalUrl(catalogs[0].coverImageUrl);
+      description = catalogs.map(c => c.name).filter(Boolean).join(', ') || description;
+      catalogSettings = catalogs[0].settings;
+    }
 
     let themeColor = '#CEDDFE';
     let backgroundColor = '#FFFFFF';
-    if (catalog?.settings && typeof catalog.settings === 'object') {
-      themeColor = catalog.settings.themeColor || catalog.settings.primaryColor || themeColor;
-      backgroundColor = catalog.settings.backgroundColor || backgroundColor;
+    if (catalogSettings && typeof catalogSettings === 'object') {
+      themeColor = catalogSettings.themeColor || catalogSettings.primaryColor || themeColor;
+      backgroundColor = catalogSettings.backgroundColor || backgroundColor;
     }
 
     const manifest = {
