@@ -98,6 +98,8 @@ export default async (request, context) => {
   <meta property="og:title" content="${safeTitle}" />
   <meta property="og:description" content="${safeDescription}" />
   <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:url" content="${request.url}" />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="MenuCom" />
@@ -118,7 +120,6 @@ export default async (request, context) => {
       status: 200,
       headers: {
         'Content-Type': 'text/html; charset=utf-8',
-        'Cache-Control': 'public, max-age=3600',
       },
     });
 
