@@ -46,13 +46,22 @@
           commerceId = last;
         }
       }
+      console.log('[PWA-DEBUG] Path:', window.location.pathname);
+      console.log('[PWA-DEBUG] commerceId detected:', commerceId);
+
+      var manifestHref = commerceId
+        ? '/.netlify/functions/manifest?id=' + commerceId
+        : 'manifest.json';
+      console.log('[PWA-DEBUG] Manifest href:', manifestHref);
+
       var link = document.createElement('link');
       link.rel = 'manifest';
       link.id = 'manifest-link';
-      link.href = commerceId
-        ? '/.netlify/functions/manifest?id=' + commerceId
-        : 'manifest.json';
+      link.href = manifestHref;
+      link.onload = function() { console.log('[PWA-DEBUG] Manifest link loaded OK'); };
+      link.onerror = function(e) { console.error('[PWA-DEBUG] Manifest link load FAILED', e); };
       document.head.appendChild(link);
+      console.log('[PWA-DEBUG] Manifest link appended to <head>');
     })();
   </script>
   <!-- MercadoPago.js V2 -->
@@ -61,35 +70,92 @@
   <script src="mercadopago_bridge.js"></script>
   <!-- PWA Install Prompt Handler -->
   <script>
+    console.log('[PWA-DEBUG] Install handler script loaded');
+    console.log('[PWA-DEBUG] display-mode:', window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser');
+    console.log('[PWA-DEBUG] Protocol:', window.location.protocol);
+    console.log('[PWA-DEBUG] Hostname:', window.location.hostname);
+
     window._deferredPrompt = null;
 
     window.addEventListener('beforeinstallprompt', function(e) {
+      console.log('[PWA-DEBUG] beforeinstallprompt FIRED!', e);
       e.preventDefault();
       window._deferredPrompt = e;
-      // Dispatch custom event so Dart can react
       window.dispatchEvent(new CustomEvent('pwa-install-available'));
+      console.log('[PWA-DEBUG] pwa-install-available dispatched, _deferredPrompt set');
     });
 
     window.addEventListener('appinstalled', function() {
+      console.log('[PWA-DEBUG] appinstalled FIRED!');
       window._deferredPrompt = null;
       window.dispatchEvent(new CustomEvent('pwa-installed'));
     });
 
     window.isPwaInstallAvailable = function() {
-      return window._deferredPrompt !== null;
+      var available = window._deferredPrompt !== null;
+      console.log('[PWA-DEBUG] isPwaInstallAvailable called, result:', available);
+      return available;
     };
 
     window.triggerPwaInstall = function() {
+      console.log('[PWA-DEBUG] triggerPwaInstall called, _deferredPrompt:', !!window._deferredPrompt);
       var prompt = window._deferredPrompt;
       if (prompt) {
         prompt.prompt();
         return prompt.userChoice.then(function(result) {
+          console.log('[PWA-DEBUG] userChoice result:', result.outcome);
           window._deferredPrompt = null;
           return result.outcome === 'accepted';
         });
       }
+      console.warn('[PWA-DEBUG] triggerPwaInstall: no prompt available');
       return Promise.resolve(false);
     };
+
+    // Diagnostic: check if env supports PWA install
+    setTimeout(function() {
+      console.log('[PWA-DEBUG] === DIAGNOSTIC (3s after load) ===');
+      console.log('[PWA-DEBUG] _deferredPrompt:', !!window._deferredPrompt);
+      console.log('[PWA-DEBUG] isPwaInstallAvailable():', window.isPwaInstallAvailable());
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) {
+          console.log('[PWA-DEBUG] SW registrations:', regs.length);
+          regs.forEach(function(r, i) {
+            console.log('[PWA-DEBUG] SW[' + i + '] scope:', r.scope, 'state:', r.active ? r.active.state : 'none');
+          });
+        }).catch(function(err) {
+          console.error('[PWA-DEBUG] Error checking SW registrations:', err);
+        });
+      } else {
+        console.warn('[PWA-DEBUG] serviceWorker API not available');
+      }
+      // Check manifest validity
+      var manifestLink = document.getElementById('manifest-link') || document.querySelector('link[rel="manifest"]');
+      if (manifestLink) {
+        console.log('[PWA-DEBUG] Manifest link href:', manifestLink.href);
+        fetch(manifestLink.href).then(function(r) {
+          console.log('[PWA-DEBUG] Manifest fetch status:', r.status, r.statusText);
+          return r.text();
+        }).then(function(text) {
+          try {
+            var m = JSON.parse(text);
+            console.log('[PWA-DEBUG] Manifest parsed OK. name:', m.name, 'start_url:', m.start_url, 'display:', m.display, 'icons:', m.icons ? m.icons.length : 0);
+            if (m.icons) {
+              m.icons.forEach(function(icon, i) {
+                console.log('[PWA-DEBUG] icon[' + i + ']:', icon.src, icon.sizes, icon.purpose || 'any');
+              });
+            }
+          } catch(e) {
+            console.error('[PWA-DEBUG] Manifest JSON parse failed:', e);
+          }
+        }).catch(function(err) {
+          console.error('[PWA-DEBUG] Manifest fetch error:', err);
+        });
+      } else {
+        console.error('[PWA-DEBUG] No manifest link found in DOM!');
+      }
+      console.log('[PWA-DEBUG] === END DIAGNOSTIC ===');
+    }, 3000);
   </script>
   <style>
     #loader {
