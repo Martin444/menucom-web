@@ -1,0 +1,14 @@
+/sw.js
+  Cache-Control: no-cache
+  Content-Type: application/javascript; charset=utf-8
+
+/flutter_service_worker.js
+  Cache-Control: no-cache
+  Content-Type: application/javascript; charset=utf-8
+
+/manifest.json
+  Content-Type: application/json; charset=utf-8
+  Cache-Control: no-cache
+
+/.netlify/functions/manifest
+  Content-Type: application/json; charset=utf-8

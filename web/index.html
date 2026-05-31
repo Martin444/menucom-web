@@ -112,50 +112,31 @@
       return Promise.resolve(false);
     };
 
-    // Diagnostic: check if env supports PWA install
-    setTimeout(function() {
-      console.log('[PWA-DEBUG] === DIAGNOSTIC (3s after load) ===');
-      console.log('[PWA-DEBUG] _deferredPrompt:', !!window._deferredPrompt);
-      console.log('[PWA-DEBUG] isPwaInstallAvailable():', window.isPwaInstallAvailable());
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(regs) {
-          console.log('[PWA-DEBUG] SW registrations:', regs.length);
-          regs.forEach(function(r, i) {
-            console.log('[PWA-DEBUG] SW[' + i + '] scope:', r.scope, 'state:', r.active ? r.active.state : 'none');
+    // Register PWA service worker explicitly after page load
+    (function() {
+      if (!('serviceWorker' in navigator)) {
+        console.warn('[PWA-DEBUG] serviceWorker API not available');
+        return;
+      }
+      window.addEventListener('load', function() {
+        console.log('[PWA-DEBUG] Registering PWA service worker at /sw.js');
+        navigator.serviceWorker.register('/sw.js').then(function(reg) {
+          console.log('[PWA-DEBUG] PWA SW registered! scope:', reg.scope);
+          console.log('[PWA-DEBUG] SW installing:', reg.installing ? reg.installing.state : 'null');
+          console.log('[PWA-DEBUG] SW waiting:', reg.waiting ? reg.waiting.state : 'null');
+          console.log('[PWA-DEBUG] SW active:', reg.active ? reg.active.state : 'null');
+          reg.addEventListener('updatefound', function() {
+            var newWorker = reg.installing;
+            console.log('[PWA-DEBUG] SW updatefound! state:', newWorker.state);
+            newWorker.addEventListener('statechange', function() {
+              console.log('[PWA-DEBUG] SW state changed to:', newWorker.state);
+            });
           });
         }).catch(function(err) {
-          console.error('[PWA-DEBUG] Error checking SW registrations:', err);
+          console.error('[PWA-DEBUG] PWA SW registration FAILED:', err.message, err);
         });
-      } else {
-        console.warn('[PWA-DEBUG] serviceWorker API not available');
-      }
-      // Check manifest validity
-      var manifestLink = document.getElementById('manifest-link') || document.querySelector('link[rel="manifest"]');
-      if (manifestLink) {
-        console.log('[PWA-DEBUG] Manifest link href:', manifestLink.href);
-        fetch(manifestLink.href).then(function(r) {
-          console.log('[PWA-DEBUG] Manifest fetch status:', r.status, r.statusText);
-          return r.text();
-        }).then(function(text) {
-          try {
-            var m = JSON.parse(text);
-            console.log('[PWA-DEBUG] Manifest parsed OK. name:', m.name, 'start_url:', m.start_url, 'display:', m.display, 'icons:', m.icons ? m.icons.length : 0);
-            if (m.icons) {
-              m.icons.forEach(function(icon, i) {
-                console.log('[PWA-DEBUG] icon[' + i + ']:', icon.src, icon.sizes, icon.purpose || 'any');
-              });
-            }
-          } catch(e) {
-            console.error('[PWA-DEBUG] Manifest JSON parse failed:', e);
-          }
-        }).catch(function(err) {
-          console.error('[PWA-DEBUG] Manifest fetch error:', err);
-        });
-      } else {
-        console.error('[PWA-DEBUG] No manifest link found in DOM!');
-      }
-      console.log('[PWA-DEBUG] === END DIAGNOSTIC ===');
-    }, 3000);
+      });
+    })();
   </script>
   <style>
     #loader {
@@ -246,22 +227,12 @@
             return;
           }
 
-          // Usamos backticks para mayor seguridad con el string inyectado
-          var serviceWorkerVersion = `{{flutter_service_worker_version}}`;
-          if (serviceWorkerVersion) {
-            serviceWorkerVersion = serviceWorkerVersion.split('/*')[0].replace(/["']/g, '').trim();
-          }
-
-          console.log('📦 [SPLASH] Ejecutando _flutter.loader.load... SW:', serviceWorkerVersion || 'N/A');
+          console.log('📦 [SPLASH] Ejecutando _flutter.loader.load...');
           _flutter.loader.load({
-            serviceWorkerSettings: {
-              serviceWorkerVersion: serviceWorkerVersion,
-            },
             onEntrypointLoaded: function(engineInitializer) {
               console.log('✅ [SPLASH] Entrypoint OK. Inicializando motor...');
               
               engineInitializer.initializeEngine({
-                serviceWorkerVersion: serviceWorkerVersion,
                 useColorEmoji: true,
               }).then(function(appRunner) {
                 console.log('🎯 [SPLASH] Motor OK. Ejecutando app...');
