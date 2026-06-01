@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:menucom_catalog/core/pwa/pwa_install_controller.dart';
 import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
-import 'package:menucom_catalog/features/home/presentation/widgets/owner_info_widget.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/filter_summary_widget.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/responsive_items_grid.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/catalog_selector.dart';
+import 'package:menucom_catalog/routes/routes.dart';
 import 'package:pu_material/pu_material.dart';
+import 'package:pu_material/utils/pu_assets.dart';
 
 import '../widgets/head_home.dart';
 import '../widgets/search_filter_bar.dart';
@@ -13,9 +15,9 @@ import '../widgets/search_filter_bar.dart';
 /// HomePage - Página principal del catálogo optimizada para scroll suave
 ///
 /// Estructura:
-/// 1. HeroSection (banner si hay imagen)
-/// 2. HeadHome (header con carrito)
-/// 3. OwnerInfoWidget (info del negocio)
+/// 1. HeadHome (sticky header con avatar y nombre del negocio)
+/// 2. Tags del catálogo + botones de acción (instalar + carrito)
+/// 3. SearchFilterBar (búsqueda y filtros)
 /// 4. FilterSummaryWidget (filtros activos)
 /// 5. ResponsiveItemsGrid (productos)
 class HomePage extends StatelessWidget {
@@ -33,11 +35,9 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  /// Sliver para el HeroSection (no persistente)
+  /// Sliver para el HeroSection (no persistente) — ahora vacío para layout compacto
   Widget _buildHeroSliver() {
-    return SliverToBoxAdapter(
-      child: GetBuilder<HomeController>(builder: (controller) => _buildHeroSection(controller)),
-    );
+    return const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 
   /// Sliver persistente para el HeadHome (vidrio líquido)
@@ -55,31 +55,108 @@ class HomePage extends StatelessWidget {
 
   /// Sliver para info y filtros (no persistente)
   Widget _buildInfoAndFiltersSliver() {
-    return SliverToBoxAdapter(child: Column(children: const [
-      OwnerInfoWidget(),
-      CatalogSelector(),
-      SearchFilterBar(),
-      FilterSummaryWidget(),
-    ]));
+    return SliverToBoxAdapter(
+      child: Column(
+        children: [
+          _buildTagsAndActionsRow(),
+          const SearchFilterBar(),
+          const FilterSummaryWidget(),
+        ],
+      ),
+    );
   }
 
-  /// Construye el HeroSection si el catálogo tiene imagen de portada
-  Widget _buildHeroSection(HomeController controller) {
-    final catalog = controller.catalog;
-    if (catalog == null) return const SizedBox.shrink();
+  /// Fila compacta: tags del catálogo + botones de acción (instalar + carrito)
+  Widget _buildTagsAndActionsRow() {
+    return GetBuilder<HomeController>(builder: (controller) {
+      return ContainerAtom(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            // Tags del catálogo (ocupan el espacio disponible)
+            const Expanded(child: CatalogSelector()),
+            const SizedBox(width: 8),
+            // Botón instalar PWA
+            Obx(() {
+              final pwaCtrl = Get.find<PwaInstallController>();
+              if (!pwaCtrl.isInstallable) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: PwaInstallButtonAtom(
+                  onPressed: () => pwaCtrl.install(),
+                  tooltip: 'Instalar aplicación',
+                ),
+              );
+            }),
+            // Botón carrito
+            _buildCartButton(controller),
+          ],
+        ),
+      );
+    });
+  }
 
-    final coverImageUrl = catalog.coverImageUrl;
-    final name = catalog.name ?? 'Catálogo';
-
-    // Mostrar solo si hay imagen
-    if (coverImageUrl == null || coverImageUrl.isEmpty) {
-      return HeroSimpleAtom(title: name, subtitle: catalog.catalogType.capitalizeFirst ?? 'Consulta nuestro menú');
-    }
-
-    return HeroSectionAtom(
-      title: name,
-      subtitle: catalog.catalogType.capitalizeFirst ?? 'Consulta nuestro menú',
-      imageUrl: coverImageUrl,
+  /// Icono del carrito con badge y accessibility
+  Widget _buildCartButton(HomeController controller) {
+    return Semantics(
+      label: 'Ver carrito de compras',
+      button: true,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(
+          onTap: () => Get.toNamed(PURoutes.MYCART),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: const Alignment(0, -1.4),
+              children: [
+                SvgPicture.asset(
+                  PUIcons.iconCart,
+                  height: 36,
+                  colorFilter: const ColorFilter.mode(
+                    PUColors.iconColorBlack,
+                    BlendMode.srcIn,
+                  ),
+                  fit: BoxFit.fitHeight,
+                ),
+                // Cart badge con animación
+                Positioned(
+                  child: Obx(() {
+                    final count = controller.cartItemCount;
+                    if (count <= 0) return const SizedBox.shrink();
+                    return AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: PUColors.restaurantPrimary,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Text(
+                        count.toString(),
+                        style: PuTextStyle.cartQuantityTextStyle.copyWith(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

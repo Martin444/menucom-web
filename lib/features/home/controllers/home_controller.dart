@@ -43,6 +43,11 @@ class HomeController extends GetxController {
   String get nameComerce => _catalogController.catalogResponse?.name ?? '';
   String get currentOwnerId => _catalogController.catalogResponse?.id ?? '';
 
+  // Datos del owner (negocio)
+  Map<String, dynamic>? get owner => _catalogController.catalogResponse?.owner;
+  String? get ownerName => _catalogController.catalogResponse?.owner?['name']?.toString();
+  String? get ownerPhotoUrl => _catalogController.catalogResponse?.owner?['photoURL']?.toString();
+
   // Multi-catálogo
   List<CatalogModel> get catalogs => _catalogController.catalogs;
   RxList<CatalogModel> get catalogsRx => _catalogController.catalogsRx;

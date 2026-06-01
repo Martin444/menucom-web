@@ -2,13 +2,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/core/pwa/pwa_install_controller.dart';
 import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
-import 'package:menucom_catalog/routes/routes.dart';
 import 'package:pu_material/utils/pu_assets.dart';
 import 'package:pu_material/utils/pu_colors.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
-import 'package:pu_material/atoms/pwa_install_button_atom.dart';
+import 'package:pu_material/widgets/pu_robust_network_image.dart';
 
 class HeadHome extends StatelessWidget {
   final bool? withBack;
@@ -61,26 +59,60 @@ class HeadHome extends StatelessWidget {
                       ),
                     ),
                   ] else ...[
-                    // Logo o Título de la marca en Home si no hay back
-                    const Expanded(
-                      child: SizedBox(),
+                    // Avatar del negocio en Home
+                    _buildOwnerAvatar(controller),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Obx(() {
+                        final catalog = controller.catalogRx.value;
+                        final name = catalog?.owner?['name']?.toString() ?? catalog?.name ?? '';
+                        if (name.isEmpty) return const SizedBox();
+                        return Text(
+                          name,
+                          style: PuTextStyle.titleHeadTextStyle.copyWith(fontSize: 16),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        );
+                      }),
                     ),
                   ],
-                  Obx(() {
-                    final pwaCtrl = Get.find<PwaInstallController>();
-                    if (!pwaCtrl.isInstallable) return const SizedBox.shrink();
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: PwaInstallButtonAtom(
-                        onPressed: () => pwaCtrl.install(),
-                        tooltip: 'Instalar aplicación',
-                      ),
-                    );
-                  }),
-                  _buildCartButton(controller),
                 ],
               ),
             ),
+          ),
+        ),
+      );
+    });
+  }
+
+  /// Avatar circular del owner (logo del negocio)
+  Widget _buildOwnerAvatar(HomeController controller) {
+    return Obx(() {
+      final catalog = controller.catalogRx.value;
+      final photoUrl = catalog?.owner?['photoURL']?.toString();
+      if (photoUrl == null || photoUrl.isEmpty) {
+        return const SizedBox(width: 40);
+      }
+      return Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: PUColors.glassBorder, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: ClipOval(
+          child: PuRobustNetworkImage(
+            imageUrl: photoUrl,
+            fit: BoxFit.cover,
+            width: 40,
+            height: 40,
           ),
         ),
       );
@@ -119,67 +151,4 @@ class HeadHome extends StatelessWidget {
     );
   }
 
-  /// Icono del carrito con hover state, badge y accessibility
-  Widget _buildCartButton(HomeController controller) {
-    return Semantics(
-      label: 'Ver carrito de compras',
-      button: true,
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(
-          onTap: () => Get.toNamed(PURoutes.MYCART),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeInOut,
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: const Alignment(0, -1.4),
-              children: [
-                SvgPicture.asset(
-                  PUIcons.iconCart,
-                  height: 36,
-                  colorFilter: const ColorFilter.mode(
-                    PUColors.iconColorBlack,
-                    BlendMode.srcIn,
-                  ),
-                  fit: BoxFit.fitHeight,
-                ),
-                // Cart badge con animación
-                Positioned(
-                  child: Obx(() {
-                    final count = controller.cartItemCount;
-                    if (count <= 0) return const SizedBox.shrink();
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: PUColors.restaurantPrimary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        count.toString(),
-                        style: PuTextStyle.cartQuantityTextStyle.copyWith(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
