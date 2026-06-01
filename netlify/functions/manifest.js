@@ -52,14 +52,34 @@ function extractOriginalUrl(proxyUrl) {
   return originalUrl;
 }
 
+function isCloudinaryUrl(url) {
+  return url && typeof url === 'string' && url.includes('res.cloudinary.com');
+}
+
+function transformCloudinaryUrl(url, width, height) {
+  return url.replace(
+    '/upload/',
+    `/upload/c_fill,w_${width},h_${height},q_auto,f_png/`
+  );
+}
+
 function buildIcons(coverImageUrl) {
   const icons = [];
 
   if (coverImageUrl) {
-    icons.push(
-      { src: coverImageUrl, sizes: '192x192', type: 'image/png', purpose: 'any' },
-      { src: coverImageUrl, sizes: '512x512', type: 'image/png', purpose: 'any' },
-    );
+    if (isCloudinaryUrl(coverImageUrl)) {
+      icons.push(
+        { src: transformCloudinaryUrl(coverImageUrl, 192, 192), sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: transformCloudinaryUrl(coverImageUrl, 512, 512), sizes: '512x512', type: 'image/png', purpose: 'any' },
+        { src: transformCloudinaryUrl(coverImageUrl, 192, 192), sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+        { src: transformCloudinaryUrl(coverImageUrl, 512, 512), sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      );
+    } else {
+      icons.push(
+        { src: coverImageUrl, sizes: '192x192', type: 'image/png', purpose: 'any' },
+        { src: coverImageUrl, sizes: '512x512', type: 'image/png', purpose: 'any' },
+      );
+    }
   }
 
   icons.push(

@@ -16,6 +16,10 @@ class CatalogController extends GetxController {
   // Lista plana de todos los items para facilitar búsquedas y filtros
   final RxList<CatalogItemModel> _allMenuItems = <CatalogItemModel>[].obs;
 
+  // Soporte multi-catálogo
+  final RxList<CatalogModel> _catalogs = <CatalogModel>[].obs;
+  final RxInt _selectedCatalogIndex = 0.obs;
+
   CatalogController({
     GetCatalogByIdUseCase? getCatalogUseCase,
     GetPublicCatalogByIdUseCase? getPublicCatalogUseCase,
@@ -40,11 +44,15 @@ class CatalogController extends GetxController {
   bool get hasData => _catalogResponse.value != null;
   bool get hasError => _error.value.isNotEmpty;
 
-  // El propietario se maneja a través de ownerId en CatalogModel
   String? get ownerId => _catalogResponse.value?.ownerId;
-  
-  // En la nueva arquitectura, CatalogModel ya es el contenedor de items
   CatalogModel? get currentCatalog => _catalogResponse.value;
+
+  // Getters multi-catálogo
+  List<CatalogModel> get catalogs => _catalogs;
+  RxList<CatalogModel> get catalogsRx => _catalogs;
+  int get selectedCatalogIndex => _selectedCatalogIndex.value;
+  RxInt get selectedCatalogIndexRx => _selectedCatalogIndex;
+  bool get hasMultipleCatalogs => _catalogs.length > 1;
 
   /// Carga un catálogo específico por ID
   Future<void> loadMenu(String catalogId) async {
@@ -109,6 +117,8 @@ class CatalogController extends GetxController {
 
       final catalogs = await _getPublicCatalogsByOwnerIdUseCase.execute(ownerId);
       if (catalogs.isNotEmpty) {
+        _catalogs.value = catalogs;
+        _selectedCatalogIndex.value = 0;
         _catalogResponse.value = catalogs.first;
         _flattenMenuItems();
       } else {
@@ -118,9 +128,24 @@ class CatalogController extends GetxController {
       _error.value = 'Error al carregar catálogos: ${e.toString()}';
       _catalogResponse.value = null;
       _allMenuItems.clear();
+      _catalogs.clear();
     } finally {
       _isLoading.value = false;
     }
+  }
+
+  /// Selecciona un catálogo por índice y actualiza items
+  void selectCatalog(int index) {
+    if (index < 0 || index >= _catalogs.length) return;
+    _selectedCatalogIndex.value = index;
+    _catalogResponse.value = _catalogs[index];
+    _flattenMenuItems();
+  }
+
+  /// Selecciona un catálogo por ID
+  void selectCatalogById(String id) {
+    final index = _catalogs.indexWhere((c) => c.id == id);
+    if (index >= 0) selectCatalog(index);
   }
 
   /// Aplana todos los items del catálogo en una sola lista

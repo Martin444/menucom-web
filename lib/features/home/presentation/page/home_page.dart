@@ -4,6 +4,7 @@ import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/owner_info_widget.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/filter_summary_widget.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/responsive_items_grid.dart';
+import 'package:menucom_catalog/features/home/presentation/widgets/catalog_selector.dart';
 import 'package:pu_material/pu_material.dart';
 
 import '../widgets/head_home.dart';
@@ -54,7 +55,12 @@ class HomePage extends StatelessWidget {
 
   /// Sliver para info y filtros (no persistente)
   Widget _buildInfoAndFiltersSliver() {
-    return SliverToBoxAdapter(child: Column(children: const [OwnerInfoWidget(), SearchFilterBar(), FilterSummaryWidget()]));
+    return SliverToBoxAdapter(child: Column(children: const [
+      OwnerInfoWidget(),
+      CatalogSelector(),
+      SearchFilterBar(),
+      FilterSummaryWidget(),
+    ]));
   }
 
   /// Construye el HeroSection si el catálogo tiene imagen de portada

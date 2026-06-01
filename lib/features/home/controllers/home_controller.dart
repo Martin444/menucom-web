@@ -43,6 +43,13 @@ class HomeController extends GetxController {
   String get nameComerce => _catalogController.catalogResponse?.name ?? '';
   String get currentOwnerId => _catalogController.catalogResponse?.id ?? '';
 
+  // Multi-catálogo
+  List<CatalogModel> get catalogs => _catalogController.catalogs;
+  RxList<CatalogModel> get catalogsRx => _catalogController.catalogsRx;
+  int get selectedCatalogIndex => _catalogController.selectedCatalogIndex;
+  RxInt get selectedCatalogIndexRx => _catalogController.selectedCatalogIndexRx;
+  bool get hasMultipleCatalogs => _catalogController.hasMultipleCatalogs;
+
   // Estado de carga y errores
   bool get isLoadHomeItems => _catalogController.isLoading || _filterController.isLoading;
   RxBool get isLoadingRx => _catalogController.isLoadingRx;
@@ -228,6 +235,22 @@ class HomeController extends GetxController {
         description: catalog.description ?? 'Catálogo de productos y servicios',
       );
     }
+  }
+
+  /// Selecciona un catálogo por índice
+  void selectCatalog(int index) {
+    _catalogController.selectCatalog(index);
+    final catalog = _catalogController.catalogResponse;
+    if (catalog != null) {
+      HtmlMetadataHelper.updateCommerceMetadata(
+        name: catalog.name ?? 'MenuCom',
+        logoUrl: catalog.coverImageUrl,
+        description: catalog.description ?? 'Catálogo de productos y servicios',
+      );
+    }
+    _filterController.clearFilters();
+    _filterController.setMenuItems(_catalogController.allMenuItems);
+    update();
   }
 
   /// Getter para el owner ID (compatibilidad con órdenes)
