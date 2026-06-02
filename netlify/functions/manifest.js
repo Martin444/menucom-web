@@ -80,14 +80,14 @@ function buildIcons(coverImageUrl) {
         { src: coverImageUrl, sizes: '512x512', type: 'image/png', purpose: 'any' },
       );
     }
+  } else {
+    icons.push(
+      { src: '/icons/menucom-192.png', sizes: '192x192', type: 'image/png' },
+      { src: '/icons/menucom-512.png', sizes: '512x512', type: 'image/png' },
+      { src: '/icons/menucom-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+      { src: '/icons/menucom-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+    );
   }
-
-  icons.push(
-    { src: '/icons/menucom-192.png', sizes: '192x192', type: 'image/png' },
-    { src: '/icons/menucom-512.png', sizes: '512x512', type: 'image/png' },
-    { src: '/icons/menucom-maskable-192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
-    { src: '/icons/menucom-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
-  );
 
   return icons;
 }
@@ -155,7 +155,7 @@ exports.handler = async (event) => {
       name: name,
       short_name: name.length > 12 ? name.substring(0, 12) : name,
       description: description,
-      start_url: '/',
+      start_url: '/' + id,
       scope: '/',
       display: 'standalone',
       background_color: backgroundColor,
