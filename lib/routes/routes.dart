@@ -12,4 +12,7 @@ class PURoutes {
   /// Ejemplo: /2229f1e3-2152-474a-94fc-efd8327f6d0c
   /// ⚠️ Esta debe ir al final en pages.dart para no capturar rutas específicas
   static String COMMERCE_DETAIL = '/:commerceId';
+
+  /// Variante con trailing slash para PWA scope
+  static String COMMERCE_DETAIL_TRAILING = '/:commerceId/';
 }

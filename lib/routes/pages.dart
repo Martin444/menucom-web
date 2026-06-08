@@ -51,5 +51,12 @@ class PUPages {
       transition: Transition.fadeIn,
       bindings: [CatalogBinding()],
     ),
+    // Variante con trailing slash para PWA scope
+    GetPage(
+      name: PURoutes.COMMERCE_DETAIL_TRAILING,
+      page: () => const HomePage(),
+      transition: Transition.fadeIn,
+      bindings: [CatalogBinding()],
+    ),
   ];
 }
