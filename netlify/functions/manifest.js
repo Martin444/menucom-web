@@ -4,6 +4,7 @@
 // O como: /manifest.json?id={commerceId} (via redirect en netlify.toml)
 
 const DEFAULT_MANIFEST = {
+  id: '/',
   name: 'Menucom Catalogo',
   short_name: 'Menucom',
   description: 'Catalogo para clientes CSM',
@@ -152,6 +153,7 @@ exports.handler = async (event) => {
     }
 
     const manifest = {
+      id: '/' + id,
       name: name,
       short_name: name.length > 12 ? name.substring(0, 12) : name,
       description: description,
