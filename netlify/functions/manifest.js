@@ -153,12 +153,12 @@ exports.handler = async (event) => {
     }
 
     const manifest = {
-      id: '/' + id + '/',
+      id: '/' + id,
       name: name,
       short_name: name.length > 12 ? name.substring(0, 12) : name,
       description: description,
-      start_url: '/' + id + '/',
-      scope: '/' + id + '/',
+      start_url: '/' + id,
+      scope: '/' + id,
       display: 'standalone',
       background_color: backgroundColor,
       theme_color: themeColor,
