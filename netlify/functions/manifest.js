@@ -139,7 +139,7 @@ exports.handler = async (event) => {
 
     if (Array.isArray(catalogs) && catalogs.length > 0) {
       const commerce = catalogs[0].commerce;
-      name = commerce?.businessName || catalogs[0].name || name;
+      name = commerce?.name || catalogs[0].name || name;
       imageUrl = extractOriginalUrl(commerce?.logoUrl)
         || extractOriginalUrl(commerce?.coverImageUrl)
         || extractOriginalUrl(catalogs[0].coverImageUrl);
