@@ -206,3 +206,11 @@ Durante la migración, ambos sistemas coexisten:
 - `Get.find<HomeController>(tag: 'new')` → Sistema nuevo
 
 Esto permite migración sin downtime y rollback en caso de problemas.
+
+---
+
+## Referencias
+
+- [CODE-REVIEW.md](./CODE-REVIEW.md) — Índice del sistema de code reviews
+- [PROGRESS-TRACKER.md](./PROGRESS-TRACKER.md) — Seguimiento de fases y tareas
+- [FILTER-IMPROVEMENT-PLAN.md](./FILTER-IMPROVEMENT-PLAN.md) — Plan de mejoras de filtros

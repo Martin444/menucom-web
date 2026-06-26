@@ -121,7 +121,7 @@ exports.handler = async (event) => {
   }
 
   try {
-    const response = await fetchWithTimeout(`${API_URL}/catalogs/public/owner/${id}`);
+    const response = await fetchWithTimeout(`${API_URL}/catalogs/public/commerce/${id}`);
     if (!response.ok) {
       return {
         statusCode: 200,
@@ -138,10 +138,14 @@ exports.handler = async (event) => {
     let catalogSettings = null;
 
     if (Array.isArray(catalogs) && catalogs.length > 0) {
-      const owner = catalogs[0].owner;
-      name = owner?.name || catalogs[0].name || name;
-      imageUrl = extractOriginalUrl(owner?.photoURL) || extractOriginalUrl(catalogs[0].coverImageUrl);
-      description = catalogs.map(c => c.name).filter(Boolean).join(', ') || description;
+      const commerce = catalogs[0].commerce;
+      name = commerce?.businessName || catalogs[0].name || name;
+      imageUrl = extractOriginalUrl(commerce?.logoUrl)
+        || extractOriginalUrl(commerce?.coverImageUrl)
+        || extractOriginalUrl(catalogs[0].coverImageUrl);
+      description = commerce?.description
+        || catalogs.map(c => c.name).filter(Boolean).join(', ')
+        || description;
       catalogSettings = catalogs[0].settings;
     }
 

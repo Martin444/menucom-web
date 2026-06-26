@@ -1,3 +1,14 @@
+---
+tags:
+  - domain/events
+  - repo/catalog
+  - type/implementation
+  - status/completed
+aliases:
+  - Event Sales Flow Catalog
+  - Venta de Entradas PWA
+  - Flujo Venta Eventos
+---
 # Flujo de Venta para Organizador de Eventos - Menucom Catalog
 
 ## Visión General

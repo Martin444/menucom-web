@@ -65,7 +65,7 @@ class HeadHome extends StatelessWidget {
                     Expanded(
                       child: Obx(() {
                         final catalog = controller.catalogRx.value;
-                        final name = catalog?.owner?['name']?.toString() ?? catalog?.name ?? '';
+                        final name = catalog?.commerce?['name']?.toString() ?? catalog?.owner?['name']?.toString() ?? catalog?.name ?? '';
                         if (name.isEmpty) return const SizedBox();
                         return Text(
                           name,
@@ -85,11 +85,11 @@ class HeadHome extends StatelessWidget {
     });
   }
 
-  /// Avatar circular del owner (logo del negocio)
+  /// Avatar circular del comercio (logo del negocio)
   Widget _buildOwnerAvatar(HomeController controller) {
     return Obx(() {
       final catalog = controller.catalogRx.value;
-      final photoUrl = catalog?.owner?['photoURL']?.toString();
+      final photoUrl = catalog?.commerce?['logoUrl']?.toString() ?? catalog?.owner?['photoURL']?.toString();
       if (photoUrl == null || photoUrl.isEmpty) {
         return const SizedBox(width: 40);
       }

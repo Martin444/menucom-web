@@ -74,4 +74,7 @@
 - [cr-2026-05-27-completado.md](./code-reviews/cr-2026-05-27-completado.md) — Primer code review completo
 - [cr-2026-05-27-fase2-completado.md](./code-reviews/cr-2026-05-27-fase2-completado.md) — Code review Fase 2 implementada
 - [FILTER-IMPROVEMENT-PLAN.md](./FILTER-IMPROVEMENT-PLAN.md) — Plan detallado de mejoras de filtros
-- [EVENT-SALES-FLOW.md](./EVENT-SALES-FLOW.md) — Flujo de ventas (existente)
+- [EVENT-SALES-FLOW.md](./EVENT-SALES-FLOW.md) — Flujo de ventas de eventos
+- [ANONYMOUS_ID_SYSTEM.md](./ANONYMOUS_ID_SYSTEM.md) — Sistema de identificación anónima persistente
+- [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) — Guía de migración del sistema Anonymous ID
+- [REFACTORING_GUIDE.md](./REFACTORING_GUIDE.md) — Guía de refactorización a Clean Architecture

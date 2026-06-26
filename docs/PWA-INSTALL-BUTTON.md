@@ -1,3 +1,14 @@
+---
+tags:
+  - domain/ui-ux
+  - repo/catalog
+  - type/implementation
+  - status/completed
+aliases:
+  - PWA Install Button
+  - Instalación PWA
+  - Add to Home Screen
+---
 # PWA Install Button
 
 Botón de "Instalar aplicación" (Add to Home Screen) para el PWA de Menucom Catalog.
@@ -178,6 +189,16 @@ Script inline al inicio de `<head>` que:
 - La función se despliega automáticamente con el resto del proyecto (la ruta `netlify/functions/` está configurada en `netlify.toml`)
 - Usa `fetch` nativo de Node.js 18+ (no necesita dependencias)
 - El manifest se actualiza solo al cargar la página; si el usuario navega entre comercios sin recargar, el manifest no cambia (limitación del navegador, no re-descarga el manifest)
+
+---
+
+---
+
+## Referencias
+
+- [CODE-REVIEW.md](./CODE-REVIEW.md) — Índice del sistema de code reviews (incluye review de PWA Install Button)
+- [cr-2026-05-29-pwa-install-button.md](./code-reviews/cr-2026-05-29-pwa-install-button.md) — Code review específico del PWA Install Button
+- [EVENT-SALES-FLOW.md](./EVENT-SALES-FLOW.md) — Flujo de ventas de eventos
 
 ---
 

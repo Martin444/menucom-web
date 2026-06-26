@@ -64,7 +64,7 @@ Implementación sólida y bien documentada del botón de instalación PWA con ma
 
 ### ✅ Arquitectura limpia
 - Separación clara: JS (index.html) → Helper (dart) → Controller (GetX) → UI Atom
-- Documentación en `PWA-INSTALL-BUTTON.md` es completa y precisa
+- Documentación en [`PWA-INSTALL-BUTTON.md`](../PWA-INSTALL-BUTTON.md) es completa y precisa
 
 ### ✅ Manejo de edge cases
 - `triggerPwaInstall()` retorna `Promise.resolve(false)` si no hay prompt

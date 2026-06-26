@@ -198,3 +198,12 @@ Para pruebas, se puede:
 6. **Testeable**: Permite regeneración y limpieza fácil para testing
 
 Este sistema garantiza que todas las órdenes y requests puedan ser vinculadas en el backend para mejorar la experiencia del usuario y la funcionalidad de tracking.
+
+---
+
+## Referencias
+
+- [CODE-REVIEW.md](./CODE-REVIEW.md) — Índice del sistema de code reviews
+- [PROGRESS-TRACKER.md](./PROGRESS-TRACKER.md) — Seguimiento de fases y tareas
+- [MIGRATION_GUIDE.md](./MIGRATION_GUIDE.md) — Guía de migración del sistema Anonymous ID
+- [EVENT-SALES-FLOW.md](./EVENT-SALES-FLOW.md) — Flujo de ventas de eventos

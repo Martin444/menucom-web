@@ -24,17 +24,36 @@ class OrderController extends GetxController {
   static const String _orderStorageKey = 'pending_order_data';
   static const String _orderStatusKey = 'pending_order_status';
 
-  // Variable para almacenar el ownerId
+  // Variable para almacenar el ownerId (userId legacy)
   RxString ownerId = ''.obs;
 
-  // Método para establecer el ownerId (llamado desde la UI)
+  // Variable para almacenar el commerceId (multi-tenant)
+  RxString commerceId = ''.obs;
+
+  // Método para establecer los identificadores del comercio
+  void setCommerceIdentifiers({
+    String? ownerIdValue,
+    String? commerceIdValue,
+  }) {
+    if (ownerIdValue != null) ownerId.value = ownerIdValue;
+    if (commerceIdValue != null) commerceId.value = commerceIdValue;
+  }
+
+  // Método para establecer el ownerId (llamado desde la UI) — mantenido para compatibilidad
   void setOwnerId(String ownerIdValue) {
     ownerId.value = ownerIdValue;
+  }
+
+  // Método para limpiar los identificadores
+  void clearCommerceIdentifiers() {
+    ownerId.value = '';
+    commerceId.value = '';
   }
 
   // Método para limpiar el ownerId cuando sea necesario
   void clearOwnerId() {
     ownerId.value = '';
+    commerceId.value = '';
   }
 
   @override
@@ -126,6 +145,7 @@ class OrderController extends GetxController {
         total: list.fold<double>(0.0, (double sum, item) => sum + ((item.price ?? 0.0) * (item.quantity ?? 1))),
         status: 'pending',
         ownerId: ownerId.value.isNotEmpty ? ownerId.value : null,
+        commerceId: commerceId.value.isNotEmpty ? commerceId.value : null,
       );
       Get.toNamed(PURoutes.CONFIRMORDER, arguments: order);
       orders.value = order;
@@ -143,10 +163,11 @@ class OrderController extends GetxController {
   void saveContactToLastOrder(String contact) async {
     debugPrint('[ORDER] saveContactToLastOrder iniciado con contact: $contact');
     
-    // Validación de información del comercio (ownerId)
+    // Validación de información del comercio
     final currentOwnerId = ownerId.value.isNotEmpty ? ownerId.value : orders.value.ownerId;
-    if (currentOwnerId == null || currentOwnerId.isEmpty) {
-      debugPrint('[ORDER] ERROR: No hay información del comercio (ownerId)');
+    final currentCommerceId = commerceId.value.isNotEmpty ? commerceId.value : orders.value.commerceId;
+    if ((currentOwnerId == null || currentOwnerId.isEmpty) && (currentCommerceId == null || currentCommerceId.isEmpty)) {
+      debugPrint('[ORDER] ERROR: No hay información del comercio');
       errorText.value = 'Información del comercio incompleta';
       Get.snackbar(
         'Error de Comercio',
@@ -163,6 +184,7 @@ class OrderController extends GetxController {
     final updatedOrder = orders.value.copyWith(
       customerEmail: contactInfo,
       ownerId: currentOwnerId,
+      commerceId: currentCommerceId,
     );
     orders.value = updatedOrder;
     isOrderLoading.value = true;

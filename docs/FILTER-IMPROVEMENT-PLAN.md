@@ -1,3 +1,13 @@
+---
+tags:
+  - domain/catalog
+  - repo/catalog
+  - type/plan
+  - status/in-progress
+aliases:
+  - Filter Improvement Plan
+  - Mejora de Filtros
+---
 # Plan de Mejora de Filtros - Menucom Catalog
 
 **Fecha:** Mayo 2026  

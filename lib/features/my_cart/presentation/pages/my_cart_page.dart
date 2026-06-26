@@ -32,7 +32,10 @@ class MyCartPage extends StatelessWidget {
         builder: (controller) => CartOrderSummary(
           total: controller.totalOrder,
           onContinue: () {
-            orderController.setOwnerId(controller.persistedOwnerId.value);
+            orderController.setCommerceIdentifiers(
+              ownerIdValue: controller.persistedOwnerId.value,
+              commerceIdValue: controller.persistedCommerceId.value,
+            );
             orderController.createOrder(controller.listMenuSelected);
           },
         ),

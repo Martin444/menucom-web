@@ -187,6 +187,6 @@ Solo permite una categoria a la vez. El UX natural esperaria seleccion multiple.
 | `home_controller.dart` | Eliminados `_sortBy`, `_getFilteredAndSortedItems()`, y metodo redundante de sort; `filteredMenuItems` apunta a `_filterController.sortedFilteredItems`; `clearFilters()` y `setSortBy()` delegan directamente |
 | `search_filter_bar.dart` | Convertido de `StatelessWidget` a `StatefulWidget`; `_searchController` con dispose; sincronizacion de texto con estado reactivo; deprecations `withOpacity` → `withValues(alpha:)` |
 | `catalog_item_tile.dart` | `ingredients` cambiado de cast manual a `item.ingredientsList` |
-| `docs/CODE-REVIEW.md` | Actualizado con estado de correcciones |
-| `docs/FILTER-IMPROVEMENT-PLAN.md` | Creado con plan de 3 fases |
-| `docs/PROGRESS-TRACKER.md` | Creado con seguimiento de tareas |
+| [`docs/CODE-REVIEW.md`](../CODE-REVIEW.md) | Actualizado con estado de correcciones |
+| [`docs/FILTER-IMPROVEMENT-PLAN.md`](../FILTER-IMPROVEMENT-PLAN.md) | Creado con plan de 3 fases |
+| [`docs/PROGRESS-TRACKER.md`](../PROGRESS-TRACKER.md) | Creado con seguimiento de tareas |

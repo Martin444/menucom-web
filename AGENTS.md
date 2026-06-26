@@ -182,3 +182,45 @@ Después de cada code review:
 ---
 
 > **Importante:** Este sistema es parte del proyecto Menucom Catalog. Los code reviews deben ser breves pero completos, priorizando bugs críticos y problemas de arquitectura sobre estilo menor.
+
+---
+
+## 7. Alineación con la Misión: Profesionalización del Emprendedor
+
+> Misión global: **Convertir a los Emprendedores en profesionales**
+
+### Rol del Catálogo PWA en la Misión
+
+El PWA de catálogo es la **vidriera profesional del emprendedor**. Es lo primero que ve el cliente. Debe transmitir confianza, orden y profesionalismo.
+
+### Lo que ya aportamos a la misión
+- ✅ Navegación profesional (grid/list, búsqueda, filtros, categorías)
+- ✅ Checkout con MercadoPago (múltiples medios de pago)
+- ✅ PWA instalable (acceso directo, sin App Store)
+- ✅ Soporte multi-catálogo (varios rubros por comercio)
+- ✅ Visualización de precios, fotos, descripciones, atributos
+- ✅ Carrito de compras funcional
+
+### Lo que falta (gaps del catálogo)
+
+| Gap | Impacto en misión | Prioridad |
+|-----|-------------------|-----------|
+| **Perfil del negocio visible** (horarios, redes, reseñas) | El cliente no confía en un "listado de precios" sin contexto del negocio | 🔴 Alta |
+| **Reseñas y valoraciones** en productos | El cliente no puede validar calidad. `averageRating` existe pero no se muestra ni se puede crear | 🔴 Alta |
+| **WhatsApp/contacto directo** | Un profesional ofrece canales de comunicación directa | 🟡 Media |
+| **Políticas del negocio** (envío, devolución, garantía) | El cliente necesita saber términos antes de comprar | 🟡 Media |
+| **Disponibilidad en tiempo real** (stock, horario) | Nada peor que comprar algo que no está disponible | 🟡 Media |
+| **Multi-idioma** | Para alcance global | 🟢 Baja |
+
+### Reglas para nuevas features en el catálogo
+
+```dart
+// CHECKLIST: ¿Esta feature aporta a la misión?
+// 1. ¿Hace que el emprendedor luzca más profesional ante el cliente?
+// 2. ¿Aumenta la confianza del cliente para comprar?
+// 3. ¿Reduce la fricción de la experiencia de compra?
+// 4. ¿Da información útil para la decisión de compra?
+```
+
+### Documentos relacionados
+- `docs/PROGRESS-TRACKER.md` — Seguimiento de fases y tareas del proyecto

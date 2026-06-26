@@ -18,6 +18,7 @@ class HomeController extends GetxController {
 
   final RxBool _isGridView = true.obs;
   final RxString _persistedOwnerId = ''.obs;
+  final RxString _persistedCommerceId = ''.obs;
 
   HomeController({
     CatalogController? catalogController,
@@ -40,13 +41,14 @@ class HomeController extends GetxController {
   
   // Compatibilidad con getters antiguos
   String? get ownerId => _catalogController.ownerId;
-  String get nameComerce => _catalogController.catalogResponse?.name ?? '';
-  String get currentOwnerId => _catalogController.catalogResponse?.id ?? '';
+  String get nameComerce => _catalogController.catalogResponse?.commerce?['name']?.toString() ?? _catalogController.catalogResponse?.owner?['name']?.toString() ?? _catalogController.catalogResponse?.name ?? '';
+  String get currentOwnerId => _catalogController.catalogResponse?.commerce?['id']?.toString() ?? _catalogController.catalogResponse?.owner?['id']?.toString() ?? _catalogController.catalogResponse?.id ?? '';
 
-  // Datos del owner (negocio)
+  // Datos del comercio (owner legacy + commerce nuevo)
   Map<String, dynamic>? get owner => _catalogController.catalogResponse?.owner;
-  String? get ownerName => _catalogController.catalogResponse?.owner?['name']?.toString();
-  String? get ownerPhotoUrl => _catalogController.catalogResponse?.owner?['photoURL']?.toString();
+  Map<String, dynamic>? get commerceData => _catalogController.catalogResponse?.commerce;
+  String? get ownerName => _catalogController.catalogResponse?.commerce?['name']?.toString() ?? _catalogController.catalogResponse?.owner?['name']?.toString();
+  String? get ownerPhotoUrl => _catalogController.catalogResponse?.commerce?['logoUrl']?.toString() ?? _catalogController.catalogResponse?.owner?['photoURL']?.toString();
 
   // Multi-catálogo
   List<CatalogModel> get catalogs => _catalogController.catalogs;
@@ -182,7 +184,7 @@ class HomeController extends GetxController {
       if (hasValidToken) {
         loadMenu(ownerId);
       } else {
-        loadPublicCatalogsByOwnerId(ownerId);
+        loadPublicCatalogsByCommerce(ownerId);
       }
     } else {
       // Si no hay ownerId, dejamos de cargar
@@ -196,12 +198,13 @@ class HomeController extends GetxController {
 
     if (_catalogController.catalogResponse != null) {
       final catalog = _catalogController.catalogResponse!;
-      _persistedOwnerId.value = catalog.id;
-      await _cartController.validateCartOwner(catalog.ownerId ?? catalog.id);
+      _persistedOwnerId.value = catalog.ownerId;
+      _persistedCommerceId.value = catalog.commerceId ?? '';
+      await _cartController.validateCartOwner(catalog.commerceId ?? catalog.ownerId ?? catalog.id);
 
       HtmlMetadataHelper.updateCommerceMetadata(
-        name: catalog.name ?? 'MenuCom',
-        logoUrl: catalog.coverImageUrl,
+        name: catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom',
+        logoUrl: catalog.commerce?['logoUrl']?.toString() ?? catalog.coverImageUrl,
         description: catalog.description ?? 'Catálogo de productos y servicios',
       );
     }
@@ -214,29 +217,51 @@ class HomeController extends GetxController {
 
     if (_catalogController.catalogResponse != null) {
       final catalog = _catalogController.catalogResponse!;
-      _persistedOwnerId.value = catalog.id;
-      await _cartController.validateCartOwner(catalog.ownerId ?? catalog.id);
+      _persistedOwnerId.value = catalog.ownerId;
+      _persistedCommerceId.value = catalog.commerceId ?? '';
+      await _cartController.validateCartOwner(catalog.commerceId ?? catalog.ownerId ?? catalog.id);
 
       HtmlMetadataHelper.updateCommerceMetadata(
-        name: catalog.name ?? 'MenuCom',
-        logoUrl: catalog.coverImageUrl,
+        name: catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom',
+        logoUrl: catalog.commerce?['logoUrl']?.toString() ?? catalog.coverImageUrl,
         description: catalog.description ?? 'Catálogo de productos y servicios',
       );
     }
   }
 
-  /// Carga catálogos públicos por ownerId
+  /// Carga catálogos públicos por identificador de comercio (slug o UUID)
+  /// Reemplaza al obsoleto loadPublicCatalogsByOwnerId
+  Future<void> loadPublicCatalogsByCommerce(String identifier) async {
+    await _catalogController.loadPublicCatalogsByCommerce(identifier);
+
+    if (_catalogController.catalogResponse != null) {
+      final catalog = _catalogController.catalogResponse!;
+      _persistedOwnerId.value = catalog.ownerId;
+      _persistedCommerceId.value = catalog.commerceId ?? identifier;
+      await _cartController.validateCartOwner(catalog.commerceId ?? catalog.ownerId ?? catalog.id);
+
+      final commerceName = catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom';
+      HtmlMetadataHelper.updateCommerceMetadata(
+        name: commerceName,
+        logoUrl: catalog.commerce?['logoUrl']?.toString() ?? catalog.coverImageUrl,
+        description: catalog.commerce?['description']?.toString() ?? catalog.description ?? 'Catálogo de productos y servicios',
+      );
+    }
+  }
+
+  /// @deprecated Usar loadPublicCatalogsByCommerce
   Future<void> loadPublicCatalogsByOwnerId(String ownerId) async {
     await _catalogController.loadPublicCatalogsByOwnerId(ownerId);
 
     if (_catalogController.catalogResponse != null) {
       final catalog = _catalogController.catalogResponse!;
       _persistedOwnerId.value = ownerId;
+      _persistedCommerceId.value = catalog.commerceId ?? '';
       await _cartController.validateCartOwner(ownerId);
 
       HtmlMetadataHelper.updateCommerceMetadata(
-        name: catalog.name ?? 'MenuCom',
-        logoUrl: catalog.coverImageUrl,
+        name: catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom',
+        logoUrl: catalog.commerce?['logoUrl']?.toString() ?? catalog.coverImageUrl,
         description: catalog.description ?? 'Catálogo de productos y servicios',
       );
     }
@@ -247,9 +272,11 @@ class HomeController extends GetxController {
     _catalogController.selectCatalog(index);
     final catalog = _catalogController.catalogResponse;
     if (catalog != null) {
+      _persistedOwnerId.value = catalog.ownerId;
+      _persistedCommerceId.value = catalog.commerceId ?? '';
       HtmlMetadataHelper.updateCommerceMetadata(
-        name: catalog.name ?? 'MenuCom',
-        logoUrl: catalog.coverImageUrl,
+        name: catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom',
+        logoUrl: catalog.commerce?['logoUrl']?.toString() ?? catalog.coverImageUrl,
         description: catalog.description ?? 'Catálogo de productos y servicios',
       );
     }
@@ -260,6 +287,9 @@ class HomeController extends GetxController {
 
   /// Getter para el owner ID (compatibilidad con órdenes)
   RxString get persistedOwnerId => _persistedOwnerId;
+
+  /// Getter para el commerce ID (multi-tenant)
+  RxString get persistedCommerceId => _persistedCommerceId;
 
   /// Aumenta la cantidad de un item en el carrito
   void addquantityItem(CartItemModel item) {

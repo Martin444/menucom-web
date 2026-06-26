@@ -210,3 +210,11 @@ print('Nuevo ID: $newId');
 - Verificar que se está usando el servicio correcto en tests
 
 El sistema está completo y listo para producción. Todos los requests HTTP ahora incluirán automáticamente el header `X-Anonymous-Id` para permitir el tracking de usuarios anónimos en el backend.
+
+---
+
+## Referencias
+
+- [CODE-REVIEW.md](./CODE-REVIEW.md) — Índice del sistema de code reviews
+- [PROGRESS-TRACKER.md](./PROGRESS-TRACKER.md) — Seguimiento de fases y tareas
+- [ANONYMOUS_ID_SYSTEM.md](./ANONYMOUS_ID_SYSTEM.md) — Documentación del sistema Anonymous ID

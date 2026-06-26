@@ -2,11 +2,13 @@ import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
 import 'package:menu_dart_api/by_feature/catalog/data/usecase/get_public_catalog_by_id_usecase.dart';
 import 'package:menu_dart_api/by_feature/catalog/data/usecase/get_public_catalogs_by_owner_id_usecase.dart';
+import 'package:menu_dart_api/by_feature/catalog/data/usecase/get_public_catalogs_by_commerce_usecase.dart';
 
 class CatalogController extends GetxController {
   final GetCatalogByIdUseCase _getCatalogUseCase;
   final GetPublicCatalogByIdUseCase _getPublicCatalogUseCase;
   final GetPublicCatalogsByOwnerIdUseCase _getPublicCatalogsByOwnerIdUseCase;
+  final GetPublicCatalogsByCommerceUseCase _getPublicCatalogsByCommerceUseCase;
 
   // Estado reactivo
   final Rx<CatalogModel?> _catalogResponse = Rx<CatalogModel?>(null);
@@ -24,9 +26,11 @@ class CatalogController extends GetxController {
     GetCatalogByIdUseCase? getCatalogUseCase,
     GetPublicCatalogByIdUseCase? getPublicCatalogUseCase,
     GetPublicCatalogsByOwnerIdUseCase? getPublicCatalogsByOwnerIdUseCase,
+    GetPublicCatalogsByCommerceUseCase? getPublicCatalogsByCommerceUseCase,
   })  : _getCatalogUseCase = getCatalogUseCase ?? GetCatalogByIdUseCase(),
         _getPublicCatalogUseCase = getPublicCatalogUseCase ?? GetPublicCatalogByIdUseCase(),
-        _getPublicCatalogsByOwnerIdUseCase = getPublicCatalogsByOwnerIdUseCase ?? GetPublicCatalogsByOwnerIdUseCase();
+        _getPublicCatalogsByOwnerIdUseCase = getPublicCatalogsByOwnerIdUseCase ?? GetPublicCatalogsByOwnerIdUseCase(),
+        _getPublicCatalogsByCommerceUseCase = getPublicCatalogsByCommerceUseCase ?? GetPublicCatalogsByCommerceUseCase();
 
   // Getters públicos (solo lectura)
   CatalogModel? get catalogResponse => _catalogResponse.value;
@@ -123,6 +127,36 @@ class CatalogController extends GetxController {
         _flattenMenuItems();
       } else {
         _error.value = 'No se encontraron catálogos públicos';
+      }
+    } catch (e) {
+      _error.value = 'Error al carregar catálogos: ${e.toString()}';
+      _catalogResponse.value = null;
+      _allMenuItems.clear();
+      _catalogs.clear();
+    } finally {
+      _isLoading.value = false;
+    }
+  }
+
+  /// Carga catálogos públicos de un comercio por slug o UUID
+  Future<void> loadPublicCatalogsByCommerce(String identifier) async {
+    if (identifier.isEmpty) {
+      _error.value = 'Identificador de comercio no válido';
+      return;
+    }
+
+    try {
+      _isLoading.value = true;
+      _error.value = '';
+
+      final catalogs = await _getPublicCatalogsByCommerceUseCase.execute(identifier);
+      if (catalogs.isNotEmpty) {
+        _catalogs.value = catalogs;
+        _selectedCatalogIndex.value = 0;
+        _catalogResponse.value = catalogs.first;
+        _flattenMenuItems();
+      } else {
+        _error.value = 'No se encontraron catálogos públicos para este comercio';
       }
     } catch (e) {
       _error.value = 'Error al carregar catálogos: ${e.toString()}';
