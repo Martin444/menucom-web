@@ -41,8 +41,10 @@
       var pathParts = window.location.pathname.split('/').filter(Boolean);
       if (pathParts.length > 0) {
         var last = pathParts[pathParts.length - 1];
+        // Accept both UUIDs and slug-based identifiers (e.g., "martina-pizzeria")
         var uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-        if (uuidPattern.test(last)) {
+        var slugPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/i;
+        if (uuidPattern.test(last) || slugPattern.test(last)) {
           commerceId = last;
         }
       }
