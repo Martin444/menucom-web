@@ -1,21 +1,5 @@
 // Edge Function para interceptar bots sociales y servir meta tags optimizados
-// API: /catalogs/public/commerce/{identifier} → { data: [{ commerce: { businessName, logoUrl, description } }, ...] }
-// identifier acepta tanto slug como UUID
-
-function extractOriginalUrl(proxyUrl) {
-  if (!proxyUrl || typeof proxyUrl !== 'string') return proxyUrl;
-  let originalUrl = proxyUrl;
-  try {
-    const urlObj = new URL(proxyUrl);
-    if (urlObj.searchParams.has('url')) {
-      originalUrl = decodeURIComponent(urlObj.searchParams.get('url'));
-    }
-  } catch (e) {}
-  if (typeof originalUrl === 'string') {
-    originalUrl = originalUrl.replace(/^http:\/\//i, 'https://');
-  }
-  return originalUrl;
-}
+// API: /catalogs/public/commerce/{identifier}/og → { title, description, imageUrl, siteName }
 
 export default async (request, context) => {
   const url = new URL(request.url);
@@ -54,23 +38,16 @@ export default async (request, context) => {
     let title = 'MenuCom';
     let description = 'Consulta nuestro catálogo de productos y servicios';
     let imageUrl = 'https://menu-comerce.netlify.app/default-image.png';
+    let siteName = 'MenuCom';
 
-    const catalogResponse = await fetchWithTimeout(`${API_URL}/catalogs/public/commerce/${commerceId}`);
+    const ogResponse = await fetchWithTimeout(`${API_URL}/catalogs/public/commerce/${commerceId}/og`);
 
-    if (catalogResponse.ok) {
-      const body = await catalogResponse.json();
-      const catalogs = body?.data;
-      if (Array.isArray(catalogs) && catalogs.length > 0) {
-        const commerce = catalogs[0].commerce;
-        title = commerce?.businessName || catalogs[0].name || title;
-        imageUrl = extractOriginalUrl(commerce?.logoUrl)
-          || extractOriginalUrl(commerce?.coverImageUrl)
-          || extractOriginalUrl(catalogs[0].coverImageUrl)
-          || imageUrl;
-        description = commerce?.description
-          || catalogs.map(c => c.name).filter(Boolean).join(', ')
-          || description;
-      }
+    if (ogResponse.ok) {
+      const data = await ogResponse.json();
+      title = data.title || title;
+      description = data.description || description;
+      imageUrl = data.imageUrl || imageUrl;
+      siteName = data.siteName || siteName;
     }
 
     const sanitize = (str) => {
@@ -92,7 +69,7 @@ export default async (request, context) => {
   <meta property="og:image:height" content="630" />
   <meta property="og:url" content="${request.url}" />
   <meta property="og:type" content="website" />
-  <meta property="og:site_name" content="MenuCom" />
+  <meta property="og:site_name" content="${sanitize(siteName)}" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${safeTitle}" />
   <meta name="twitter:description" content="${safeDescription}" />
