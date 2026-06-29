@@ -43,11 +43,12 @@ export default async (request, context) => {
     const ogResponse = await fetchWithTimeout(`${API_URL}/catalogs/public/commerce/${commerceId}/og`);
 
     if (ogResponse.ok) {
-      const data = await ogResponse.json();
-      title = data.title || title;
-      description = data.description || description;
-      imageUrl = data.imageUrl || imageUrl;
-      siteName = data.siteName || siteName;
+      const body = await ogResponse.json();
+      const og = body.data || body;
+      title = og.title || title;
+      description = og.description || description;
+      imageUrl = og.imageUrl || imageUrl;
+      siteName = og.siteName || siteName;
     }
 
     const sanitize = (str) => {

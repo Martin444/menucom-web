@@ -61,7 +61,8 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers, body: JSON.stringify(DEFAULT_MANIFEST) };
     }
 
-    const manifest = await response.json();
+    const body = await response.json();
+    const manifest = body.data || body;
 
     return {
       statusCode: 200,
