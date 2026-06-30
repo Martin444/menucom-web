@@ -2,6 +2,8 @@ import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
 import '../../../shared/utils/debouncer.dart';
 import '../../../shared/utils/text_normalizer.dart';
+import 'package:menucom_catalog/core/analytics_service.dart';
+import 'package:menucom_catalog/core/analytics_events.dart';
 
 class FilterController extends GetxController {
   final RxString _searchQuery = ''.obs;
@@ -125,7 +127,20 @@ class FilterController extends GetxController {
 
   void updateSearchQuery(String query) {
     _searchQuery.value = query;
-    _searchDebouncer.run(_applyFilters);
+    if (query.isNotEmpty) {
+      _searchDebouncer.run(() {
+        _applyFilters();
+        AnalyticsService().logEvent(
+          name: AnalyticsEvents.searchPerformed,
+          parameters: {
+            AnalyticsParams.searchQuery: query,
+            AnalyticsParams.resultCount: _filteredItems.length,
+          },
+        );
+      });
+    } else {
+      _applyFilters();
+    }
   }
 
   void toggleCategory(String category) {
@@ -167,6 +182,12 @@ class FilterController extends GetxController {
   void setSortBy(String sortOption) {
     _sortBy.value = sortOption;
     _sortFilteredItems();
+    if (sortOption != 'none') {
+      AnalyticsService().logEvent(
+        name: AnalyticsEvents.sortChanged,
+        parameters: {AnalyticsParams.sortOrder: sortOption},
+      );
+    }
   }
 
   void clearFilters() {
@@ -179,6 +200,7 @@ class FilterController extends GetxController {
     _minPrice.value = 0.0;
     _maxPrice.value = _priceUpperBound.value;
     _applyFilters();
+    AnalyticsService().logEvent(name: AnalyticsEvents.filterCleared);
   }
 
   void _applyFilters() {
@@ -217,6 +239,21 @@ class FilterController extends GetxController {
 
       _filteredItems.value = result;
       _sortFilteredItems();
+
+      if (hasActiveFilters) {
+        AnalyticsService().logEvent(
+          name: AnalyticsEvents.filterApplied,
+          parameters: {
+            if (_selectedCategories.isNotEmpty) AnalyticsParams.categories: _selectedCategories.toList().toString(),
+            if (_showOnlyAvailable.value) 'available': true,
+            if (_showOnlyOnSale.value) 'on_sale': true,
+            if (_showOnlyFeatured.value) 'featured': true,
+            if (_minPrice.value > 0 || _maxPrice.value < _priceUpperBound.value)
+              'price_range': '${_minPrice.value}-${_maxPrice.value}',
+            AnalyticsParams.resultCount: result.length,
+          },
+        );
+      }
     } finally {
       _isLoading.value = false;
     }

@@ -6,6 +6,7 @@ import 'package:menu_dart_api/by_feature/auth/social_login/model/social_login_re
 import 'package:menu_dart_api/core/api.dart';
 import '../firebase_config.dart';
 import '../config.dart';
+import '../analytics_service.dart';
 
 class GoogleAuthService {
   static final GoogleAuthService _instance = GoogleAuthService._internal();
@@ -44,6 +45,9 @@ class GoogleAuthService {
       );
 
       _updateGlobalAuthState(response, googleUser.displayName);
+
+      AnalyticsService().logLogin(method: 'google');
+      AnalyticsService().setUserId(response.user?.id.toString());
 
       return response;
     } catch (e) {
@@ -94,6 +98,9 @@ class GoogleAuthService {
 
       _updateGlobalAuthState(response, googleUser?.displayName ?? firebaseUser?.displayName);
 
+      AnalyticsService().logLogin(method: 'google_silent');
+      AnalyticsService().setUserId(response.user?.id.toString());
+
       return response;
     } catch (e) {
       debugPrint('Silent Sign-In Error: $e');
@@ -122,6 +129,8 @@ class GoogleAuthService {
   Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();
+      AnalyticsService().logLogout();
+      AnalyticsService().setUserId(null);
       ACCESS_TOKEN = '';
       API.setAccessToken('');
       NAME_USER = '';

@@ -14,6 +14,8 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 import '../presentation/widgets/order_status_config.dart';
 import 'package:menucom_catalog/features/home/controllers/cart_controller.dart';
+import 'package:menucom_catalog/core/analytics_service.dart';
+import 'package:menucom_catalog/core/analytics_events.dart';
 
 class OrderController extends GetxController {
   IO.Socket? _socket;
@@ -150,7 +152,17 @@ class OrderController extends GetxController {
       Get.toNamed(PURoutes.CONFIRMORDER, arguments: order);
       orders.value = order;
       isLoading.value = false;
+
+      AnalyticsService().logEvent(
+        name: AnalyticsEvents.checkoutStarted,
+        parameters: {
+          AnalyticsParams.itemCount: list.length,
+          AnalyticsParams.orderTotal: order.total ?? 0,
+          AnalyticsParams.catalogId: order.commerceId ?? order.ownerId ?? '',
+        },
+      );
     } catch (e) {
+      AnalyticsService().logErrorWithException(e, context: 'order_controller.createOrder');
       rethrow;
     }
   }
@@ -299,6 +311,16 @@ class OrderController extends GetxController {
     }
 
     debugPrint('[PAY] Usando redirección a: $targetUrl');
+
+    AnalyticsService().logEvent(
+      name: AnalyticsEvents.paymentInitiated,
+      parameters: {
+        AnalyticsParams.orderId: _extractPreferenceId(targetUrl),
+        AnalyticsParams.orderTotal: orders.value.total ?? 0,
+        AnalyticsParams.paymentMethod: 'mercadopago',
+      },
+    );
+
     await redirectToMercadoPagoCheckout(targetUrl);
   }
 
@@ -347,6 +369,16 @@ class OrderController extends GetxController {
       orderStatus.refresh();
       isOrderLoading.value = false;
       isOrderLoading.refresh();
+
+      AnalyticsService().logEvent(
+        name: AnalyticsEvents.checkoutCompleted,
+        parameters: {
+          AnalyticsParams.orderId: data['orderId']?.toString() ?? '',
+          AnalyticsParams.orderTotal: orders.value.total ?? 0,
+          AnalyticsParams.orderStatus: 'confirmed',
+        },
+      );
+
       // Cerrar modal si está abierto
       try {
         if (Get.isOverlaysOpen == true) {

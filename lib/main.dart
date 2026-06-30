@@ -9,7 +9,9 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:pu_material/pu_material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:menucom_catalog/core/services/google_auth_service.dart';
+import 'package:menucom_catalog/core/analytics_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,21 +19,18 @@ void main() async {
   if (Firebase.apps.isEmpty) {
     await Firebase.initializeApp(options: FirebaseConfig.currentPlatform);
   } else {
-    // Si ya existe, usamos la instancia actual
     Firebase.app();
   }
+
+  AnalyticsService().init();
   
   await inicialiceServiceMenucomAPi();
   runApp(const MyApp());
 
-  // Intentar restaurar sesión de forma silenciosa en segundo plano
-  // (útil para persistir login tras recargas en Flutter Web)
   try {
     // ignore: unawaited_futures
     GoogleAuthService().signInSilently();
-  } catch (_) {
-    // Silencioso, no bloqueamos el inicio de la app
-  }
+  } catch (_) {}
 }
 
 Future<void> inicialiceServiceMenucomAPi() async {
@@ -49,10 +48,51 @@ Future<void> inicialiceServiceMenucomAPi() async {
   }
 }
 
-class MyApp extends StatelessWidget {
+
+
+class _AnalyticsLifecycleObserver extends WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        AnalyticsService().logAppResumed();
+        break;
+      case AppLifecycleState.paused:
+        AnalyticsService().logAppBackground();
+        break;
+      case AppLifecycleState.detached:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.hidden:
+        break;
+    }
+  }
+}
+
+class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final _lifecycleObserver = _AnalyticsLifecycleObserver();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(_lifecycleObserver);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      AnalyticsService().logAppOpen();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(_lifecycleObserver);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
@@ -83,10 +123,12 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       initialRoute: PURoutes.HOME,
-      // home: const HomePage(),
       supportedLocales: const [
-        Locale('en'), // Inglés
-        Locale('es'), // españól
+        Locale('en'),
+        Locale('es'),
+      ],
+      navigatorObservers: [
+        FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
       ],
     );
   }

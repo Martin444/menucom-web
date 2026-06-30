@@ -3,6 +3,7 @@ import 'package:menu_dart_api/menu_com_api.dart';
 import 'package:menu_dart_api/by_feature/catalog/data/usecase/get_public_catalog_by_id_usecase.dart';
 import 'package:menu_dart_api/by_feature/catalog/data/usecase/get_public_catalogs_by_owner_id_usecase.dart';
 import 'package:menu_dart_api/by_feature/catalog/data/usecase/get_public_catalogs_by_commerce_usecase.dart';
+import 'package:menucom_catalog/core/analytics_service.dart';
 
 class CatalogController extends GetxController {
   final GetCatalogByIdUseCase _getCatalogUseCase;
@@ -72,12 +73,13 @@ class CatalogController extends GetxController {
       final response = await _getCatalogUseCase.execute(catalogId);
       _catalogResponse.value = response;
 
-      // Crear lista plana de todos los items para facilitar búsquedas
       _flattenMenuItems();
+      _logCatalogViewed();
     } catch (e) {
       _error.value = 'Error al cargar el catálogo: ${e.toString()}';
       _catalogResponse.value = null;
       _allMenuItems.clear();
+      AnalyticsService().logErrorWithException(e, context: 'catalog_controller.loadMenu');
     } finally {
       _isLoading.value = false;
     }
@@ -99,10 +101,12 @@ class CatalogController extends GetxController {
       _catalogResponse.value = response;
 
       _flattenMenuItems();
+      _logCatalogViewed();
     } catch (e) {
       _error.value = 'Error al carregar o catálogo: ${e.toString()}';
       _catalogResponse.value = null;
       _allMenuItems.clear();
+      AnalyticsService().logErrorWithException(e, context: 'catalog_controller.loadPublicMenu');
     } finally {
       _isLoading.value = false;
     }
@@ -125,6 +129,7 @@ class CatalogController extends GetxController {
         _selectedCatalogIndex.value = 0;
         _catalogResponse.value = catalogs.first;
         _flattenMenuItems();
+        _logCatalogViewed();
       } else {
         _error.value = 'No se encontraron catálogos públicos';
       }
@@ -133,6 +138,7 @@ class CatalogController extends GetxController {
       _catalogResponse.value = null;
       _allMenuItems.clear();
       _catalogs.clear();
+      AnalyticsService().logErrorWithException(e, context: 'catalog_controller.loadPublicCatalogsByOwnerId');
     } finally {
       _isLoading.value = false;
     }
@@ -155,6 +161,7 @@ class CatalogController extends GetxController {
         _selectedCatalogIndex.value = 0;
         _catalogResponse.value = catalogs.first;
         _flattenMenuItems();
+        _logCatalogViewed();
       } else {
         _error.value = 'No se encontraron catálogos públicos para este comercio';
       }
@@ -163,6 +170,7 @@ class CatalogController extends GetxController {
       _catalogResponse.value = null;
       _allMenuItems.clear();
       _catalogs.clear();
+      AnalyticsService().logErrorWithException(e, context: 'catalog_controller.loadPublicCatalogsByCommerce');
     } finally {
       _isLoading.value = false;
     }
@@ -186,6 +194,19 @@ class CatalogController extends GetxController {
   void _flattenMenuItems() {
     final items = _catalogResponse.value?.items ?? [];
     _allMenuItems.value = items;
+  }
+
+  void _logCatalogViewed() {
+    final catalog = _catalogResponse.value;
+    if (catalog == null) return;
+    AnalyticsService().logEvent(
+      name: 'catalog_viewed',
+      parameters: {
+        'catalog_id': catalog.id,
+        'catalog_name': catalog.name ?? '',
+        'item_count': _allMenuItems.length,
+      },
+    );
   }
 
   /// Permite establecer el estado de carga manualmente

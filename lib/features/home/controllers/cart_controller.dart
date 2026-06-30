@@ -5,6 +5,8 @@ import 'package:pu_material/pu_material.dart';
 import 'package:pu_material/organisms/cart/model/cart_item_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import 'package:menucom_catalog/core/analytics_service.dart';
+import 'package:menucom_catalog/core/analytics_events.dart';
 
 /// Controlador especializado para manejo del carrito de compras
 /// Responsable de gestionar items, cantidades, totales y persistencia
@@ -141,12 +143,30 @@ class CartController extends GetxController {
     }
 
     _calculateTotals();
+    AnalyticsService().logEvent(
+      name: AnalyticsEvents.cartAdd,
+      parameters: {
+        AnalyticsParams.itemId: catalogItem.id ?? '',
+        AnalyticsParams.itemName: catalogItem.name ?? '',
+        AnalyticsParams.productPrice: catalogItem.price,
+        AnalyticsParams.cartTotal: _total.value,
+        AnalyticsParams.cartQuantity: totalQuantity,
+      },
+    );
   }
 
   /// Remueve un item del carrito completamente
   void removeItem(String itemId) {
     _cartItems.removeWhere((item) => item.id == itemId);
     _calculateTotals();
+    AnalyticsService().logEvent(
+      name: AnalyticsEvents.cartRemove,
+      parameters: {
+        AnalyticsParams.itemId: itemId,
+        AnalyticsParams.cartTotal: _total.value,
+        AnalyticsParams.cartQuantity: totalQuantity,
+      },
+    );
   }
 
   /// Actualiza la cantidad de un item específico

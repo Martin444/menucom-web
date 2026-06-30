@@ -8,11 +8,27 @@ import 'package:pu_material/atoms/product_badge.dart';
 import 'package:pu_material/atoms/product_additional_info.dart';
 import 'package:pu_material/atoms/atom_button.dart';
 import 'package:get/get.dart';
+import 'package:menucom_catalog/core/analytics_service.dart';
+import 'package:menucom_catalog/core/analytics_events.dart';
 
 /// Organismo: Vista detalle de producto
 class ProductDetailPage extends StatelessWidget {
   factory ProductDetailPage.fromArguments() {
     final args = Get.arguments as Map<String, dynamic>? ?? {};
+    final CatalogItemModel? item = args['item'] as CatalogItemModel?;
+
+    if (item != null) {
+      AnalyticsService().logEvent(
+        name: AnalyticsEvents.productViewed,
+        parameters: {
+          AnalyticsParams.productId: item.id ?? '',
+          AnalyticsParams.productName: item.name,
+          AnalyticsParams.productPrice: item.price,
+          AnalyticsParams.productCategory: item.category ?? '',
+        },
+      );
+    }
+
     return ProductDetailPage(
       name: args['name'] is String ? args['name'] : '',
       description: args['description'] is String ? args['description'] : '',
@@ -22,7 +38,7 @@ class ProductDetailPage extends StatelessWidget {
       sizes: args['sizes'] as List<String>?,
       color: args['color'] as String?,
       onAddCart: args['onAddCart'],
-      item: args['item'] as CatalogItemModel?,
+      item: item,
     );
   }
 

@@ -7,6 +7,8 @@ import 'package:pu_material/pu_material.dart';
 import 'package:menucom_catalog/core/helpers/html_metadata_helper.dart';
 import 'package:menucom_catalog/core/config.dart';
 import 'package:menucom_catalog/shared/utils/helpers/token_helper.dart';
+import 'package:menucom_catalog/core/analytics_service.dart';
+import 'package:menucom_catalog/core/analytics_events.dart';
 
 /// Controlador coordinador que integra CatalogController, FilterController y CartController
 /// Reemplaza al monolítico MenuHomeCartController manteniendo compatibilidad con la UI (Catalog architecture)
@@ -283,6 +285,16 @@ class HomeController extends GetxController {
     _filterController.clearFilters();
     _filterController.setMenuItems(_catalogController.allMenuItems);
     update();
+
+    if (catalog != null) {
+      AnalyticsService().logEvent(
+        name: AnalyticsEvents.catalogSelected,
+        parameters: {
+          AnalyticsParams.catalogId: catalog.id,
+          AnalyticsParams.catalogName: catalog.name ?? '',
+        },
+      );
+    }
   }
 
   /// Getter para el owner ID (compatibilidad con órdenes)
@@ -349,6 +361,12 @@ class HomeController extends GetxController {
   void toggleViewMode() {
     _isGridView.value = !_isGridView.value;
     update();
+    AnalyticsService().logEvent(
+      name: AnalyticsEvents.viewModeChanged,
+      parameters: {
+        AnalyticsParams.viewMode: _isGridView.value ? 'grid' : 'list',
+      },
+    );
   }
 
   // === MÉTODOS DEL CARRITO ===
