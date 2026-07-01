@@ -74,7 +74,7 @@ class HomePage extends StatelessWidget {
       if (c.isLoading) return _loadingState(c.error);
       return NotificationListener<ScrollNotification>(
         onNotification: _handleScrollNotification,
-        child: CustomScrollView(slivers: [_buildProfileSliver(), _desktopTopBar(), const SliverToBoxAdapter(child: SizedBox(height: 8)), _buildGrid(true)]),
+        child: CustomScrollView(slivers: [_buildProfileSliver(), _desktopTopBar(), const SliverToBoxAdapter(child: SizedBox(height: 8)), const _ProductsGridWidget(isSliver: true)]),
       );
     });
   }
@@ -84,6 +84,8 @@ class HomePage extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(children: [
         Expanded(child: h.hasMultipleCatalogs ? CatalogSelectorOrganism(catalogs: h.catalogs, selectedCatalogIndex: h.selectedCatalogIndex, onCatalogSelected: (i) => h.selectCatalog(i)) : const SizedBox.shrink()),
+        const SizedBox(width: 8),
+        const _CartButtonWidget(),
       ]),
     )));
   }
@@ -119,7 +121,7 @@ class HomePage extends StatelessWidget {
           Expanded(child: CatalogSelectorOrganism(catalogs: h.catalogs, selectedCatalogIndex: h.selectedCatalogIndex, onCatalogSelected: (i) => h.selectCatalog(i))),
           const SizedBox(width: 8),
           Obx(() => Get.find<PwaInstallController>().isInstallable ? Padding(padding: const EdgeInsets.only(right: 8), child: PwaInstallButtonAtom(onPressed: () => Get.find<PwaInstallController>().install(), tooltip: 'Instalar aplicacion')) : const SizedBox.shrink()),
-          _cartButton(),
+          const _CartButtonWidget(),
         ]),
       )),
       GetBuilder<FilterController>(builder: (f) => SearchFilterBarOrganism(
@@ -146,13 +148,54 @@ class HomePage extends StatelessWidget {
     return Obx(() {
       final c = Get.find<CatalogController>();
       if (c.isLoading) return SliverToBoxAdapter(child: _loadingState(c.error));
-      return SliverToBoxAdapter(child: _buildGrid(false));
+      return const SliverToBoxAdapter(child: _ProductsGridWidget(isSliver: false));
     });
   }
 
   // ── Shared ──
 
-  Widget _cartButton() {
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification is ScrollUpdateNotification) {
+      final metrics = notification.metrics;
+      if (metrics.maxScrollExtent > 0 && metrics.pixels >= metrics.maxScrollExtent * 0.8) {
+        final home = Get.find<HomeController>();
+        if (home.hasMoreItems && !home.isLoadingMore) {
+          home.loadMoreItems();
+        }
+      }
+    }
+    return false;
+  }
+
+  Widget _buildProfileSliver() {
+    return GetBuilder<HomeController>(
+      builder: (home) {
+        if (home.businessProfile == null) return const SliverToBoxAdapter();
+        return SliverToBoxAdapter(child: BusinessProfileFooterOrganism(
+          profile: home.businessProfile!,
+          commerceName: home.nameComerce,
+          commerceLogoUrl: home.ownerPhotoUrl,
+          isHeader: true,
+        ));
+      },
+    );
+  }
+
+  Widget _loadingState(String error) {
+    return ContainerAtom(height: 400, padding: const EdgeInsets.symmetric(horizontal: 20), child: Center(
+      child: error.isEmpty
+          ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [const CircularProgressIndicator(color: Color(0xFF1336E5), strokeWidth: 3), const SizedBox(height: 20), Text('Preparando el catalogo...', style: PuTextStyle.bodyMedium.copyWith(color: Colors.grey[600], letterSpacing: 0.5))])
+          : EmptyStateAtom(title: error, titleStyle: PuTextStyle.title5),
+    ));
+  }
+}
+
+/// Widget propio para el botón de carrito — reemplaza la función _cartButton()
+class _CartButtonWidget extends StatelessWidget {
+  const _CartButtonWidget();
+
+  @override
+  Widget build(BuildContext context) {
     return Semantics(
       label: 'Ver carrito de compras',
       button: true,
@@ -189,61 +232,34 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+}
 
-  Widget _buildGrid(bool isSliver) {
+/// Widget propio para la grilla reactiva de productos — reemplaza la función _buildGrid()
+class _ProductsGridWidget extends StatelessWidget {
+  final bool isSliver;
+  const _ProductsGridWidget({required this.isSliver});
+
+  @override
+  Widget build(BuildContext context) {
     return GetBuilder<FilterController>(builder: (f) {
-      final cart = Get.find<CartController>();
       final cat = Get.find<CatalogController>();
       final home = Get.find<HomeController>();
-      return ResponsiveItemsGridOrganism(
-        items: f.displayedItems,
-        isLoadingMore: home.isLoadingMore,
-        catalogType: cat.catalogResponse?.catalogType ?? 'wardrobe',
-        onItemTap: (item) => Get.toNamed('/product-detail', arguments: {
-          'item': item, 'isAdded': cart.containsItem(item.id),
-          'onAddCart': (CatalogItemModel i) => cart.toggleItem(i),
-          'name': item.name, 'description': item.description,
-          'photoUrl': item.photoURL, 'price': item.price.toString(),
-        }),
-        isItemAdded: (id) => cart.containsItem(id),
-        onAddToCart: (item) => cart.toggleItem(item),
-        isSliver: isSliver,
-      );
+      return GetBuilder<CartController>(builder: (cart) {
+        return ResponsiveItemsGridOrganism(
+          items: f.displayedItems,
+          isLoadingMore: home.isLoadingMore,
+          catalogType: cat.catalogResponse?.catalogType ?? 'wardrobe',
+          onItemTap: (item) => Get.toNamed('/product-detail', arguments: {
+            'item': item, 'isAdded': cart.containsItem(item.id),
+            'onAddCart': (CatalogItemModel i) => cart.toggleItem(i),
+            'name': item.name, 'description': item.description,
+            'photoUrl': item.photoURL, 'price': item.price.toString(),
+          }),
+          isItemAdded: (id) => cart.containsItem(id),
+          onAddToCart: (item) => cart.toggleItem(item),
+          isSliver: isSliver,
+        );
+      });
     });
-  }
-
-  bool _handleScrollNotification(ScrollNotification notification) {
-    if (notification is ScrollUpdateNotification) {
-      final metrics = notification.metrics;
-      if (metrics.maxScrollExtent > 0 && metrics.pixels >= metrics.maxScrollExtent * 0.8) {
-        final home = Get.find<HomeController>();
-        if (home.hasMoreItems && !home.isLoadingMore) {
-          home.loadMoreItems();
-        }
-      }
-    }
-    return false;
-  }
-
-  Widget _buildProfileSliver() {
-    return GetBuilder<HomeController>(
-      builder: (home) {
-        if (home.businessProfile == null) return const SliverToBoxAdapter();
-        return SliverToBoxAdapter(child: BusinessProfileFooterOrganism(
-          profile: home.businessProfile!,
-          commerceName: home.nameComerce,
-          commerceLogoUrl: home.ownerPhotoUrl,
-          isHeader: true,
-        ));
-      },
-    );
-  }
-
-  Widget _loadingState(String error) {
-    return ContainerAtom(height: 400, padding: const EdgeInsets.symmetric(horizontal: 20), child: Center(
-      child: error.isEmpty
-          ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [const CircularProgressIndicator(color: Color(0xFF1336E5), strokeWidth: 3), const SizedBox(height: 20), Text('Preparando el catalogo...', style: PuTextStyle.bodyMedium.copyWith(color: Colors.grey[600], letterSpacing: 0.5))])
-          : EmptyStateAtom(title: error, titleStyle: PuTextStyle.title5),
-    ));
   }
 }

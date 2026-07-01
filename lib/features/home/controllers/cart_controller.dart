@@ -143,6 +143,7 @@ class CartController extends GetxController {
     }
 
     _calculateTotals();
+    update();
     AnalyticsService().logEvent(
       name: AnalyticsEvents.cartAdd,
       parameters: {
@@ -159,6 +160,7 @@ class CartController extends GetxController {
   void removeItem(String itemId) {
     _cartItems.removeWhere((item) => item.id == itemId);
     _calculateTotals();
+    update();
     AnalyticsService().logEvent(
       name: AnalyticsEvents.cartRemove,
       parameters: {
@@ -183,6 +185,7 @@ class CartController extends GetxController {
     if (itemIndex != -1) {
       _cartItems[itemIndex] = _cartItems[itemIndex].copyWith(quantity: newQuantity);
       _calculateTotals();
+      update();
     }
   }
 
@@ -196,6 +199,7 @@ class CartController extends GetxController {
       final item = _cartItems[itemIndex];
       _cartItems[itemIndex] = item.copyWith(quantity: (item.quantity ?? 0) + 1);
       _calculateTotals();
+      update();
     }
   }
 
@@ -220,6 +224,7 @@ class CartController extends GetxController {
   void clearCart() {
     _cartItems.clear();
     _calculateTotals();
+    update();
   }
 
   /// Verifica si un item está en el carrito
@@ -237,6 +242,7 @@ class CartController extends GetxController {
     } else {
       addItem(catalogItem);
     }
+    update();
   }
 
   /// Obtiene la cantidad de un item específico en el carrito
