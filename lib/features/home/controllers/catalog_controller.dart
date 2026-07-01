@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
 import 'package:menu_dart_api/by_feature/catalog/data/usecase/get_public_catalog_by_id_usecase.dart';
@@ -84,16 +85,11 @@ class CatalogController extends GetxController {
       _isPaginating.value = false;
       _hasMoreServerSide.value = false;
 
-      final response = await _getCatalogUseCase.execute(
-        catalogId,
-        offset: 0,
-        limit: pageSize,
-        inStock: true,
-      );
+      final response = await _getCatalogUseCase.execute(catalogId);
       _catalogResponse.value = response;
 
       final itemsCount = response.items?.length ?? 0;
-      _hasMoreServerSide.value = itemsCount >= pageSize;
+      _hasMoreServerSide.value = false;
       _itemsOffset = itemsCount;
 
       _flattenMenuItems();
@@ -190,7 +186,10 @@ class CatalogController extends GetxController {
       _isPaginating.value = false;
       _hasMoreServerSide.value = false;
 
+      debugPrint('[CATALOG] Loading public catalogs for commerce: $identifier');
       final result = await _getPublicCatalogsByCommerceUseCase.execute(identifier);
+      debugPrint('[CATALOG] Loaded ${result.items.length} catalogs');
+
       if (result.items.isNotEmpty) {
         _catalogs.value = result.items;
         _selectedCatalogIndex.value = 0;
@@ -201,6 +200,7 @@ class CatalogController extends GetxController {
         _error.value = 'No se encontraron catálogos públicos para este comercio';
       }
     } catch (e) {
+      debugPrint('[CATALOG] Error loading catalogs: $e');
       _error.value = 'Error al carregar catálogos: ${e.toString()}';
       _catalogResponse.value = null;
       _allMenuItems.clear();
