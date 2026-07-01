@@ -1,5 +1,6 @@
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'dart:html' as html;
+import 'package:flutter/foundation.dart';
 
 /// Helper para actualizar dinámicamente los metadatos del HTML
 /// Solo funciona en plataforma web
@@ -33,7 +34,7 @@ class HtmlMetadataHelper {
       }
     } catch (e) {
       // Si hay error al parsear, devolver la URL original
-      print('[HtmlMetadataHelper] Error extracting URL: $e');
+      debugPrint('[HtmlMetadataHelper] Error extracting URL: $e');
     }
 
     // Si no es proxy, forzar HTTPS de todas formas

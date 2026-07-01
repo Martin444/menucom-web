@@ -5,7 +5,7 @@ import 'package:menucom_catalog/features/my_cart/getx/order_controller.dart';
 import 'package:pu_material/molecule/total_row.dart';
 
 /// Widget that displays order totals, customizable with optional discount, shipping, and taxes.
-class TotalsSection extends StatelessWidget {
+class TotalsSectionOrganism extends StatelessWidget {
   final OrderController orderController;
   final bool hasDiscount;
   final double discountPercentage;
@@ -13,7 +13,7 @@ class TotalsSection extends StatelessWidget {
   final double shippingCost;
   final Function(double subtotal)? customTaxCalculator;
 
-  const TotalsSection({
+  const TotalsSectionOrganism({
     Key? key,
     required this.orderController,
     this.hasDiscount = false,

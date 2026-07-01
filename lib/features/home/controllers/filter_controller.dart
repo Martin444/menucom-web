@@ -26,6 +26,7 @@ class FilterController extends GetxController {
   late final Debouncer _searchDebouncer;
 
   List<CatalogItemModel> _allItems = [];
+  List<String> _normalizedCache = [];
 
   String get searchQuery => _searchQuery.value;
   RxString get searchQueryRx => _searchQuery;
@@ -102,12 +103,26 @@ class FilterController extends GetxController {
     _searchDebouncer = Debouncer(delay: const Duration(milliseconds: 300));
   }
 
-  void setMenuItems(List<CatalogItemModel> items) {
+  void setMenuItems(List<CatalogItemModel> items, {bool preserveDisplayLimit = false}) {
     _allItems = items;
+    _buildNormalizedCache();
     _extractCategories();
     _updatePriceBounds();
-    _applyFilters();
+    _applyFilters(resetDisplay: !preserveDisplayLimit);
     update();
+  }
+
+  void _buildNormalizedCache() {
+    _normalizedCache = _allItems.map((item) {
+      final parts = <String>[
+        item.name,
+        if (item.description != null) item.description!,
+        if (item.category != null) item.category!,
+        ...item.tags ?? <String>[],
+        ...item.ingredientsList,
+      ];
+      return parts.map(TextNormalizer.normalize).join(' ');
+    }).toList();
   }
 
   void _extractCategories() {
@@ -223,9 +238,9 @@ class FilterController extends GetxController {
     AnalyticsService().logEvent(name: AnalyticsEvents.filterCleared);
   }
 
-  void _applyFilters() {
+  void _applyFilters({bool resetDisplay = true}) {
     _isLoading.value = true;
-    _resetDisplayLimit();
+    if (resetDisplay) _resetDisplayLimit();
 
     try {
       List<CatalogItemModel> result = List.from(_allItems);
@@ -306,28 +321,12 @@ class FilterController extends GetxController {
     final normalizedQuery = TextNormalizer.normalize(query);
 
     return items.where((item) {
-      if (TextNormalizer.normalize(item.name).contains(normalizedQuery)) {
-        return true;
+      final idx = _allItems.indexOf(item);
+      if (idx >= 0 && idx < _normalizedCache.length) {
+        return _normalizedCache[idx].contains(normalizedQuery);
       }
-
-      if (item.description != null &&
-          TextNormalizer.normalize(item.description!).contains(normalizedQuery)) {
-        return true;
-      }
-
-      if (item.category != null &&
-          TextNormalizer.normalize(item.category!).contains(normalizedQuery)) {
-        return true;
-      }
-
-      final itemCategories = _getItemCategories(item);
-      for (final cat in itemCategories) {
-        if (TextNormalizer.normalize(cat).contains(normalizedQuery)) {
-          return true;
-        }
-      }
-
-      return false;
+      // Fallback: si el item no está en _allItems, normalizar on-the-fly
+      return TextNormalizer.normalize(item.name).contains(normalizedQuery);
     }).toList();
   }
 

@@ -11,7 +11,6 @@ import 'package:menucom_catalog/core/config.dart';
 import 'package:menucom_catalog/core/services/google_auth_service.dart';
 
 import '../presentation/widgets/order_status_config.dart';
-import 'package:menucom_catalog/features/home/controllers/cart_controller.dart';
 import 'package:menucom_catalog/core/analytics_service.dart';
 import 'package:menucom_catalog/core/analytics_events.dart';
 import 'package:menucom_catalog/features/my_cart/services/payment_socket_service.dart';
@@ -26,27 +25,23 @@ class OrderController extends GetxController {
   Rx<OrderStatus> orderStatus = OrderStatus.pending.obs;
   RxBool isOrderLoading = false.obs;
 
+  /// Callback que se ejecuta cuando el pago se completa exitosamente.
+  /// El caller (ej. my_cart_page) puede asignarlo para limpiar el carrito.
+  void Function()? onPaymentCompleted;
+
   static const String _orderStorageKey = 'pending_order_data';
   static const String _orderStatusKey = 'pending_order_status';
 
-  RxString ownerId = ''.obs;
   RxString commerceId = ''.obs;
 
-  // ── Identificadores del comercio ──
+  // ── Identificador del comercio ──
 
-  void setCommerceIdentifiers({String? ownerIdValue, String? commerceIdValue}) {
-    if (ownerIdValue != null) ownerId.value = ownerIdValue;
-    if (commerceIdValue != null) commerceId.value = commerceIdValue;
-  }
+  /// @deprecated Usar [commerceId]
+  RxString get ownerId => commerceId;
 
-  void setOwnerId(String ownerIdValue) => ownerId.value = ownerIdValue;
+  void setCommerceId(String value) => commerceId.value = value;
 
-  void clearCommerceIdentifiers() {
-    ownerId.value = '';
-    commerceId.value = '';
-  }
-
-  void clearOwnerId() => clearCommerceIdentifiers();
+  void clearCommerceId() => commerceId.value = '';
 
   // ── Lifecycle ──
 
@@ -144,7 +139,6 @@ class OrderController extends GetxController {
         items: orderItems,
         total: list.fold<double>(0.0, (sum, item) => sum + ((item.price ?? 0.0) * (item.quantity ?? 1))),
         status: 'pending',
-        ownerId: ownerId.value.isNotEmpty ? ownerId.value : null,
         commerceId: commerceId.value.isNotEmpty ? commerceId.value : null,
       );
 
@@ -157,7 +151,7 @@ class OrderController extends GetxController {
         parameters: {
           AnalyticsParams.itemCount: list.length,
           AnalyticsParams.orderTotal: order.total ?? 0,
-          AnalyticsParams.catalogId: order.commerceId ?? order.ownerId ?? '',
+          AnalyticsParams.catalogId: order.commerceId ?? '',
         },
       );
     } catch (e) {
@@ -172,11 +166,9 @@ class OrderController extends GetxController {
   void saveContactToLastOrder(String contact) async {
     debugPrint('[ORDER] saveContactToLastOrder iniciado con contact: $contact');
 
-    final currentOwnerId = ownerId.value.isNotEmpty ? ownerId.value : orders.value.ownerId;
     final currentCommerceId = commerceId.value.isNotEmpty ? commerceId.value : orders.value.commerceId;
 
-    if ((currentOwnerId == null || currentOwnerId.isEmpty) &&
-        (currentCommerceId == null || currentCommerceId.isEmpty)) {
+    if (currentCommerceId == null || currentCommerceId.isEmpty) {
       errorText.value = 'Información del comercio incompleta';
       Get.snackbar(
         'Error de Comercio',
@@ -192,7 +184,6 @@ class OrderController extends GetxController {
 
     final updatedOrder = orders.value.copyWith(
       customerEmail: contactInfo,
-      ownerId: currentOwnerId,
       commerceId: currentCommerceId,
     );
 
@@ -309,10 +300,7 @@ class OrderController extends GetxController {
       }
     } catch (_) {}
 
-    try {
-      Get.find<CartController>().clearCart();
-    } catch (_) {}
-
+    onPaymentCompleted?.call();
     clearPersistedOrder();
   }
 }

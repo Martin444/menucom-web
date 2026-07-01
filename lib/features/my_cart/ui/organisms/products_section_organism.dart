@@ -5,12 +5,12 @@ import 'package:menucom_catalog/features/my_cart/getx/order_controller.dart';
 import 'package:pu_material/molecule/section_header.dart';
 
 /// Products Section Widget
-class ProductsSection extends StatelessWidget {
+class ProductsSectionOrganism extends StatelessWidget {
   final bool isMobile;
   final bool isTablet;
   final OrderController orderController;
 
-  const ProductsSection({
+  const ProductsSectionOrganism({
     Key? key,
     required this.isMobile,
     required this.isTablet,

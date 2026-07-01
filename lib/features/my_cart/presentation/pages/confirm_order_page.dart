@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:menucom_catalog/features/my_cart/getx/order_controller.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/confirm_order_header.dart';
-import 'package:menucom_catalog/features/my_cart/presentation/widgets/products_section.dart';
-import 'package:menucom_catalog/features/my_cart/presentation/widgets/totals_section.dart';
+import 'package:menucom_catalog/features/my_cart/ui/organisms/products_section_organism.dart';
+import 'package:menucom_catalog/features/my_cart/ui/organisms/totals_section_organism.dart';
 
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/confirm_order_actions.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/order_status_config.dart';
@@ -144,13 +144,13 @@ class ConfirmOrderContent extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ProductsSection(
+          ProductsSectionOrganism(
             isMobile: isMobile,
             isTablet: isTablet,
             orderController: orderController,
           ),
           const SizedBox(height: 32),
-          TotalsSection(orderController: orderController),
+          TotalsSectionOrganism(orderController: orderController),
           const SizedBox(height: 24),
         ],
       ),

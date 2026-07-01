@@ -1,45 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
+import 'package:menu_dart_api/menu_com_api.dart';
 import 'package:pu_material/pu_material.dart';
 
-class CatalogSelector extends StatelessWidget {
-  const CatalogSelector({super.key});
+class CatalogSelectorOrganism extends StatelessWidget {
+  final List<CatalogModel> catalogs;
+  final int selectedCatalogIndex;
+  final void Function(int index) onCatalogSelected;
+
+  const CatalogSelectorOrganism({
+    super.key,
+    required this.catalogs,
+    required this.selectedCatalogIndex,
+    required this.onCatalogSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<HomeController>(
-      builder: (controller) {
-        if (!controller.hasMultipleCatalogs) return const SizedBox.shrink();
+    if (catalogs.length <= 1) return const SizedBox.shrink();
 
-        final catalogs = controller.catalogs;
-        final selectedIndex = controller.selectedCatalogIndex;
+    return ContainerAtom(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: SizedBox(
+        height: 48,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          itemCount: catalogs.length,
+          separatorBuilder: (_, __) => const SizedBox(width: 10),
+          itemBuilder: (context, index) {
+            final catalog = catalogs[index];
+            final isSelected = index == selectedCatalogIndex;
+            final itemCount = catalog.itemCount;
 
-        return ContainerAtom(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: SizedBox(
-            height: 48,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: catalogs.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 10),
-              itemBuilder: (context, index) {
-                final catalog = catalogs[index];
-                final isSelected = index == selectedIndex;
-                final itemCount = catalog.itemCount;
-
-                return _CatalogChip(
-                  name: catalog.name ?? 'Catálogo',
-                  itemCount: itemCount,
-                  isSelected: isSelected,
-                  onTap: () => controller.selectCatalog(index),
-                );
-              },
-            ),
-          ),
-        );
-      },
+            return _CatalogChip(
+              name: catalog.name ?? 'Catálogo',
+              itemCount: itemCount,
+              isSelected: isSelected,
+              onTap: () => onCatalogSelected(index),
+            );
+          },
+        ),
+      ),
     );
   }
 }

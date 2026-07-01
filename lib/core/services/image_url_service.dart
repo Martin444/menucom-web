@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart';
+
 class ImageUrlService {
   static const String proxyBaseUrl = 'http://localhost:3000/api/image-proxy/image';
 
@@ -24,7 +26,7 @@ class ImageUrlService {
         return Uri.decodeComponent(uri.queryParameters['url']!);
       }
     } catch (e) {
-      print('Error extracting original URL: $e');
+      debugPrint('Error extracting original URL: $e');
     }
     return proxyUrl;
   }

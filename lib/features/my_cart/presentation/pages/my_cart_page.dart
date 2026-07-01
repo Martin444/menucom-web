@@ -1,8 +1,6 @@
-// Level: Page
-// Description: Página coordinadora del carrito de compras. Conecta controladores con el Template.
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/presentation/widgets/head_home.dart';
+import 'package:menucom_catalog/features/home/ui/organisms/head_home_organism.dart';
 import 'package:menucom_catalog/features/my_cart/ui/templates/my_cart_template.dart';
 import 'package:pu_material/pu_material.dart';
 import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
@@ -16,12 +14,14 @@ class MyCartPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final orderController = Get.find<OrderController>();
     final homeCtrl = Get.find<HomeController>();
+    orderController.onPaymentCompleted = () => Get.find<CartController>().clearCart();
 
     return MyCartTemplate(
-      header: HeadHome(
+      header: HeadHomeOrganism(
         withBack: true,
         titleHead: 'Mi carrito',
         onBack: () => Navigator.of(context).maybePop(),
+        commerceName: '',
       ),
       cartList: GetBuilder<CartController>(
         builder: (cartCtrl) => CartItemList(
@@ -34,10 +34,7 @@ class MyCartPage extends StatelessWidget {
         builder: (cartCtrl) => CartOrderSummary(
           total: cartCtrl.total,
           onContinue: () {
-            orderController.setCommerceIdentifiers(
-              ownerIdValue: homeCtrl.persistedOwnerId.value,
-              commerceIdValue: homeCtrl.persistedCommerceId.value,
-            );
+            orderController.setCommerceId(homeCtrl.commerceId.value);
             orderController.createOrder(cartCtrl.cartItems);
           },
         ),

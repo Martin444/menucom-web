@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
-import 'package:menucom_catalog/features/home/controllers/cart_controller.dart';
 import 'package:pu_material/pu_material.dart';
 
-/// CatalogItemTile - Widget unificado para mostrar items del catálogo
-/// Determina automáticamente si debe mostrarse como un item de restaurante o de tienda (clothing)
-class CatalogItemTile extends StatelessWidget {
+class CatalogItemTileOrganism extends StatelessWidget {
   final CatalogItemModel item;
   final bool selected;
   final String catalogType;
-  final Function(CatalogItemModel) onAddCart;
+  final bool isAdded;
+  final VoidCallback onAddCart;
+  final ValueChanged<CatalogItemModel> onTap;
 
-  const CatalogItemTile({
+  const CatalogItemTileOrganism({
     super.key,
     required this.item,
     required this.selected,
     required this.catalogType,
+    required this.isAdded,
     required this.onAddCart,
+    required this.onTap,
   });
 
   @override
@@ -30,22 +30,7 @@ class CatalogItemTile extends StatelessWidget {
       borderRadius: 16,
       backgroundColor: Colors.transparent,
       semanticsLabel: 'Ver detalle de ${item.name}',
-      onTap: () {
-        final cartCtrl = Get.find<CartController>();
-        final isAdded = cartCtrl.containsItem(item.id);
-        Get.toNamed(
-          '/product-detail',
-          arguments: {
-            'item': item,
-            'isAdded': isAdded,
-            'onAddCart': (CatalogItemModel i) => cartCtrl.toggleItem(i),
-            'name': item.name,
-            'description': item.description,
-            'photoUrl': item.photoURL,
-            'price': item.price.toString(),
-          },
-        );
-      },
+      onTap: () => onTap(item),
       child: isMenu
           ? ProductCard.menu(
               title: item.name,
@@ -55,7 +40,7 @@ class CatalogItemTile extends StatelessWidget {
               ingredients: item.ingredientsList.isNotEmpty ? item.ingredientsList : null,
               isSelected: selected,
               layout: ProductCardLayout.vertical,
-              onAddToCart: () => onAddCart(item),
+              onAddToCart: onAddCart,
             )
           : ProductCard.clothing(
               title: item.name,
@@ -67,7 +52,7 @@ class CatalogItemTile extends StatelessWidget {
               quantity: item.quantity,
               isSelected: selected,
               layout: ProductCardLayout.vertical,
-              onAddToCart: () => onAddCart(item),
+              onAddToCart: onAddCart,
             ),
     );
   }

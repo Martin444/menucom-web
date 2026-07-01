@@ -6,22 +6,27 @@ import 'package:menu_dart_api/by_feature/catalog/data/usecase/get_public_catalog
 import 'package:menucom_catalog/core/analytics_service.dart';
 
 class CatalogController extends GetxController {
+  static const int pageSize = 30;
+
   final GetCatalogByIdUseCase _getCatalogUseCase;
   final GetPublicCatalogByIdUseCase _getPublicCatalogUseCase;
   final GetPublicCatalogsByOwnerIdUseCase _getPublicCatalogsByOwnerIdUseCase;
   final GetPublicCatalogsByCommerceUseCase _getPublicCatalogsByCommerceUseCase;
 
-  // Estado reactivo
   final Rx<CatalogModel?> _catalogResponse = Rx<CatalogModel?>(null);
   final RxBool _isLoading = true.obs;
   final RxString _error = ''.obs;
 
-  // Lista plana de todos los items para facilitar búsquedas y filtros
   final RxList<CatalogItemModel> _allMenuItems = <CatalogItemModel>[].obs;
 
-  // Soporte multi-catálogo
   final RxList<CatalogModel> _catalogs = <CatalogModel>[].obs;
   final RxInt _selectedCatalogIndex = 0.obs;
+
+  final RxBool _isLoadingMore = false.obs;
+  final RxBool _hasMoreServerSide = false.obs;
+  final RxBool _isPaginating = false.obs;
+  int _itemsOffset = 0;
+  bool _isAuthFlow = false;
 
   CatalogController({
     GetCatalogByIdUseCase? getCatalogUseCase,
@@ -59,6 +64,11 @@ class CatalogController extends GetxController {
   RxInt get selectedCatalogIndexRx => _selectedCatalogIndex;
   bool get hasMultipleCatalogs => _catalogs.length > 1;
 
+  bool get isLoadingMore => _isLoadingMore.value;
+  RxBool get isLoadingMoreRx => _isLoadingMore;
+  bool get hasMoreServerSide => _hasMoreServerSide.value;
+  bool get isPaginating => _isPaginating.value;
+
   /// Carga un catálogo específico por ID
   Future<void> loadMenu(String catalogId) async {
     if (catalogId.isEmpty) {
@@ -69,9 +79,22 @@ class CatalogController extends GetxController {
     try {
       _isLoading.value = true;
       _error.value = '';
+      _isAuthFlow = true;
+      _itemsOffset = 0;
+      _isPaginating.value = false;
+      _hasMoreServerSide.value = false;
 
-      final response = await _getCatalogUseCase.execute(catalogId);
+      final response = await _getCatalogUseCase.execute(
+        catalogId,
+        offset: 0,
+        limit: pageSize,
+        inStock: true,
+      );
       _catalogResponse.value = response;
+
+      final itemsCount = response.items?.length ?? 0;
+      _hasMoreServerSide.value = itemsCount >= pageSize;
+      _itemsOffset = itemsCount;
 
       _flattenMenuItems();
       _logCatalogViewed();
@@ -96,6 +119,10 @@ class CatalogController extends GetxController {
     try {
       _isLoading.value = true;
       _error.value = '';
+      _isAuthFlow = false;
+      _itemsOffset = 0;
+      _isPaginating.value = false;
+      _hasMoreServerSide.value = false;
 
       final response = await _getPublicCatalogUseCase.execute(catalogId);
       _catalogResponse.value = response;
@@ -122,6 +149,10 @@ class CatalogController extends GetxController {
     try {
       _isLoading.value = true;
       _error.value = '';
+      _isAuthFlow = false;
+      _itemsOffset = 0;
+      _isPaginating.value = false;
+      _hasMoreServerSide.value = false;
 
       final catalogs = await _getPublicCatalogsByOwnerIdUseCase.execute(ownerId);
       if (catalogs.isNotEmpty) {
@@ -154,12 +185,16 @@ class CatalogController extends GetxController {
     try {
       _isLoading.value = true;
       _error.value = '';
+      _isAuthFlow = false;
+      _itemsOffset = 0;
+      _isPaginating.value = false;
+      _hasMoreServerSide.value = false;
 
-      final catalogs = await _getPublicCatalogsByCommerceUseCase.execute(identifier);
-      if (catalogs.isNotEmpty) {
-        _catalogs.value = catalogs;
+      final result = await _getPublicCatalogsByCommerceUseCase.execute(identifier);
+      if (result.items.isNotEmpty) {
+        _catalogs.value = result.items;
         _selectedCatalogIndex.value = 0;
-        _catalogResponse.value = catalogs.first;
+        _catalogResponse.value = result.items.first;
         _flattenMenuItems();
         _logCatalogViewed();
       } else {
@@ -181,6 +216,9 @@ class CatalogController extends GetxController {
     if (index < 0 || index >= _catalogs.length) return;
     _selectedCatalogIndex.value = index;
     _catalogResponse.value = _catalogs[index];
+    _itemsOffset = 0;
+    _hasMoreServerSide.value = false;
+    _isPaginating.value = false;
     _flattenMenuItems();
   }
 
@@ -188,6 +226,40 @@ class CatalogController extends GetxController {
   void selectCatalogById(String id) {
     final index = _catalogs.indexWhere((c) => c.id == id);
     if (index >= 0) selectCatalog(index);
+  }
+
+  Future<void> loadMoreItems() async {
+    if (!_isAuthFlow || _isLoadingMore.value || !_hasMoreServerSide.value) return;
+
+    final catalogId = _catalogResponse.value?.id;
+    if (catalogId == null) return;
+
+    _isLoadingMore.value = true;
+    _isPaginating.value = true;
+
+    try {
+      final response = await _getCatalogUseCase.execute(
+        catalogId,
+        offset: _itemsOffset,
+        limit: pageSize,
+        inStock: true,
+      );
+      final newItems = response.items ?? [];
+
+      if (newItems.isNotEmpty) {
+        final currentItems = List<CatalogItemModel>.from(_allMenuItems);
+        currentItems.addAll(newItems);
+        _allMenuItems.value = currentItems;
+      }
+
+      _itemsOffset += newItems.length;
+      _hasMoreServerSide.value = newItems.length >= pageSize;
+    } catch (e) {
+      AnalyticsService().logErrorWithException(e, context: 'catalog_controller.loadMoreItems');
+    } finally {
+      _isLoadingMore.value = false;
+      _isPaginating.value = false;
+    }
   }
 
   /// Aplana todos los items del catálogo en una sola lista
@@ -216,11 +288,7 @@ class CatalogController extends GetxController {
 
   /// Obtiene un item específico por ID
   CatalogItemModel? getItemById(String itemId) {
-    try {
-      return _allMenuItems.firstWhere((item) => item.id == itemId);
-    } catch (e) {
-      return null;
-    }
+    return _allMenuItems.firstWhereOrNull((item) => item.id == itemId);
   }
 }
 

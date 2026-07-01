@@ -1,28 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:menu_dart_api/menu_com_api.dart';
 import 'package:menucom_catalog/core/pwa/pwa_install_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/catalog_controller.dart';
 import 'package:menucom_catalog/features/home/controllers/cart_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/filter_controller.dart';
 import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
-import 'package:menucom_catalog/features/home/presentation/widgets/filter_summary_widget.dart';
-import 'package:menucom_catalog/features/home/presentation/widgets/responsive_items_grid.dart';
-import 'package:menucom_catalog/features/home/presentation/widgets/catalog_selector.dart';
-import 'package:menucom_catalog/features/home/presentation/widgets/desktop_filter_sidebar.dart';
+import 'package:menucom_catalog/features/home/ui/molecules/filter_summary_molecule.dart';
+import 'package:menucom_catalog/features/home/ui/organisms/business_profile_footer_organism.dart';
+import 'package:menucom_catalog/features/home/ui/organisms/catalog_selector_organism.dart';
+import 'package:menucom_catalog/features/home/ui/organisms/desktop_filter_sidebar_organism.dart';
+import 'package:menucom_catalog/features/home/ui/organisms/head_home_organism.dart';
+import 'package:menucom_catalog/features/home/ui/organisms/responsive_items_grid_organism.dart';
+import 'package:menucom_catalog/features/home/ui/organisms/search_filter_bar_organism.dart';
 import 'package:menucom_catalog/routes/routes.dart';
 import 'package:pu_material/pu_material.dart';
 import 'package:pu_material/utils/pu_assets.dart';
 
-import '../widgets/head_home.dart';
-import '../widgets/search_filter_bar.dart';
-
-/// HomePage - Página principal del catálogo optimizada para scroll suave
-///
-/// Layout responsive:
-/// - Desktop (>= 900px): sidebar de filtros a la izquierda + grid de productos
-/// - Mobile (< 900px): filtros arriba + grid de productos (scroll vertical)
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
-
-  static const double _desktopBreakpoint = 900;
+  static const double desktopBreakpoint = 900;
 
   @override
   Widget build(BuildContext context) {
@@ -30,152 +27,135 @@ class HomePage extends StatelessWidget {
       backgroundColor: PUColors.primaryBackground,
       body: LayoutBuilder(
         builder: (context, constraints) {
-          final isDesktop = constraints.maxWidth >= _desktopBreakpoint;
-          if (isDesktop) {
-            return _buildDesktopLayout(constraints);
-          }
-          return _buildMobileLayout();
+          if (constraints.maxWidth >= desktopBreakpoint) return _desktopLayout();
+          return _mobileLayout();
         },
       ),
     );
   }
 
-  // ==================== DESKTOP LAYOUT ====================
-
-  Widget _buildDesktopLayout(BoxConstraints constraints) {
-    return Column(
-      children: [
-        // Header fijo arriba
-        const _DesktopHeader(),
-        // Contenido: sidebar + grid
-        Expanded(
-          child: Row(
-            children: [
-              // Sidebar de filtros
-              const DesktopFilterSidebar(),
-              // Área de productos
-              Expanded(
-                child: _buildDesktopContentArea(),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
+  Widget _desktopLayout() {
+    return Column(children: [
+      _desktopHeader(),
+      Expanded(child: Row(children: [_desktopSidebar(), Expanded(child: _desktopContent())])),
+    ]);
   }
 
-  Widget _buildDesktopContentArea() {
-    return GetBuilder<HomeController>(
-      builder: (controller) {
-        if (controller.isLoadHomeItems) {
-          return _buildLoadingOrErrorState();
-        }
-
-        if (controller.hasError) {
-          return _buildLoadingOrErrorState();
-        }
-
-        return CustomScrollView(
-          slivers: [
-            _buildDesktopTagsAndActions(),
-            const SliverToBoxAdapter(child: SizedBox(height: 8)),
-            const ResponsiveItemsGrid(isSliver: true),
-          ],
+  Widget _desktopHeader() {
+    return GetBuilder<CatalogController>(
+      builder: (c) {
+        final cat = c.catalogResponse;
+        return Container(
+          decoration: BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.06)))),
+          child: HeadHomeOrganism(
+            commerceName: cat?.commerce?['name']?.toString() ?? cat?.owner?['name']?.toString() ?? cat?.name ?? '',
+            commerceLogoUrl: cat?.commerce?['logoUrl']?.toString() ?? cat?.owner?['photoURL']?.toString(),
+          ),
         );
       },
     );
   }
 
-  Widget _buildDesktopTagsAndActions() {
-    return SliverToBoxAdapter(
-      child: _buildTagsAndActionsRow(),
-    );
+  Widget _desktopSidebar() {
+    return GetBuilder<FilterController>(builder: (f) => DesktopFilterSidebarOrganism(
+      searchQuery: f.searchQuery, sortBy: f.sortBy,
+      availableCategories: f.availableCategories, selectedCategories: f.selectedCategories,
+      showOnlyAvailable: f.showOnlyAvailable, showOnlyOnSale: f.showOnlyOnSale, showOnlyFeatured: f.showOnlyFeatured,
+      minPrice: f.minPrice, maxPrice: f.maxPrice, priceUpperBound: f.priceUpperBound,
+      totalFilteredItems: f.sortedFilteredItems.length,
+      onSearchChanged: (v) => f.updateSearchQuery(v), onSortChanged: (v) => f.setSortBy(v),
+      onCategoryToggled: (v) => f.toggleCategory(v),
+      onAvailableToggled: () => f.toggleAvailableOnly(), onSaleToggled: () => f.toggleOnSale(), onFeaturedToggled: () => f.toggleFeatured(),
+      onPriceRangeChanged: (a, b) => f.setPriceRange(a, b), onClearFilters: () => f.clearFilters(),
+    ));
   }
 
-  // ==================== MOBILE LAYOUT ====================
-
-  Widget _buildMobileLayout() {
-    return CustomScrollView(
-      slivers: [
-        _buildHeroSliver(),
-        _buildStickyHeaderSliver(),
-        _buildInfoAndFiltersSliver(),
-        _buildSliverContent(),
-      ],
-    );
-  }
-
-  Widget _buildHeroSliver() {
-    return const SliverToBoxAdapter(child: SizedBox.shrink());
-  }
-
-  Widget _buildStickyHeaderSliver() {
-    return const SliverAppBar(
-      pinned: true,
-      floating: true,
-      elevation: 0,
-      backgroundColor: Colors.transparent,
-      automaticallyImplyLeading: false,
-      toolbarHeight: 70,
-      flexibleSpace: HeadHome(),
-    );
-  }
-
-  Widget _buildInfoAndFiltersSliver() {
-    return SliverToBoxAdapter(
-      child: Column(
-        children: [
-          _buildTagsAndActionsRow(),
-          const SearchFilterBar(),
-          const FilterSummaryWidget(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSliverContent() {
-    return GetBuilder<HomeController>(
-      builder: (controller) {
-        if (controller.isLoadHomeItems) {
-          return SliverToBoxAdapter(child: _buildLoadingOrErrorState());
-        }
-
-        if (controller.hasError) {
-          return SliverToBoxAdapter(child: _buildLoadingOrErrorState());
-        }
-
-        return const ResponsiveItemsGrid(isSliver: true);
+  Widget _desktopContent() {
+    return GetBuilder<CatalogController>(
+      builder: (c) {
+        if (c.isLoading) return _loadingState(c.error);
+        return NotificationListener<ScrollNotification>(
+          onNotification: _handleScrollNotification,
+          child: CustomScrollView(slivers: [_desktopTopBar(), const SliverToBoxAdapter(child: SizedBox(height: 8)), _buildGrid(true), _buildFooter()]),
+        );
       },
     );
   }
 
-  // ==================== SHARED WIDGETS ====================
-
-  Widget _buildTagsAndActionsRow() {
-    return ContainerAtom(
+  Widget _desktopTopBar() {
+    return SliverToBoxAdapter(child: GetBuilder<HomeController>(builder: (h) => ContainerAtom(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      child: Row(
-        children: [
-          const Expanded(child: CatalogSelector()),
-          const SizedBox(width: 8),
-          Obx(() {
-            final pwaCtrl = Get.find<PwaInstallController>();
-            if (!pwaCtrl.isInstallable) return const SizedBox.shrink();
-            return Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: PwaInstallButtonAtom(
-                onPressed: () => pwaCtrl.install(),
-                tooltip: 'Instalar aplicación',
-              ),
-            );
-          }),
-          _buildCartButton(),
-        ],
-      ),
+      child: Row(children: [
+        Expanded(child: h.hasMultipleCatalogs ? CatalogSelectorOrganism(catalogs: h.catalogs, selectedCatalogIndex: h.selectedCatalogIndex, onCatalogSelected: (i) => h.selectCatalog(i)) : const SizedBox.shrink()),
+      ]),
+    )));
+  }
+
+  // ── Mobile ──
+
+  Widget _mobileLayout() {
+    return NotificationListener<ScrollNotification>(
+      onNotification: _handleScrollNotification,
+      child: CustomScrollView(slivers: [_mobileHeader(), _mobileInfoAndFilters(), _mobileContent(), _buildFooter()]),
     );
   }
 
-  Widget _buildCartButton() {
+  Widget _mobileHeader() {
+    return GetBuilder<CatalogController>(
+      builder: (c) {
+        final cat = c.catalogResponse;
+        return const SliverAppBar(
+          pinned: true, floating: true, elevation: 0, backgroundColor: Colors.transparent,
+          automaticallyImplyLeading: false, toolbarHeight: 70,
+          flexibleSpace: HeadHomeOrganism(commerceName: ''),
+        );
+      },
+    );
+  }
+
+  Widget _mobileInfoAndFilters() {
+    return SliverToBoxAdapter(child: Column(children: [
+      GetBuilder<HomeController>(builder: (h) => ContainerAtom(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(children: [
+          Expanded(child: CatalogSelectorOrganism(catalogs: h.catalogs, selectedCatalogIndex: h.selectedCatalogIndex, onCatalogSelected: (i) => h.selectCatalog(i))),
+          const SizedBox(width: 8),
+          Obx(() => Get.find<PwaInstallController>().isInstallable ? Padding(padding: const EdgeInsets.only(right: 8), child: PwaInstallButtonAtom(onPressed: () => Get.find<PwaInstallController>().install(), tooltip: 'Instalar aplicacion')) : const SizedBox.shrink()),
+          _cartButton(),
+        ]),
+      )),
+      GetBuilder<FilterController>(builder: (f) => SearchFilterBarOrganism(
+        searchQuery: f.searchQuery, sortBy: f.sortBy,
+        availableCategories: f.availableCategories, selectedCategories: f.selectedCategories,
+        showOnlyAvailable: f.showOnlyAvailable, showOnlyOnSale: f.showOnlyOnSale, showOnlyFeatured: f.showOnlyFeatured,
+        minPrice: f.minPrice, maxPrice: f.maxPrice, priceUpperBound: f.priceUpperBound,
+        onSearchChanged: (v) => f.updateSearchQuery(v), onSortChanged: (v) => f.setSortBy(v),
+        onCategoryToggled: (v) => f.toggleCategory(v),
+        onAvailableToggled: () => f.toggleAvailableOnly(), onSaleToggled: () => f.toggleOnSale(), onFeaturedToggled: () => f.toggleFeatured(),
+        onPriceRangeChanged: (a, b) => f.setPriceRange(a, b),
+      )),
+      GetBuilder<FilterController>(builder: (f) => FilterSummaryMolecule(
+        totalItems: f.sortedFilteredItems.length, searchQuery: f.searchQuery,
+        selectedCategories: f.selectedCategories, showOnlyAvailable: f.showOnlyAvailable,
+        showOnlyOnSale: f.showOnlyOnSale, showOnlyFeatured: f.showOnlyFeatured,
+        minPrice: f.minPrice, maxPrice: f.maxPrice, priceUpperBound: f.priceUpperBound,
+        onClearFilters: () => f.clearFilters(),
+      )),
+    ]));
+  }
+
+  Widget _mobileContent() {
+    return GetBuilder<CatalogController>(
+      builder: (c) {
+        if (c.isLoading) return SliverToBoxAdapter(child: _loadingState(c.error));
+        return _buildGrid(true);
+      },
+    );
+  }
+
+  // ── Shared ──
+
+  Widget _cartButton() {
     return Semantics(
       label: 'Ver carrito de compras',
       button: true,
@@ -187,45 +167,21 @@ class HomePage extends StatelessWidget {
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: Colors.transparent,
-              borderRadius: BorderRadius.circular(8),
-            ),
+            decoration: BoxDecoration(color: Colors.transparent, borderRadius: BorderRadius.circular(8)),
             child: Stack(
               clipBehavior: Clip.none,
               alignment: const Alignment(0, -1.4),
               children: [
-                SvgPicture.asset(
-                  PUIcons.iconCart,
-                  height: 36,
-                  colorFilter: const ColorFilter.mode(
-                    PUColors.iconColorBlack,
-                    BlendMode.srcIn,
-                  ),
-                  fit: BoxFit.fitHeight,
-                ),
+                SvgPicture.asset(PUIcons.iconCart, height: 36, colorFilter: const ColorFilter.mode(PUColors.iconColorBlack, BlendMode.srcIn), fit: BoxFit.fitHeight),
                 Positioned(
                   child: Obx(() {
                     final count = Get.find<CartController>().itemCount;
                     if (count <= 0) return const SizedBox.shrink();
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: PUColors.restaurantPrimary,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        count.toString(),
-                        style: PuTextStyle.cartQuantityTextStyle.copyWith(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(color: PUColors.restaurantPrimary, borderRadius: BorderRadius.circular(10)),
+                      child: Text(count.toString(), style: PuTextStyle.cartQuantityTextStyle.copyWith(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700)),
                     );
                   }),
                 ),
@@ -237,56 +193,65 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingOrErrorState() {
+  Widget _buildGrid(bool isSliver) {
+    return GetBuilder<FilterController>(builder: (f) {
+      final cart = Get.find<CartController>();
+      final cat = Get.find<CatalogController>();
+      final home = Get.find<HomeController>();
+      return ResponsiveItemsGridOrganism(
+        items: f.displayedItems,
+        isLoadingMore: home.isLoadingMore,
+        catalogType: cat.catalogResponse?.catalogType ?? 'wardrobe',
+        onItemTap: (item) => Get.toNamed('/product-detail', arguments: {
+          'item': item, 'isAdded': cart.containsItem(item.id),
+          'onAddCart': (CatalogItemModel i) => cart.toggleItem(i),
+          'name': item.name, 'description': item.description,
+          'photoUrl': item.photoURL, 'price': item.price.toString(),
+        }),
+        isItemAdded: (id) => cart.containsItem(id),
+        onAddToCart: (item) => cart.toggleItem(item),
+        isSliver: isSliver,
+      );
+    });
+  }
+
+  bool _handleScrollNotification(ScrollNotification notification) {
+    if (notification is ScrollUpdateNotification) {
+      final metrics = notification.metrics;
+      if (metrics.maxScrollExtent > 0 && metrics.pixels >= metrics.maxScrollExtent * 0.8) {
+        final home = Get.find<HomeController>();
+        if (home.hasMoreItems && !home.isLoadingMore) {
+          home.loadMoreItems();
+        }
+      }
+    }
+    return false;
+  }
+
+  Widget _buildFooter() {
     return GetBuilder<HomeController>(
-      builder: (controller) {
-        return ContainerAtom(
-          height: 400,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Center(
-            child: controller.errorText.isEmpty
-                ? Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const CircularProgressIndicator(
-                        color: Color(0xFF1336E5),
-                        strokeWidth: 3,
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        'Preparando el catálogo...',
-                        style: PuTextStyle.bodyMedium.copyWith(
-                          color: Colors.grey[600],
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  )
-                : EmptyStateAtom(
-                    title: controller.errorText,
-                    titleStyle: PuTextStyle.title5,
-                  ),
-          ),
-        );
+      builder: (home) {
+        if (home.businessProfile == null) return const SliverToBoxAdapter();
+        return SliverToBoxAdapter(child: _buildFooterWidget());
       },
     );
   }
-}
 
-/// Header para desktop: combina HeadHome + tags + acciones en una sola barra
-class _DesktopHeader extends StatelessWidget {
-  const _DesktopHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: Colors.black.withValues(alpha: 0.06)),
-        ),
-      ),
-      child: const HeadHome(),
+  Widget _buildFooterWidget() {
+    final home = Get.find<HomeController>();
+    if (home.businessProfile == null) return const SizedBox.shrink();
+    return BusinessProfileFooterOrganism(
+      profile: home.businessProfile!,
+      commerceName: home.nameComerce,
+      commerceLogoUrl: home.ownerPhotoUrl,
     );
+  }
+
+  Widget _loadingState(String error) {
+    return ContainerAtom(height: 400, padding: const EdgeInsets.symmetric(horizontal: 20), child: Center(
+      child: error.isEmpty
+          ? Column(mainAxisAlignment: MainAxisAlignment.center, children: [const CircularProgressIndicator(color: Color(0xFF1336E5), strokeWidth: 3), const SizedBox(height: 20), Text('Preparando el catalogo...', style: PuTextStyle.bodyMedium.copyWith(color: Colors.grey[600], letterSpacing: 0.5))])
+          : EmptyStateAtom(title: error, titleStyle: PuTextStyle.title5),
+    ));
   }
 }

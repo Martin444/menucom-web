@@ -1,72 +1,68 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
-import 'package:menucom_catalog/features/home/controllers/filter_controller.dart';
-import 'package:menucom_catalog/features/home/controllers/cart_controller.dart';
-import 'package:menucom_catalog/features/home/controllers/catalog_controller.dart';
-import 'package:menucom_catalog/features/home/presentation/widgets/catalog_item_tile.dart';
+import 'package:menucom_catalog/features/home/ui/organisms/catalog_item_tile_organism.dart';
 import 'package:pu_material/pu_material.dart';
 
-/// Grid responsivo para mostrar items del catalogo con lazy loading
-class ResponsiveItemsGrid extends StatelessWidget {
+class ResponsiveItemsGridOrganism extends StatelessWidget {
+  final List<CatalogItemModel> items;
+  final bool isLoadingMore;
+  final String catalogType;
+  final void Function(CatalogItemModel item) onItemTap;
+  final bool Function(String itemId) isItemAdded;
+  final void Function(CatalogItemModel item) onAddToCart;
   final bool isSliver;
 
-  const ResponsiveItemsGrid({
+  const ResponsiveItemsGridOrganism({
     super.key,
+    required this.items,
+    required this.isLoadingMore,
+    required this.catalogType,
+    required this.onItemTap,
+    required this.isItemAdded,
+    required this.onAddToCart,
     this.isSliver = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<FilterController>(
-      builder: (filterCtrl) {
-        final items = filterCtrl.displayedItems;
-        final hasMore = filterCtrl.hasMoreItems;
-        final isLoading = Get.find<CatalogController>().isLoading;
+    if (items.isEmpty) {
+      final emptyContent = _buildEmptyState();
+      return isSliver ? SliverToBoxAdapter(child: emptyContent) : emptyContent;
+    }
 
-        if (items.isEmpty && !isLoading) {
-          final emptyContent = _buildEmptyState();
-          return isSliver ? SliverToBoxAdapter(child: emptyContent) : emptyContent;
-        }
+    final grid = _buildResponsiveGrid(items);
 
-        final grid = _buildResponsiveGrid(filterCtrl, items);
+    if (!isLoadingMore) {
+      return grid;
+    }
 
-        if (!hasMore) {
-          return grid;
-        }
+    final loading = _buildLoadingIndicator();
 
-        final loadMore = _buildLoadMoreButton(filterCtrl);
+    if (isSliver) {
+      return SliverList(
+        delegate: SliverChildListDelegate([
+          grid,
+          SliverToBoxAdapter(child: loading),
+        ]),
+      );
+    }
 
-        if (isSliver) {
-          return SliverList(
-            delegate: SliverChildListDelegate([
-              grid,
-              SliverToBoxAdapter(child: loadMore),
-            ]),
-          );
-        }
-
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [grid, loadMore],
-        );
-      },
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [grid, loading],
     );
   }
 
-  Widget _buildLoadMoreButton(FilterController controller) {
-    final remaining = controller.sortedFilteredItems.length - controller.displayLimit;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 16),
+  Widget _buildLoadingIndicator() {
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: 24),
       child: Center(
-        child: OutlinedButton.icon(
-          onPressed: () => controller.incrementDisplayLimit(),
-          icon: const Icon(Icons.expand_more, size: 20),
-          label: Text('Mostrar más ($remaining restantes)'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: PUColors.primaryColor,
-            side: BorderSide(color: PUColors.primaryColor.withValues(alpha: 0.5)),
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        child: SizedBox(
+          width: 32,
+          height: 32,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: PUColors.primaryColor,
           ),
         ),
       ),
@@ -88,7 +84,7 @@ class ResponsiveItemsGrid extends StatelessWidget {
     );
   }
 
-  Widget _buildResponsiveGrid(FilterController filterCtrl, List<CatalogItemModel> filteredData) {
+  Widget _buildResponsiveGrid(List<CatalogItemModel> filteredData) {
     if (isSliver) {
       return SliverLayoutBuilder(
         builder: (context, sliverConstraints) {
@@ -148,7 +144,7 @@ class ResponsiveItemsGrid extends StatelessWidget {
     } else {
       height = itemWidth * 1.4;
     }
-    
+
     return height.clamp(260.0, double.infinity);
   }
 
@@ -161,17 +157,14 @@ class ResponsiveItemsGrid extends StatelessWidget {
   }
 
   List<Widget> _buildGridItems(List<CatalogItemModel> filteredData) {
-    final cartCtrl = Get.find<CartController>();
-    final catalogCtrl = Get.find<CatalogController>();
-
     return filteredData.map((item) {
-      final isAdded = cartCtrl.containsItem(item.id);
-
-      return CatalogItemTile(
+      return CatalogItemTileOrganism(
         item: item,
-        selected: isAdded,
-        catalogType: catalogCtrl.catalogResponse?.catalogType ?? 'wardrobe',
-        onAddCart: (i) => cartCtrl.toggleItem(i),
+        selected: isItemAdded(item.id),
+        catalogType: catalogType,
+        isAdded: isItemAdded(item.id),
+        onAddCart: () => onAddToCart(item),
+        onTap: (i) => onItemTap(i),
       );
     }).toList();
   }

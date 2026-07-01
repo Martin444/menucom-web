@@ -51,7 +51,7 @@ class GoogleAuthService {
 
       return response;
     } catch (e) {
-      print('Google Sign-In Error: $e');
+      debugPrint('Google Sign-In Error: $e');
       rethrow;
     }
   }

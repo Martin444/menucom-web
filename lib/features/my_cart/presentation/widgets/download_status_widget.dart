@@ -71,7 +71,7 @@ class _DownloadStatusWidgetState extends State<DownloadStatusWidget> with Single
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: (widget.color ?? const Color(0xFF4CAF50)).withOpacity(0.1),
+              color: (widget.color ?? const Color(0xFF4CAF50)).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
                 color: widget.color ?? const Color(0xFF4CAF50),

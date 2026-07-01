@@ -21,8 +21,9 @@ class HomeController extends GetxController {
   late final CartController _cartController;
 
   final RxBool _isGridView = true.obs;
-  final RxString _persistedOwnerId = ''.obs;
-  final RxString _persistedCommerceId = ''.obs;
+  final RxString _commerceId = ''.obs;
+  final Rx<BusinessProfileModel?> _businessProfile = Rx<BusinessProfileModel?>(null);
+  final GetPublicBusinessProfileUseCase _getPublicBusinessProfileUseCase = GetPublicBusinessProfileUseCase();
 
   HomeController({
     CatalogController? catalogController,
@@ -81,6 +82,11 @@ class HomeController extends GetxController {
   bool get isGridView => _isGridView.value;
   RxBool get isGridViewRx => _isGridView;
 
+  // ── Business Profile ──
+
+  BusinessProfileModel? get businessProfile => _businessProfile.value;
+  Rx<BusinessProfileModel?> get businessProfileRx => _businessProfile;
+
   void toggleViewMode() {
     _isGridView.value = !_isGridView.value;
     update();
@@ -121,8 +127,10 @@ class HomeController extends GetxController {
 
   // ── Persistencia ──
 
-  RxString get persistedOwnerId => _persistedOwnerId;
-  RxString get persistedCommerceId => _persistedCommerceId;
+  /// @deprecated Usar [commerceId]
+  RxString get persistedOwnerId => _commerceId;
+  RxString get persistedCommerceId => _commerceId;
+  RxString get commerceId => _commerceId;
 
   // ── Lifecycle ──
 
@@ -135,16 +143,17 @@ class HomeController extends GetxController {
 
   void _setupControllerListeners() {
     ever(_catalogController.allMenuItemsRx, (List<CatalogItemModel> items) {
-      _filterController.clearFilters();
-      _filterController.setMenuItems(items);
+      final isPaginating = _catalogController.isPaginating;
+      if (!isPaginating) _filterController.clearFilters();
+      _filterController.setMenuItems(items, preserveDisplayLimit: isPaginating);
       update();
     });
 
     ever(_filterController.sortedFilteredItemsRx, (_) => update());
 
-    // Notificar cuando cambia el estado de carga o errores del catalogo
     ever(_catalogController.isLoadingRx, (_) => update());
     ever(_catalogController.errorRx, (_) => update());
+    ever(_catalogController.isLoadingMoreRx, (_) => update());
   }
 
   // ── Inicializacion desde URL ──
@@ -181,9 +190,9 @@ class HomeController extends GetxController {
 
     if (_catalogController.catalogResponse != null) {
       final catalog = _catalogController.catalogResponse!;
-      _persistedOwnerId.value = catalog.ownerId;
-      _persistedCommerceId.value = catalog.commerceId ?? '';
-      await _cartController.validateCartOwner(catalog.commerceId ?? catalog.ownerId ?? catalog.id);
+      _commerceId.value = catalog.commerceId ?? catalog.ownerId;
+      await _cartController.validateCartOwner(_commerceId.value ?? catalog.id);
+      await _loadBusinessProfile(catalog);
 
       HtmlMetadataHelper.updateCommerceMetadata(
         name: catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom',
@@ -198,9 +207,9 @@ class HomeController extends GetxController {
 
     if (_catalogController.catalogResponse != null) {
       final catalog = _catalogController.catalogResponse!;
-      _persistedOwnerId.value = catalog.ownerId;
-      _persistedCommerceId.value = catalog.commerceId ?? '';
-      await _cartController.validateCartOwner(catalog.commerceId ?? catalog.ownerId ?? catalog.id);
+      _commerceId.value = catalog.commerceId ?? catalog.ownerId;
+      await _cartController.validateCartOwner(_commerceId.value ?? catalog.id);
+      await _loadBusinessProfile(catalog);
 
       HtmlMetadataHelper.updateCommerceMetadata(
         name: catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom',
@@ -215,9 +224,9 @@ class HomeController extends GetxController {
 
     if (_catalogController.catalogResponse != null) {
       final catalog = _catalogController.catalogResponse!;
-      _persistedOwnerId.value = catalog.ownerId;
-      _persistedCommerceId.value = catalog.commerceId ?? identifier;
-      await _cartController.validateCartOwner(catalog.commerceId ?? catalog.ownerId ?? catalog.id);
+      _commerceId.value = catalog.commerceId ?? catalog.ownerId ?? identifier;
+      await _cartController.validateCartOwner(_commerceId.value ?? catalog.id);
+      await _loadBusinessProfile(catalog);
 
       final commerceName =
           catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom';
@@ -235,9 +244,8 @@ class HomeController extends GetxController {
 
     if (_catalogController.catalogResponse != null) {
       final catalog = _catalogController.catalogResponse!;
-      _persistedOwnerId.value = ownerId;
-      _persistedCommerceId.value = catalog.commerceId ?? '';
-      await _cartController.validateCartOwner(ownerId);
+      _commerceId.value = catalog.commerceId ?? ownerId;
+      await _cartController.validateCartOwner(_commerceId.value ?? catalog.id);
 
       HtmlMetadataHelper.updateCommerceMetadata(
         name: catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom',
@@ -251,8 +259,7 @@ class HomeController extends GetxController {
     _catalogController.selectCatalog(index);
     final catalog = _catalogController.catalogResponse;
     if (catalog != null) {
-      _persistedOwnerId.value = catalog.ownerId;
-      _persistedCommerceId.value = catalog.commerceId ?? '';
+      _commerceId.value = catalog.commerceId ?? catalog.ownerId;
       HtmlMetadataHelper.updateCommerceMetadata(
         name: catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom',
         logoUrl: catalog.commerce?['logoUrl']?.toString() ?? catalog.coverImageUrl,
@@ -274,9 +281,38 @@ class HomeController extends GetxController {
     }
   }
 
+  // ── Paginacion ──
+
+  bool get hasMoreItems => _filterController.hasMoreItems || _catalogController.hasMoreServerSide;
+  bool get isLoadingMore => _catalogController.isLoadingMore;
+
+  Future<void> loadMoreItems() async {
+    if (_filterController.hasMoreItems) {
+      _filterController.incrementDisplayLimit();
+    } else if (_catalogController.hasMoreServerSide) {
+      await _catalogController.loadMoreItems();
+    }
+  }
+
   // ── Helpers ──
 
   CatalogItemModel? getItemById(String itemId) {
     return _catalogController.getItemById(itemId);
+  }
+
+  Future<void> _loadBusinessProfile(CatalogModel catalog) async {
+    final identifier = catalog.commerce?['id']?.toString() ??
+        catalog.commerce?['slug']?.toString() ??
+        catalog.commerceId ??
+        catalog.id;
+
+    if (identifier.isEmpty) return;
+
+    try {
+      final profile = await _getPublicBusinessProfileUseCase.execute(identifier);
+      _businessProfile.value = profile;
+    } catch (_) {
+      _businessProfile.value = null;
+    }
   }
 }

@@ -220,6 +220,13 @@ Review completo post-implementación de Firebase Analytics. Se auditó: bugs, ar
 | ARCH-002 | `order_controller.dart` + 2 servicios nuevos | OrderController 471→260 líneas. WebSocket → `PaymentSocketService`, MercadoPago → `MercadoPagoCheckoutService` |
 | ARCH-004 | `search_filter_bar.dart`, `desktop_filter_sidebar.dart`, `confirm_order_actions.dart`, `filter_summary_widget.dart` | TextEditingController sync por listener (no en build), login extraído a `OrderController.loginAndConfirmOrder()`, `hasActiveFilters` delegado |
 | BUG-004 | `order_status_config.dart:70` | `!` → `??` fallback a `OrderStatus.pending` |
+| BUG-003 | `catalog_controller.dart:220` | `firstWhere` + try-catch → `firstWhereOrNull` |
+| DEBT-002 | `google_auth_service.dart`, `html_metadata_helper.dart`, `image_url_service.dart` | `print()` → `debugPrint()` |
+| DEBT-003 | `download_status_widget.dart`, `category_tile_molecule.dart` | `withOpacity()` → `withValues(alpha:)` |
+| DEAD-001 | `lib/core/widgets/robust_network_image.dart` | Archivo eliminado (108 líneas muertas) |
+| PERF-005 | `search_filter_bar.dart` | Sort menu items cacheados como `late final` field |
+| ARCH-006 | `home_controller.dart`, `order_controller.dart`, `my_cart_page.dart` | `ownerId` unificado con `commerceId`: single source of truth, fallbacks simplificados |
+| ARCH-005 | `order_controller.dart`, `my_cart_page.dart` | `Get.find<CartController>().clearCart()` → callback `onPaymentCompleted` seteado por el caller |
 
 ---
 
@@ -232,15 +239,19 @@ Review completo post-implementación de Firebase Analytics. Se auditó: bugs, ar
 - [x] ~~Refactorizar HomeController (reducir god object)~~ (ARCH-001: 442→229 líneas, widgets desacoplados)
 - [x] ~~Extraer servicios de OrderController (WebSocket, MercadoPago)~~ (ARCH-002: PaymentSocketService + MercadoPagoCheckoutService)
 - [x] ~~Implementar paginación/lazy loading~~ (CRIT-003: lazy loading frontend con displayLimit)
-- [ ] Migrar widgets a pu_material (CatalogItemTile, SearchFilterBar, etc.)
-- [ ] Eliminar `RobustNetworkImage` legacy
-- [ ] Migrar `withOpacity` → `withValues(alpha:)`
-- [ ] Migrar `print()` → `debugPrint()`
+- [x] ~~Eliminar `RobustNetworkImage` legacy~~ (DEAD-001)
+- [x] ~~Migrar `withOpacity` → `withValues(alpha:)`~~ (DEBT-003)
+- [x] ~~Migrar `print()` → `debugPrint()`~~ (DEBT-002)
 - [ ] Actualizar dependencias (get, firebase_*, flutter_svg)
 - [ ] Agregar filtro de stock (quantity)
 - [ ] Agregar campo `averageRating` al modelo
-- [ ] Cachear normalización de texto en filtros
-- [ ] Eliminar `Obx` redundantes en SearchFilterBar
+- [ ] Cachear normalización de texto en filtros (FILT-003)
+- [ ] `shrinkWrap: true` en products_section (PERF-003)
+- [ ] Eliminar `Obx` redundantes en SearchFilterBar (PERF-004)
+| ATOM-001/002 | 8 widgets migrados a `features/*/ui/` | Moleculas/organismos con sufijos, sin GetX. Pages cablean via GetBuilder |
+| FILT-003 | `filter_controller.dart` | Pre-normalización cacheada en `setMenuItems`. `_filterBySearchQuery` ahora hace O(1) lookup por item |
+| PERF-004 | `search_filter_bar_organism.dart` | `Obx` redundantes eliminados por refactor de organismo |
+| Dependencias | `pubspec.yaml` | `flutter_svg: ^2.2.0`, `shared_preferences: ^2.5.3`, `firebase_core: ^3.10.0` |
 
 ---
 
