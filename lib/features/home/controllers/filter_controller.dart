@@ -89,6 +89,7 @@ class FilterController extends GetxController {
   void incrementDisplayLimit() {
     final newLimit = (_displayLimit.value + 20).clamp(0, _sortedFilteredItems.length);
     _displayLimit.value = newLimit;
+    update();
   }
 
   void _resetDisplayLimit() {
@@ -106,6 +107,7 @@ class FilterController extends GetxController {
     _extractCategories();
     _updatePriceBounds();
     _applyFilters();
+    update();
   }
 
   void _extractCategories() {
@@ -275,6 +277,7 @@ class FilterController extends GetxController {
       }
     } finally {
       _isLoading.value = false;
+      update();
     }
   }
 

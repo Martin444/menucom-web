@@ -137,6 +137,7 @@ class HomeController extends GetxController {
     ever(_catalogController.allMenuItemsRx, (List<CatalogItemModel> items) {
       _filterController.clearFilters();
       _filterController.setMenuItems(items);
+      update();
     });
 
     ever(_filterController.sortedFilteredItemsRx, (_) => update());
