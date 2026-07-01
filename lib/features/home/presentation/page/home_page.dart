@@ -42,18 +42,16 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _desktopHeader() {
-    return GetBuilder<CatalogController>(
-      builder: (c) {
-        final cat = c.catalogResponse;
-        return Container(
-          decoration: BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.06)))),
-          child: HeadHomeOrganism(
-            commerceName: cat?.commerce?['name']?.toString() ?? cat?.owner?['name']?.toString() ?? cat?.name ?? '',
-            commerceLogoUrl: cat?.commerce?['logoUrl']?.toString() ?? cat?.owner?['photoURL']?.toString(),
-          ),
-        );
-      },
-    );
+    return Obx(() {
+      final cat = Get.find<CatalogController>().catalogResponse;
+      return Container(
+        decoration: BoxDecoration(color: Colors.white, border: Border(bottom: BorderSide(color: Colors.black.withValues(alpha: 0.06)))),
+        child: HeadHomeOrganism(
+          commerceName: cat?.commerce?['name']?.toString() ?? cat?.owner?['name']?.toString() ?? cat?.name ?? '',
+          commerceLogoUrl: cat?.commerce?['logoUrl']?.toString() ?? cat?.owner?['photoURL']?.toString(),
+        ),
+      );
+    });
   }
 
   Widget _desktopSidebar() {
@@ -71,15 +69,14 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _desktopContent() {
-    return GetBuilder<CatalogController>(
-      builder: (c) {
-        if (c.isLoading) return _loadingState(c.error);
-        return NotificationListener<ScrollNotification>(
-          onNotification: _handleScrollNotification,
-          child: CustomScrollView(slivers: [_desktopTopBar(), const SliverToBoxAdapter(child: SizedBox(height: 8)), _buildGrid(true), _buildFooter()]),
-        );
-      },
-    );
+    return Obx(() {
+      final c = Get.find<CatalogController>();
+      if (c.isLoading) return _loadingState(c.error);
+      return NotificationListener<ScrollNotification>(
+        onNotification: _handleScrollNotification,
+        child: CustomScrollView(slivers: [_buildProfileSliver(), _desktopTopBar(), const SliverToBoxAdapter(child: SizedBox(height: 8)), _buildGrid(true)]),
+      );
+    });
   }
 
   Widget _desktopTopBar() {
@@ -96,21 +93,22 @@ class HomePage extends StatelessWidget {
   Widget _mobileLayout() {
     return NotificationListener<ScrollNotification>(
       onNotification: _handleScrollNotification,
-      child: CustomScrollView(slivers: [_mobileHeader(), _mobileInfoAndFilters(), _mobileContent(), _buildFooter()]),
+      child: CustomScrollView(slivers: [_mobileHeader(), _buildProfileSliver(), _mobileInfoAndFilters(), _mobileContent()]),
     );
   }
 
   Widget _mobileHeader() {
-    return GetBuilder<CatalogController>(
-      builder: (c) {
-        final cat = c.catalogResponse;
-        return const SliverAppBar(
-          pinned: true, floating: true, elevation: 0, backgroundColor: Colors.transparent,
-          automaticallyImplyLeading: false, toolbarHeight: 70,
-          flexibleSpace: HeadHomeOrganism(commerceName: ''),
-        );
-      },
-    );
+    return Obx(() {
+      final cat = Get.find<CatalogController>().catalogResponse;
+      return SliverAppBar(
+        pinned: true, floating: true, elevation: 0, backgroundColor: Colors.transparent,
+        automaticallyImplyLeading: false, toolbarHeight: 70,
+        flexibleSpace: HeadHomeOrganism(
+          commerceName: cat?.commerce?['name']?.toString() ?? cat?.owner?['name']?.toString() ?? cat?.name ?? '',
+          commerceLogoUrl: cat?.commerce?['logoUrl']?.toString() ?? cat?.owner?['photoURL']?.toString(),
+        ),
+      );
+    });
   }
 
   Widget _mobileInfoAndFilters() {
@@ -145,12 +143,11 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _mobileContent() {
-    return GetBuilder<CatalogController>(
-      builder: (c) {
-        if (c.isLoading) return SliverToBoxAdapter(child: _loadingState(c.error));
-        return _buildGrid(true);
-      },
-    );
+    return Obx(() {
+      final c = Get.find<CatalogController>();
+      if (c.isLoading) return SliverToBoxAdapter(child: _loadingState(c.error));
+      return SliverToBoxAdapter(child: _buildGrid(false));
+    });
   }
 
   // ── Shared ──
@@ -228,22 +225,17 @@ class HomePage extends StatelessWidget {
     return false;
   }
 
-  Widget _buildFooter() {
+  Widget _buildProfileSliver() {
     return GetBuilder<HomeController>(
       builder: (home) {
         if (home.businessProfile == null) return const SliverToBoxAdapter();
-        return SliverToBoxAdapter(child: _buildFooterWidget());
+        return SliverToBoxAdapter(child: BusinessProfileFooterOrganism(
+          profile: home.businessProfile!,
+          commerceName: home.nameComerce,
+          commerceLogoUrl: home.ownerPhotoUrl,
+          isHeader: true,
+        ));
       },
-    );
-  }
-
-  Widget _buildFooterWidget() {
-    final home = Get.find<HomeController>();
-    if (home.businessProfile == null) return const SizedBox.shrink();
-    return BusinessProfileFooterOrganism(
-      profile: home.businessProfile!,
-      commerceName: home.nameComerce,
-      commerceLogoUrl: home.ownerPhotoUrl,
     );
   }
 

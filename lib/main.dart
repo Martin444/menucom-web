@@ -14,17 +14,33 @@ import 'package:menucom_catalog/core/services/google_auth_service.dart';
 import 'package:menucom_catalog/core/analytics_service.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // debugPrint no funciona si Flutter binding no está. Usamos print directo.
+  print('[MAIN] main() started - before ensureInitialized');
   
-  if (Firebase.apps.isEmpty) {
-    await Firebase.initializeApp(options: FirebaseConfig.currentPlatform);
-  } else {
-    Firebase.app();
+  WidgetsFlutterBinding.ensureInitialized();
+
+  print('[MAIN] WidgetsBinding ensured');
+  
+  try {
+    if (Firebase.apps.isEmpty) {
+      print('[MAIN] Firebase.initializeApp()...');
+      await Firebase.initializeApp(options: FirebaseConfig.currentPlatform);
+      print('[MAIN] Firebase.initializeApp() OK');
+    } else {
+      Firebase.app();
+      print('[MAIN] Firebase.app() OK');
+    }
+  } catch (e, s) {
+    print('[MAIN] Firebase ERROR: $e\n$s');
   }
 
+  debugPrint('[MAIN] AnalyticsService init...');
   AnalyticsService().init();
   
+  debugPrint('[MAIN] inicialiceServiceMenucomAPi...');
   await inicialiceServiceMenucomAPi();
+
+  debugPrint('[MAIN] runApp...');
   runApp(const MyApp());
 
   try {

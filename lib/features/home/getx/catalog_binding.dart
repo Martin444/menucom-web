@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 // Importar los nuevos controladores
 import 'package:menu_dart_api/menu_com_api.dart';
@@ -10,30 +11,39 @@ import '../controllers/home_controller.dart';
 class CatalogBinding extends Bindings {
   @override
   void dependencies() {
-    // === NUEVA ARQUITECTURA DE CONTROLADORES ===
+    debugPrint('[CATALOG_BINDING] dependencies() called');
 
     // Use cases de menu_dart_api
     Get.lazyPut<GetCatalogByIdUseCase>(() => GetCatalogByIdUseCase());
 
-    // Controladores especializados
-    Get.lazyPut<CatalogController>(
-      () => CatalogController(getCatalogUseCase: Get.find<GetCatalogByIdUseCase>()),
-    );
+    try {
+      // Controladores especializados — put inmediato para que HomeController tenga dependencias listas
+      Get.put<CatalogController>(
+        CatalogController(getCatalogUseCase: Get.find<GetCatalogByIdUseCase>()),
+      );
+      debugPrint('[CATALOG_BINDING] CatalogController created');
 
-    Get.lazyPut<FilterController>(() => FilterController());
+      Get.put<FilterController>(FilterController());
+      debugPrint('[CATALOG_BINDING] FilterController created');
 
-    Get.lazyPut<CartController>(() => CartController());
+      Get.put<CartController>(CartController());
+      debugPrint('[CATALOG_BINDING] CartController created');
 
-    // PWA Install controller
-    Get.lazyPut<PwaInstallController>(() => PwaInstallController());
+      // PWA Install controller
+      Get.put<PwaInstallController>(PwaInstallController());
+      debugPrint('[CATALOG_BINDING] PwaInstallController created');
 
-    // Controlador coordinador (Reemplaza a MenuHomeCartController)
-    Get.lazyPut<HomeController>(
-      () => HomeController(
-        catalogController: Get.find<CatalogController>(),
-        filterController: Get.find<FilterController>(),
-        cartController: Get.find<CartController>(),
-      ),
-    );
+      // Controlador coordinador — put inmediato para forzar onInit() en la entrada de ruta
+      Get.put<HomeController>(
+        HomeController(
+          catalogController: Get.find<CatalogController>(),
+          filterController: Get.find<FilterController>(),
+          cartController: Get.find<CartController>(),
+        ),
+      );
+      debugPrint('[CATALOG_BINDING] HomeController created');
+    } catch (e, s) {
+      debugPrint('[CATALOG_BINDING] ERROR creating controllers: $e\n$s');
+    }
   }
 }

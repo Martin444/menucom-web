@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
 import 'catalog_controller.dart';
@@ -137,6 +138,7 @@ class HomeController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    debugPrint('[HOME] onInit called');
     _setupControllerListeners();
     initializeFromUrl();
   }
@@ -167,6 +169,11 @@ class HomeController extends GetxController {
     final decodedToken = Uri.decodeComponent(rawToken);
     final hasValidToken = rawToken.isNotEmpty;
 
+    debugPrint('[HOME] URL: ${uri.toString()}');
+    debugPrint('[HOME] Path segments: ${uri.pathSegments}');
+    debugPrint('[HOME] Owner ID: $ownerId');
+    debugPrint('[HOME] Has token: $hasValidToken');
+
     if (hasValidToken) {
       ACCESS_TOKEN = decryptAccessToken(decodedToken);
       API.setAccessToken(ACCESS_TOKEN);
@@ -174,11 +181,14 @@ class HomeController extends GetxController {
 
     if (ownerId.isNotEmpty) {
       if (hasValidToken) {
+        debugPrint('[HOME] Calling loadMenu with: $ownerId');
         loadMenu(ownerId);
       } else {
+        debugPrint('[HOME] Calling loadPublicCatalogsByCommerce with: $ownerId');
         loadPublicCatalogsByCommerce(ownerId);
       }
     } else {
+      debugPrint('[HOME] No owner ID, setting loading to false');
       _catalogController.setLoading(false);
     }
   }
@@ -316,6 +326,8 @@ class HomeController extends GetxController {
       _businessProfile.value = profile;
     } catch (_) {
       _businessProfile.value = null;
+    } finally {
+      update();
     }
   }
 }

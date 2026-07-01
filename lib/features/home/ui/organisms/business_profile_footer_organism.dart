@@ -7,23 +7,25 @@ class BusinessProfileFooterOrganism extends StatelessWidget {
   final BusinessProfileModel profile;
   final String commerceName;
   final String? commerceLogoUrl;
+  final bool isHeader;
 
   const BusinessProfileFooterOrganism({
     super.key,
     required this.profile,
     required this.commerceName,
     this.commerceLogoUrl,
+    this.isHeader = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.only(top: 40),
+      margin: isHeader ? EdgeInsets.zero : const EdgeInsets.only(top: 40),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: Colors.white,
-        border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.06))),
+        border: isHeader ? const Border() : Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.06))),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
