@@ -19,6 +19,14 @@ class _DesktopFilterSidebarState extends State<DesktopFilterSidebar> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+
+    final filterCtrl = Get.find<FilterController>();
+    ever(filterCtrl.searchQueryRx, (String query) {
+      if (_searchController.text != query) {
+        _searchController.text = query;
+        _searchController.selection = TextSelection.collapsed(offset: query.length);
+      }
+    });
   }
 
   @override
@@ -31,12 +39,6 @@ class _DesktopFilterSidebarState extends State<DesktopFilterSidebar> {
   Widget build(BuildContext context) {
     return GetBuilder<FilterController>(
       builder: (controller) {
-        final currentQuery = controller.searchQuery;
-        if (_searchController.text != currentQuery) {
-          _searchController.text = currentQuery;
-          _searchController.selection = TextSelection.collapsed(offset: currentQuery.length);
-        }
-
         return Container(
           width: 280,
           decoration: BoxDecoration(

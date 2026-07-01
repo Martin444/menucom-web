@@ -217,6 +217,9 @@ Review completo post-implementación de Firebase Analytics. Se auditó: bugs, ar
 | CRIT-002 | `home_controller.dart:161-163` | `clearFilters()` agregado antes de `setMenuItems()` en el `ever` listener |
 | CRIT-003 | `filter_controller.dart` + `responsive_items_grid.dart` | Lazy loading: `displayLimit` (30 inicial, +20 por click) con botón "Mostrar más" |
 | ARCH-001 | `home_controller.dart` + 12 widgets | HomeController reducido de 442→229 líneas. Widgets usan FilterController, CartController, CatalogController directo |
+| ARCH-002 | `order_controller.dart` + 2 servicios nuevos | OrderController 471→260 líneas. WebSocket → `PaymentSocketService`, MercadoPago → `MercadoPagoCheckoutService` |
+| ARCH-004 | `search_filter_bar.dart`, `desktop_filter_sidebar.dart`, `confirm_order_actions.dart`, `filter_summary_widget.dart` | TextEditingController sync por listener (no en build), login extraído a `OrderController.loginAndConfirmOrder()`, `hasActiveFilters` delegado |
+| BUG-004 | `order_status_config.dart:70` | `!` → `??` fallback a `OrderStatus.pending` |
 
 ---
 
@@ -227,7 +230,7 @@ Review completo post-implementación de Firebase Analytics. Se auditó: bugs, ar
 - [x] ~~Fix BUG-001: `rethrow` en `createOrder()`~~
 - [x] ~~Fix BUG-002: null-check en `orderCreated`~~
 - [x] ~~Refactorizar HomeController (reducir god object)~~ (ARCH-001: 442→229 líneas, widgets desacoplados)
-- [ ] Extraer servicios de OrderController (WebSocket, MercadoPago)
+- [x] ~~Extraer servicios de OrderController (WebSocket, MercadoPago)~~ (ARCH-002: PaymentSocketService + MercadoPagoCheckoutService)
 - [x] ~~Implementar paginación/lazy loading~~ (CRIT-003: lazy loading frontend con displayLimit)
 - [ ] Migrar widgets a pu_material (CatalogItemTile, SearchFilterBar, etc.)
 - [ ] Eliminar `RobustNetworkImage` legacy

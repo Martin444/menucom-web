@@ -18,6 +18,14 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+
+    final filterCtrl = Get.find<FilterController>();
+    ever(filterCtrl.searchQueryRx, (String query) {
+      if (_searchController.text != query) {
+        _searchController.text = query;
+        _searchController.selection = TextSelection.collapsed(offset: query.length);
+      }
+    });
   }
 
   @override
@@ -30,12 +38,6 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
   Widget build(BuildContext context) {
     return GetBuilder<FilterController>(
       builder: (controller) {
-        final currentQuery = controller.searchQuery;
-        if (_searchController.text != currentQuery) {
-          _searchController.text = currentQuery;
-          _searchController.selection = TextSelection.collapsed(offset: currentQuery.length);
-        }
-
         return LayoutBuilder(
           builder: (context, constraints) {
             final isCompact = constraints.maxHeight < 80;

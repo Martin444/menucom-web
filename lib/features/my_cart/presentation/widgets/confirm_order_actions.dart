@@ -6,8 +6,8 @@ import 'package:pu_material/pu_material.dart';
 import 'package:menucom_catalog/features/my_cart/presentation/widgets/order_status_config.dart';
 import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
 import 'package:menucom_catalog/core/config.dart';
-import 'package:menucom_catalog/features/my_cart/presentation/widgets/require_login_dialog.dart';
 import 'package:menucom_catalog/core/services/google_auth_service.dart';
+import 'package:menucom_catalog/features/my_cart/presentation/widgets/require_login_dialog.dart';
 
 class ConfirmOrderActions extends StatefulWidget {
   final bool isMobile;
@@ -26,40 +26,33 @@ class ConfirmOrderActions extends StatefulWidget {
 class _ConfirmOrderActionsState extends State<ConfirmOrderActions> {
   bool _isLoggingIn = false;
 
-  Future<void> _handleGoogleLogin(BuildContext context, String commerceName) async {
+  Future<void> _handleGoogleLogin(BuildContext context) async {
     setState(() => _isLoggingIn = true);
-    
-    try {
-      final googleAuthService = GoogleAuthService();
-      await googleAuthService.signInWithGoogle();
-      
-      if (!context.mounted) return;
 
-      Navigator.of(context).pop();
-      
-      // Automatización: Confirmamos la orden inmediatamente después del login
-      widget.orderController.saveContactToLastOrder(NAME_USER);
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('¡Sesión iniciada! Procesando tu orden...'),
-          backgroundColor: Colors.green,
-        ),
-      );
-    } catch (e) {
-      if (context.mounted) {
+    final success = await widget.orderController.loginAndConfirmOrder();
+
+    if (!mounted) return;
+
+    if (context.mounted) {
+      if (success) {
+        Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error al iniciar sesión: $e'),
+          const SnackBar(
+            content: Text('¡Sesión iniciada! Procesando tu orden...'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Error al iniciar sesión'),
             backgroundColor: Colors.red,
           ),
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoggingIn = false);
-      }
     }
+
+    setState(() => _isLoggingIn = false);
   }
 
   @override
@@ -106,7 +99,7 @@ class _ConfirmOrderActionsState extends State<ConfirmOrderActions> {
                           commerceName: commerceName,
                           isLoading: _isLoggingIn,
                           onLogin: () async {
-                            await _handleGoogleLogin(ctx, commerceName);
+                            await _handleGoogleLogin(ctx);
                           },
                           onCancel: () {
                             Navigator.of(ctx).pop();

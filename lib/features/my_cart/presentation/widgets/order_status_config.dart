@@ -67,7 +67,7 @@ class OrderStatusConfig {
   };
 
   static StatusHeaderConfig getConfig(OrderStatus status) {
-    return configs[status]!;
+    return configs[status] ?? configs[OrderStatus.pending]!;
   }
 
   /// Maps MercadoPago payment status to OrderStatus

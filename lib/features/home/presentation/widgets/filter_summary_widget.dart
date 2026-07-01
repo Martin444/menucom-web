@@ -12,13 +12,7 @@ class FilterSummaryWidget extends StatelessWidget {
     return GetBuilder<FilterController>(
       builder: (controller) {
         final totalItems = controller.sortedFilteredItems.length;
-        final hasActiveFilters = controller.searchQuery.isNotEmpty ||
-            controller.selectedCategories.isNotEmpty ||
-            controller.showOnlyAvailable ||
-            controller.showOnlyOnSale ||
-            controller.showOnlyFeatured ||
-            controller.minPrice > 0 ||
-            controller.maxPrice < controller.priceUpperBound;
+        final hasActiveFilters = controller.hasActiveFilters;
 
         if (totalItems == 0 && !hasActiveFilters) {
           return const SizedBox();
