@@ -5,9 +5,8 @@ import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/catalog_item_tile.dart';
 import 'package:pu_material/pu_material.dart';
 
-/// Grid responsivo para mostrar items del catálogo
+/// Grid responsivo para mostrar items del catálogo con lazy loading
 class ResponsiveItemsGrid extends StatelessWidget {
-  /// Si debe retornar un Sliver en lugar de un Widget normal
   final bool isSliver;
 
   const ResponsiveItemsGrid({
@@ -19,16 +18,56 @@ class ResponsiveItemsGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return GetBuilder<HomeController>(
       builder: (controller) {
-        final filteredData = controller.filteredMenuItems;
+        final items = controller.displayedItems;
+        final hasMore = controller.hasMoreItems;
 
-        // Estado vacío
-        if (filteredData.isEmpty && !controller.isLoadHomeItems) {
+        if (items.isEmpty && !controller.isLoadHomeItems) {
           final emptyContent = _buildEmptyState();
           return isSliver ? SliverToBoxAdapter(child: emptyContent) : emptyContent;
         }
 
-        return _buildResponsiveGrid(controller, filteredData);
+        final grid = _buildResponsiveGrid(controller, items);
+
+        if (!hasMore) {
+          return grid;
+        }
+
+        final loadMore = _buildLoadMoreButton(controller);
+
+        if (isSliver) {
+          return SliverList(
+            delegate: SliverChildListDelegate([
+              grid,
+              SliverToBoxAdapter(child: loadMore),
+            ]),
+          );
+        }
+
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [grid, loadMore],
+        );
       },
+    );
+  }
+
+  /// Botón para cargar más items
+  Widget _buildLoadMoreButton(HomeController controller) {
+    final remaining = controller.filteredMenuItems.length - controller.displayLimit;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Center(
+        child: OutlinedButton.icon(
+          onPressed: () => controller.incrementDisplayLimit(),
+          icon: const Icon(Icons.expand_more, size: 20),
+          label: Text('Mostrar más ($remaining restantes)'),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: PUColors.primaryColor,
+            side: BorderSide(color: PUColors.primaryColor.withValues(alpha: 0.5)),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+        ),
+      ),
     );
   }
 

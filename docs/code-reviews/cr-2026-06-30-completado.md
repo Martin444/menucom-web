@@ -215,6 +215,7 @@ Review completo post-implementación de Firebase Analytics. Se auditó: bugs, ar
 | BUG-001 | `order_controller.dart:166` | `rethrow` eliminado; ahora setea `errorText` y `isLoading` en catch |
 | BUG-002 | `order_controller.dart:213` | Validación de `orderCreated.id != null` (no nullable, se eliminó el check redundante) |
 | CRIT-002 | `home_controller.dart:161-163` | `clearFilters()` agregado antes de `setMenuItems()` en el `ever` listener |
+| CRIT-003 | `filter_controller.dart` + `responsive_items_grid.dart` | Lazy loading: `displayLimit` (30 inicial, +20 por click) con botón "Mostrar más" |
 
 ---
 
@@ -226,7 +227,7 @@ Review completo post-implementación de Firebase Analytics. Se auditó: bugs, ar
 - [x] ~~Fix BUG-002: null-check en `orderCreated`~~
 - [ ] Refactorizar HomeController (reducir god object)
 - [ ] Extraer servicios de OrderController (WebSocket, MercadoPago)
-- [ ] Implementar paginación/lazy loading
+- [x] ~~Implementar paginación/lazy loading~~ (CRIT-003: lazy loading frontend con displayLimit)
 - [ ] Migrar widgets a pu_material (CatalogItemTile, SearchFilterBar, etc.)
 - [ ] Eliminar `RobustNetworkImage` legacy
 - [ ] Migrar `withOpacity` → `withValues(alpha:)`

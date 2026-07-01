@@ -105,6 +105,13 @@ class HomeController extends GetxController {
   double get priceUpperBound => _filterController.priceUpperBound;
   RxDouble get priceUpperBoundRx => _filterController.priceUpperBoundRx;
 
+  int get displayLimit => _filterController.displayLimit;
+  RxInt get displayLimitRx => _filterController.displayLimitRx;
+  bool get hasMoreItems => _filterController.hasMoreItems;
+  List<CatalogItemModel> get displayedItems => _filterController.displayedItems;
+
+  void incrementDisplayLimit() => _filterController.incrementDisplayLimit();
+
   // Carrito
   List<CartItemModel> get cartItems => _cartController.cartItems;
   RxList<CartItemModel> get cartItemsRx => _cartController.cartItemsRx;

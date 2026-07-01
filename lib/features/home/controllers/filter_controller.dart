@@ -21,6 +21,7 @@ class FilterController extends GetxController {
   final RxDouble _minPrice = 0.0.obs;
   final RxDouble _maxPrice = double.infinity.obs;
   final RxDouble _priceUpperBound = 0.0.obs;
+  final RxInt _displayLimit = 30.obs;
 
   late final Debouncer _searchDebouncer;
 
@@ -76,6 +77,23 @@ class FilterController extends GetxController {
 
   int get filteredItemsCount => _filteredItems.length;
   int get totalItemsCount => _allItems.length;
+
+  int get displayLimit => _displayLimit.value;
+  RxInt get displayLimitRx => _displayLimit;
+
+  bool get hasMoreItems => _sortedFilteredItems.length > _displayLimit.value;
+
+  List<CatalogItemModel> get displayedItems =>
+      _sortedFilteredItems.take(_displayLimit.value).toList();
+
+  void incrementDisplayLimit() {
+    final newLimit = (_displayLimit.value + 20).clamp(0, _sortedFilteredItems.length);
+    _displayLimit.value = newLimit;
+  }
+
+  void _resetDisplayLimit() {
+    _displayLimit.value = 30;
+  }
 
   @override
   void onInit() {
@@ -205,6 +223,7 @@ class FilterController extends GetxController {
 
   void _applyFilters() {
     _isLoading.value = true;
+    _resetDisplayLimit();
 
     try {
       List<CatalogItemModel> result = List.from(_allItems);
