@@ -192,13 +192,14 @@ class HomeController extends GetxController {
       final catalog = _catalogController.catalogResponse!;
       _commerceId.value = catalog.commerceId ?? catalog.ownerId;
       await _cartController.validateCartOwner(_commerceId.value ?? catalog.id);
-      await _loadBusinessProfile(catalog);
 
       HtmlMetadataHelper.updateCommerceMetadata(
         name: catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom',
         logoUrl: catalog.commerce?['logoUrl']?.toString() ?? catalog.coverImageUrl,
         description: catalog.description ?? 'Catálogo de productos y servicios',
       );
+
+      _loadBusinessProfile(catalog);
     }
   }
 
@@ -209,13 +210,14 @@ class HomeController extends GetxController {
       final catalog = _catalogController.catalogResponse!;
       _commerceId.value = catalog.commerceId ?? catalog.ownerId;
       await _cartController.validateCartOwner(_commerceId.value ?? catalog.id);
-      await _loadBusinessProfile(catalog);
 
       HtmlMetadataHelper.updateCommerceMetadata(
         name: catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom',
         logoUrl: catalog.commerce?['logoUrl']?.toString() ?? catalog.coverImageUrl,
         description: catalog.description ?? 'Catálogo de productos y servicios',
       );
+
+      _loadBusinessProfile(catalog);
     }
   }
 
@@ -226,7 +228,6 @@ class HomeController extends GetxController {
       final catalog = _catalogController.catalogResponse!;
       _commerceId.value = catalog.commerceId ?? catalog.ownerId ?? identifier;
       await _cartController.validateCartOwner(_commerceId.value ?? catalog.id);
-      await _loadBusinessProfile(catalog);
 
       final commerceName =
           catalog.commerce?['name']?.toString() ?? catalog.owner?['name']?.toString() ?? catalog.name ?? 'MenuCom';
@@ -235,6 +236,8 @@ class HomeController extends GetxController {
         logoUrl: catalog.commerce?['logoUrl']?.toString() ?? catalog.coverImageUrl,
         description: catalog.commerce?['description']?.toString() ?? catalog.description ?? 'Catálogo de productos y servicios',
       );
+
+      _loadBusinessProfile(catalog);
     }
   }
 
