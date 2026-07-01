@@ -140,6 +140,10 @@ class HomeController extends GetxController {
     });
 
     ever(_filterController.sortedFilteredItemsRx, (_) => update());
+
+    // Notificar cuando cambia el estado de carga o errores del catalogo
+    ever(_catalogController.isLoadingRx, (_) => update());
+    ever(_catalogController.errorRx, (_) => update());
   }
 
   // ── Inicializacion desde URL ──

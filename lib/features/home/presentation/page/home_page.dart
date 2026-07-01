@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:menucom_catalog/core/pwa/pwa_install_controller.dart';
-import 'package:menucom_catalog/features/home/controllers/catalog_controller.dart';
 import 'package:menucom_catalog/features/home/controllers/cart_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/filter_summary_widget.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/responsive_items_grid.dart';
 import 'package:menucom_catalog/features/home/presentation/widgets/catalog_selector.dart';
@@ -65,10 +65,14 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildDesktopContentArea() {
-    return GetBuilder<CatalogController>(
+    return GetBuilder<HomeController>(
       builder: (controller) {
-        if (controller.isLoading) {
-          return _buildLoadingOrErrorState(controller);
+        if (controller.isLoadHomeItems) {
+          return _buildLoadingOrErrorState();
+        }
+
+        if (controller.hasError) {
+          return _buildLoadingOrErrorState();
         }
 
         return CustomScrollView(
@@ -130,10 +134,14 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildSliverContent() {
-    return GetBuilder<CatalogController>(
+    return GetBuilder<HomeController>(
       builder: (controller) {
-        if (controller.isLoading) {
-          return SliverToBoxAdapter(child: _buildLoadingOrErrorState(controller));
+        if (controller.isLoadHomeItems) {
+          return SliverToBoxAdapter(child: _buildLoadingOrErrorState());
+        }
+
+        if (controller.hasError) {
+          return SliverToBoxAdapter(child: _buildLoadingOrErrorState());
         }
 
         return const ResponsiveItemsGrid(isSliver: true);
@@ -229,34 +237,38 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildLoadingOrErrorState(CatalogController controller) {
-    return ContainerAtom(
-      height: 400,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Center(
-        child: controller.error.isEmpty
-            ? Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(
-                    color: Color(0xFF1336E5),
-                    strokeWidth: 3,
+  Widget _buildLoadingOrErrorState() {
+    return GetBuilder<HomeController>(
+      builder: (controller) {
+        return ContainerAtom(
+          height: 400,
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Center(
+            child: controller.errorText.isEmpty
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const CircularProgressIndicator(
+                        color: Color(0xFF1336E5),
+                        strokeWidth: 3,
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'Preparando el catálogo...',
+                        style: PuTextStyle.bodyMedium.copyWith(
+                          color: Colors.grey[600],
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  )
+                : EmptyStateAtom(
+                    title: controller.errorText,
+                    titleStyle: PuTextStyle.title5,
                   ),
-                  const SizedBox(height: 20),
-                  Text(
-                    'Preparando el catálogo...',
-                    style: PuTextStyle.bodyMedium.copyWith(
-                      color: Colors.grey[600],
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                ],
-              )
-            : EmptyStateAtom(
-                title: controller.error,
-                titleStyle: PuTextStyle.title5,
-              ),
-      ),
+          ),
+        );
+      },
     );
   }
 }
