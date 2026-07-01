@@ -25,6 +25,7 @@ docs/code-reviews/
 | 2026-05-27 | [`cr-2026-05-27-completado.md`](./code-reviews/cr-2026-05-27-completado.md) | 🟢 Completado |
 | 2026-05-27 | [`cr-2026-05-27-fase2-completado.md`](./code-reviews/cr-2026-05-27-fase2-completado.md) | 🟢 Completado — Fase 2 implementada |
 | 2026-05-29 | [`cr-2026-05-29-pwa-install-button.md`](./code-reviews/cr-2026-05-29-pwa-install-button.md) | 🟢 Completado — PWA Install Button |
+| 2026-06-30 | [`cr-2026-06-30-completado.md`](./code-reviews/cr-2026-06-30-completado.md) | 🟢 Completado — Post-analytics + revisión completa |
 
 ## Documentos relacionados
 

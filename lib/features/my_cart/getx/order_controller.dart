@@ -163,7 +163,8 @@ class OrderController extends GetxController {
       );
     } catch (e) {
       AnalyticsService().logErrorWithException(e, context: 'order_controller.createOrder');
-      rethrow;
+      errorText.value = 'Error al preparar la orden';
+      isLoading.value = false;
     }
   }
 
@@ -206,34 +207,49 @@ class OrderController extends GetxController {
     orders.refresh();
 
     debugPrint('[ORDER] Llamando a CreateOrderUseCase con orden: ${orders.value}');
-    var orderCreated = await CreateOrderUseCase().call(orders.value);
-    debugPrint(
-        '[ORDER] Respuesta de CreateOrderUseCase: id=${orderCreated.id}, operationID=${orderCreated.operationID}, paymentUrl=${orderCreated.paymentUrl}');
 
-    if (orderCreated.id != null) {
-      // Conectar al WebSocket y suscribirse a la room de la orden si tenemos operationID
-      if (orderCreated.operationID != null) {
-        _connectAndSubscribeToOrder(orderCreated.operationID!);
+    try {
+      final orderCreated = await CreateOrderUseCase().call(orders.value);
+      debugPrint(
+          '[ORDER] Respuesta de CreateOrderUseCase: id=${orderCreated.id}, operationID=${orderCreated.operationID}, paymentUrl=${orderCreated.paymentUrl}');
+
+      if (orderCreated.id != null) {
+        if (orderCreated.operationID != null) {
+          _connectAndSubscribeToOrder(orderCreated.operationID!);
+        } else {
+          debugPrint('[ORDER] WARNING: No se recibió operationID, no habrá actualizaciones en tiempo real.');
+        }
+
+        final raw = orderCreated.paymentUrl ?? '';
+        final prefId = _extractPreferenceId(raw);
+
+        debugPrint('[PAY] paymentUrl/raw="$raw" -> preferenceId="$prefId"');
+
+        await _openMercadoPagoCheckout(
+          preferenceId: prefId,
+          redirectUrl: raw,
+        );
       } else {
-        debugPrint('[ORDER] WARNING: No se recibió operationID, no habrá actualizaciones en tiempo real.');
+        debugPrint('[ORDER] ERROR: No se pudo crear la orden, id es null');
+        errorText.value = 'Error al crear la orden';
+        errorText.refresh();
+        isOrderLoading.value = false;
+        orderStatus.value = OrderStatus.pending;
       }
-      
-      // Derivar preferenceId desde paymentUrl (la API retorna URL de redirección)
-      final raw = orderCreated.paymentUrl ?? '';
-      final prefId = _extractPreferenceId(raw);
-      
-      debugPrint('[PAY] paymentUrl/raw="$raw" -> preferenceId="$prefId"');
-      
-      await _openMercadoPagoCheckout(
-        preferenceId: prefId,
-        redirectUrl: raw,
-      );
-    } else {
-      debugPrint('[ORDER] ERROR: No se pudo crear la orden, orderCreated.id es null');
-      errorText.value = 'Error al crear la orden';
+    } catch (e) {
+      debugPrint('[ORDER] Excepción al crear orden: $e');
+      AnalyticsService().logErrorWithException(e, context: 'order_controller.saveContactToLastOrder');
+      errorText.value = 'Error al procesar el pago. Intenta de nuevo.';
       errorText.refresh();
       isOrderLoading.value = false;
       orderStatus.value = OrderStatus.pending;
+      Get.snackbar(
+        'Error de Pago',
+        'No se pudo procesar el pago. Verifica tu conexión e intenta de nuevo.',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red.withAlpha(204),
+        colorText: Colors.white,
+      );
     }
   }
 

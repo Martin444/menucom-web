@@ -159,6 +159,7 @@ class HomeController extends GetxController {
   /// Configura listeners entre controladores
   void _setupControllerListeners() {
     ever(_catalogController.allMenuItemsRx, (List<CatalogItemModel> items) {
+      _filterController.clearFilters();
       _filterController.setMenuItems(items);
     });
 
