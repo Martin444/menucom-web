@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/catalog_controller.dart';
 import 'package:pu_material/utils/pu_assets.dart';
 import 'package:pu_material/utils/pu_colors.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
@@ -21,7 +21,7 @@ class HeadHome extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<HomeController>(builder: (controller) {
+    return GetBuilder<CatalogController>(builder: (controller) {
       return ClipRRect(
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
@@ -64,7 +64,7 @@ class HeadHome extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Obx(() {
-                        final catalog = controller.catalogRx.value;
+                        final catalog = controller.catalogResponseRx.value;
                         final name = catalog?.commerce?['name']?.toString() ?? catalog?.owner?['name']?.toString() ?? catalog?.name ?? '';
                         if (name.isEmpty) return const SizedBox();
                         return Text(
@@ -86,9 +86,9 @@ class HeadHome extends StatelessWidget {
   }
 
   /// Avatar circular del comercio (logo del negocio)
-  Widget _buildOwnerAvatar(HomeController controller) {
+  Widget _buildOwnerAvatar(CatalogController controller) {
     return Obx(() {
-      final catalog = controller.catalogRx.value;
+      final catalog = controller.catalogResponseRx.value;
       final photoUrl = catalog?.commerce?['logoUrl']?.toString() ?? catalog?.owner?['photoURL']?.toString();
       if (photoUrl == null || photoUrl.isEmpty) {
         return const SizedBox(width: 40);

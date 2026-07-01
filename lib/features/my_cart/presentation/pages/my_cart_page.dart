@@ -6,6 +6,7 @@ import 'package:menucom_catalog/features/home/presentation/widgets/head_home.dar
 import 'package:menucom_catalog/features/my_cart/ui/templates/my_cart_template.dart';
 import 'package:pu_material/pu_material.dart';
 import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/cart_controller.dart';
 import 'package:menucom_catalog/features/my_cart/getx/order_controller.dart';
 
 class MyCartPage extends StatelessWidget {
@@ -14,6 +15,7 @@ class MyCartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final orderController = Get.find<OrderController>();
+    final homeCtrl = Get.find<HomeController>();
 
     return MyCartTemplate(
       header: HeadHome(
@@ -21,22 +23,22 @@ class MyCartPage extends StatelessWidget {
         titleHead: 'Mi carrito',
         onBack: () => Navigator.of(context).maybePop(),
       ),
-      cartList: GetBuilder<HomeController>(
-        builder: (controller) => CartItemList(
-          items: controller.listMenuSelected,
-          onAdd: (item) => controller.addquantityItem(item),
-          onRemove: (item) => controller.removequantityItem(item),
+      cartList: GetBuilder<CartController>(
+        builder: (cartCtrl) => CartItemList(
+          items: cartCtrl.cartItems,
+          onAdd: (item) => homeCtrl.addquantityItem(item),
+          onRemove: (item) => homeCtrl.removequantityItem(item),
         ),
       ),
-      orderSummary: GetBuilder<HomeController>(
-        builder: (controller) => CartOrderSummary(
-          total: controller.totalOrder,
+      orderSummary: GetBuilder<CartController>(
+        builder: (cartCtrl) => CartOrderSummary(
+          total: cartCtrl.total,
           onContinue: () {
             orderController.setCommerceIdentifiers(
-              ownerIdValue: controller.persistedOwnerId.value,
-              commerceIdValue: controller.persistedCommerceId.value,
+              ownerIdValue: homeCtrl.persistedOwnerId.value,
+              commerceIdValue: homeCtrl.persistedCommerceId.value,
             );
-            orderController.createOrder(controller.listMenuSelected);
+            orderController.createOrder(cartCtrl.cartItems);
           },
         ),
       ),

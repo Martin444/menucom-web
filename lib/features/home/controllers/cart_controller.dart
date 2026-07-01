@@ -228,6 +228,17 @@ class CartController extends GetxController {
     return _cartItems.any((item) => item.id == itemId);
   }
 
+  /// Alterna un item en el carrito (agrega si no está, remueve si ya está)
+  void toggleItem(CatalogItemModel catalogItem) {
+    final id = catalogItem.id;
+    if (id == null) return;
+    if (containsItem(id)) {
+      removeItem(id);
+    } else {
+      addItem(catalogItem);
+    }
+  }
+
   /// Obtiene la cantidad de un item específico en el carrito
   int getItemQuantity(String itemId) {
     final item = _cartItems.firstWhereOrNull((item) => item.id == itemId);

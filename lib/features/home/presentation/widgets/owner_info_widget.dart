@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/catalog_controller.dart';
 import 'package:pu_material/pu_material.dart';
 
 /// Widget que muestra la información del catálogo o comercio
@@ -9,9 +9,9 @@ class OwnerInfoWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<HomeController>(
+    return GetBuilder<CatalogController>(
       builder: (controller) {
-        final catalog = controller.catalog;
+        final catalog = controller.catalogResponse;
         
         if (catalog == null) {
           return const SizedBox.shrink();

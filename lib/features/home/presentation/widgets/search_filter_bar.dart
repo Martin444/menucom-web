@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/filter_controller.dart';
 import 'package:pu_material/pu_material.dart';
 
 class SearchFilterBar extends StatefulWidget {
@@ -28,7 +28,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<HomeController>(
+    return GetBuilder<FilterController>(
       builder: (controller) {
         final currentQuery = controller.searchQuery;
         if (_searchController.text != currentQuery) {
@@ -76,7 +76,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
     );
   }
 
-  Widget _buildAdvancedToggle(HomeController controller) {
+  Widget _buildAdvancedToggle(FilterController controller) {
     final hasAdvancedFilters = controller.showOnlyAvailable ||
         controller.showOnlyOnSale ||
         controller.showOnlyFeatured ||
@@ -122,7 +122,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
     );
   }
 
-  Widget _buildSearchAndSortRow(HomeController controller, bool isCompact) {
+  Widget _buildSearchAndSortRow(FilterController controller, bool isCompact) {
     return Row(
       children: [
         _buildSearchField(controller, isCompact),
@@ -132,7 +132,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
     );
   }
 
-  Widget _buildSearchField(HomeController controller, bool isCompact) {
+  Widget _buildSearchField(FilterController controller, bool isCompact) {
     return Expanded(
       child: ContainerAtom(
         height: isCompact ? 44 : 48,
@@ -158,7 +158,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
     );
   }
 
-  Widget _buildSortDropdown(HomeController controller, bool isCompact) {
+  Widget _buildSortDropdown(FilterController controller, bool isCompact) {
     return ContainerAtom(
       height: isCompact ? 44 : 48,
       padding: EdgeInsets.zero,
@@ -217,7 +217,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
     ];
   }
 
-  Widget _buildCategoryFilters(HomeController controller, bool isCompact) {
+  Widget _buildCategoryFilters(FilterController controller, bool isCompact) {
     return Obx(() => controller.availableCategoriesRx.isNotEmpty
         ? SizedBox(
             height: isCompact ? 32 : 40,
@@ -235,7 +235,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
         : const SizedBox());
   }
 
-  Widget _buildCategoryChip(HomeController controller, String category, bool isCompact) {
+  Widget _buildCategoryChip(FilterController controller, String category, bool isCompact) {
     return Obx(() {
       final isSelected = controller.selectedCategoriesRx.contains(category);
 
@@ -262,7 +262,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
     });
   }
 
-  Widget _buildToggleChips(HomeController controller) {
+  Widget _buildToggleChips(FilterController controller) {
     return Obx(() => Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Wrap(
@@ -301,7 +301,7 @@ class _SearchFilterBarState extends State<SearchFilterBar> {
     ));
   }
 
-  Widget _buildPriceSlider(HomeController controller) {
+  Widget _buildPriceSlider(FilterController controller) {
     return Obx(() {
       final upperBound = controller.priceUpperBoundRx.value;
       if (upperBound <= 0) return const SizedBox();

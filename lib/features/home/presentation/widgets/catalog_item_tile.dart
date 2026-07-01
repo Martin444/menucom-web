@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
-import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/cart_controller.dart';
 import 'package:pu_material/pu_material.dart';
 
 /// CatalogItemTile - Widget unificado para mostrar items del catálogo
@@ -31,13 +31,14 @@ class CatalogItemTile extends StatelessWidget {
       backgroundColor: Colors.transparent,
       semanticsLabel: 'Ver detalle de ${item.name}',
       onTap: () {
-        final isAdded = Get.find<HomeController>().detectItemInList(item);
+        final cartCtrl = Get.find<CartController>();
+        final isAdded = cartCtrl.containsItem(item.id);
         Get.toNamed(
           '/product-detail',
           arguments: {
             'item': item,
             'isAdded': isAdded,
-            'onAddCart': (CatalogItemModel i) => Get.find<HomeController>().selectItem(i),
+            'onAddCart': (CatalogItemModel i) => cartCtrl.toggleItem(i),
             'name': item.name,
             'description': item.description,
             'photoUrl': item.photoURL,

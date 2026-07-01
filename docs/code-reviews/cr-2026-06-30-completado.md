@@ -216,6 +216,7 @@ Review completo post-implementación de Firebase Analytics. Se auditó: bugs, ar
 | BUG-002 | `order_controller.dart:213` | Validación de `orderCreated.id != null` (no nullable, se eliminó el check redundante) |
 | CRIT-002 | `home_controller.dart:161-163` | `clearFilters()` agregado antes de `setMenuItems()` en el `ever` listener |
 | CRIT-003 | `filter_controller.dart` + `responsive_items_grid.dart` | Lazy loading: `displayLimit` (30 inicial, +20 por click) con botón "Mostrar más" |
+| ARCH-001 | `home_controller.dart` + 12 widgets | HomeController reducido de 442→229 líneas. Widgets usan FilterController, CartController, CatalogController directo |
 
 ---
 
@@ -225,7 +226,7 @@ Review completo post-implementación de Firebase Analytics. Se auditó: bugs, ar
 - [x] ~~Fix CRIT-002: limpiar filtros al cambiar catálogo~~
 - [x] ~~Fix BUG-001: `rethrow` en `createOrder()`~~
 - [x] ~~Fix BUG-002: null-check en `orderCreated`~~
-- [ ] Refactorizar HomeController (reducir god object)
+- [x] ~~Refactorizar HomeController (reducir god object)~~ (ARCH-001: 442→229 líneas, widgets desacoplados)
 - [ ] Extraer servicios de OrderController (WebSocket, MercadoPago)
 - [x] ~~Implementar paginación/lazy loading~~ (CRIT-003: lazy loading frontend con displayLimit)
 - [ ] Migrar widgets a pu_material (CatalogItemTile, SearchFilterBar, etc.)

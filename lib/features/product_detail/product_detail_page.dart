@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:menu_dart_api/menu_com_api.dart';
-import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/cart_controller.dart';
 import 'package:pu_material/atoms/product_image.dart';
 import 'package:pu_material/atoms/product_title.dart';
 import 'package:pu_material/atoms/product_price.dart';
@@ -86,10 +86,10 @@ class ProductDetailPage extends StatelessWidget {
                   SliverToBoxAdapter(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
-                      child: GetBuilder<HomeController>(
+                      child: GetBuilder<CartController>(
                         builder: (controller) {
                           final isAdded = item != null
-                              ? controller.detectItemInList(item!)
+                              ? controller.containsItem(item!.id)
                               : false;
 
                           final displayBrand = brand ?? (item?.attributes?['brand'] as String? ?? '');

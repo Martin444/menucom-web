@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:menucom_catalog/features/home/controllers/home_controller.dart';
+import 'package:menucom_catalog/features/home/controllers/filter_controller.dart';
 import 'package:pu_material/utils/pu_colors.dart';
 import 'package:pu_material/utils/style/pu_style_fonts.dart';
 
@@ -9,9 +9,9 @@ class FilterSummaryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<HomeController>(
+    return GetBuilder<FilterController>(
       builder: (controller) {
-        final totalItems = controller.filteredMenuItems.length;
+        final totalItems = controller.sortedFilteredItems.length;
         final hasActiveFilters = controller.searchQuery.isNotEmpty ||
             controller.selectedCategories.isNotEmpty ||
             controller.showOnlyAvailable ||
